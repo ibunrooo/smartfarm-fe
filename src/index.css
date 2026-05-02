@@ -31,3 +31,20 @@ body {
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
 }
+
+
+/* 반응형 — 인라인으로 못 쓰는 것들만 여기서 처리 */
+.sidebar { display: flex; }
+.bottom-nav { display: none; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .bottom-nav { display: grid; }
+  .page-content { padding: 16px 16px 80px !important; }
+}
+
+/* 네비 hover */
+.nav-btn:hover {
+  background: #f2faf3;
+  color: #2ea84e;
+}
