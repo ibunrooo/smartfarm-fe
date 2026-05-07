@@ -3,29 +3,9 @@ import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import MetricCard from '../components/MetricCard'
 import EventLog from '../components/EventLog'
+import { DeviceIcon } from '../components/Device'
+import { deviceLabels } from '../data/devices'
 import { greenhouses, metricLabels, sensorOrder, LUX_INFO } from '../data/greenhouses'
-
-const deviceMeta = {
-  pump: { label: '펌프', icon: (
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-      <path d="M6 1.5C6 1.5 3 5 3 7.5a3 3 0 006 0C9 5 6 1.5 6 1.5z"
-        stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" fill="none"/>
-    </svg>
-  )},
-  fan:  { label: '환기팬', icon: (
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-      <circle cx="6" cy="6" r="1" fill="currentColor"/>
-      <path d="M6 5V2M6 7v3M5 6H2M7 6h3"
-        stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
-    </svg>
-  )},
-  led:  { label: 'LED', icon: (
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-      <path d="M6 1.5a3.5 3.5 0 00-2 6.4V9.5h4V7.9A3.5 3.5 0 006 1.5zM4.5 10.5h3"
-        stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" strokeLinecap="round" fill="none"/>
-    </svg>
-  )},
-}
 
 function Home() {
   const [activeId, setActiveId] = useState('gh1')
@@ -115,30 +95,27 @@ function Home() {
           display: 'flex', alignItems: 'center', gap: 6,
           flexWrap: 'wrap',
         }}>
-          {Object.entries(devices).map(([key, on]) => {
-            const meta = deviceMeta[key]
-            return (
-              <div key={key} style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '4px 9px',
-                background: on ? '#ddf2e2' : '#f5f5f5',
-                border: `0.5px solid ${on ? '#b4e3be' : '#e8e8e8'}`,
-                borderRadius: 18,
-                fontSize: 10.5, fontWeight: 600,
-                color: on ? '#156b2e' : '#999',
+          {Object.entries(devices).map(([key, on]) => (
+            <div key={key} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '4px 9px',
+              background: on ? '#ddf2e2' : '#f5f5f5',
+              border: `0.5px solid ${on ? '#b4e3be' : '#e8e8e8'}`,
+              borderRadius: 18,
+              fontSize: 10.5, fontWeight: 600,
+              color: on ? '#156b2e' : '#999',
+            }}>
+              <DeviceIcon name={key} size={11} />
+              {deviceLabels[key]}
+              <span style={{
+                fontSize: 9, fontWeight: 700,
+                marginLeft: 1,
+                color: on ? '#2ea84e' : '#bbb',
               }}>
-                {meta.icon}
-                {meta.label}
-                <span style={{
-                  fontSize: 9, fontWeight: 700,
-                  marginLeft: 1,
-                  color: on ? '#2ea84e' : '#bbb',
-                }}>
-                  {on ? 'ON' : 'OFF'}
-                </span>
-              </div>
-            )
-          })}
+                {on ? 'ON' : 'OFF'}
+              </span>
+            </div>
+          ))}
           <div style={{ flex: 1 }} />
           <div style={{
             display: 'flex', alignItems: 'center', gap: 5,

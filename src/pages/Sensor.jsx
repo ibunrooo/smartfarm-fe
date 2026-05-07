@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
+import { DeviceIcon } from '../components/Device'
+import { DEVICE_KEYS, deviceLabels } from '../data/devices'
 import { greenhouses, metricLabels, sensorOrder } from '../data/greenhouses'
 import { generateHistory } from '../data/sensorHistory'
 
@@ -114,11 +116,146 @@ function Sensor() {
         })}
       </div>
 
-      {/* 다음 단계에서 채울 영역들 */}
-      <SectionPlaceholder title="디바이스 제어"     hint="펌프 / 환기팬 / LED 토글 + 자동제어 스위치" />
+      {/* 디바이스 제어 — key={activeId}로 온실 변경 시 자연 리셋 */}
+      <DeviceControlPanel
+        key={activeId}
+        initialDevices={active.devices}
+        initialAutoControl={active.autoControl}
+      />
+
+      {/* 다음 단계에서 채울 영역 */}
       <SectionPlaceholder title="이벤트 로그 (전체)" hint="필터 + 페이지네이션" />
 
     </div>
+  )
+}
+
+function DeviceControlPanel({ initialDevices, initialAutoControl }) {
+  const [autoControl, setAutoControl] = useState(initialAutoControl)
+  const [devices, setDevices] = useState(initialDevices)
+
+  const toggleDevice = (key) => (next) => {
+    setDevices(prev => ({ ...prev, [key]: next }))
+  }
+
+  return (
+    <div style={{
+      background: '#fff',
+      border: '0.5px solid #e8e8e8',
+      borderRadius: 14,
+      overflow: 'hidden',
+    }}>
+      {/* 자동제어 헤더 */}
+      <div style={{
+        padding: '12px 14px',
+        background: '#f8fdf9',
+        borderBottom: '0.5px solid #ddf2e2',
+        display: 'flex', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+            자동제어
+          </div>
+          <div style={{ fontSize: 10.5, color: '#666', marginTop: 2, lineHeight: 1.4 }}>
+            {autoControl
+              ? '룰엔진이 임계값에 따라 디바이스를 자동으로 제어해요.'
+              : '디바이스를 수동으로 제어할 수 있어요.'}
+          </div>
+        </div>
+        <ToggleSwitch
+          checked={autoControl}
+          onChange={setAutoControl}
+          size="lg"
+        />
+      </div>
+
+      {/* 디바이스 3개 */}
+      <div>
+        {DEVICE_KEYS.map((key, i) => (
+          <DeviceRow
+            key={key}
+            deviceKey={key}
+            on={devices[key]}
+            disabled={autoControl}
+            onToggle={toggleDevice(key)}
+            isLast={i === DEVICE_KEYS.length - 1}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DeviceRow({ deviceKey, on, disabled, onToggle, isLast }) {
+  return (
+    <div style={{
+      padding: '11px 14px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      borderBottom: isLast ? 'none' : '0.5px solid #f0f0f0',
+      opacity: disabled ? 0.55 : 1,
+    }}>
+      <div style={{
+        width: 36, height: 36,
+        borderRadius: 10,
+        background: on ? '#ddf2e2' : '#f5f5f5',
+        color: on ? '#2ea84e' : '#aaa',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <DeviceIcon name={deviceKey} size={18} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>
+          {deviceLabels[deviceKey]}
+        </div>
+        <div style={{
+          fontSize: 10.5, fontWeight: 600, marginTop: 1,
+          color: on ? '#2ea84e' : '#aaa',
+        }}>
+          {on ? 'ON' : 'OFF'}
+        </div>
+      </div>
+      <ToggleSwitch checked={on} disabled={disabled} onChange={onToggle} />
+    </div>
+  )
+}
+
+function ToggleSwitch({ checked, disabled, onChange, size = 'md' }) {
+  const w = size === 'lg' ? 42 : 32
+  const h = size === 'lg' ? 24 : 18
+  const pad = 2
+  const knob = h - pad * 2
+
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      style={{
+        width: w, height: h,
+        borderRadius: h / 2,
+        background: disabled ? '#e0e0e0' : (checked ? '#2ea84e' : '#cfcfcf'),
+        border: 'none',
+        position: 'relative',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        padding: 0,
+        transition: 'background .2s',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{
+        position: 'absolute',
+        top: pad,
+        left: checked ? w - knob - pad : pad,
+        width: knob, height: knob,
+        borderRadius: '50%',
+        background: '#fff',
+        boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+        transition: 'left .2s',
+        display: 'block',
+      }} />
+    </button>
   )
 }
 
