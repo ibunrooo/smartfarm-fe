@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import AlertBanner from '../components/AlertBanner'
+import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
+import MetricCard from '../components/MetricCard'
+import EventLog from '../components/EventLog'
 
 const greenhouses = [
   {
@@ -74,18 +77,6 @@ const greenhouses = [
   },
 ]
 
-const tagStyle = {
-  ok:   { background: '#ddf2e2', color: '#156b2e' },
-  warn: { background: '#fff8ec', color: '#8a5c00' },
-  bad:  { background: '#fff1f1', color: '#991f1f' },
-}
-
-const dotColor = {
-  green: '#4db866',
-  amber: '#f0a500',
-  blue:  '#3b82c4',
-}
-
 const metricLabels = {
   temp:     '온도',
   humidity: '습도',
@@ -117,19 +108,17 @@ const deviceMeta = {
   )},
 }
 
+const sensorOrder = ['temp', 'humidity', 'soil', 'lux']
+
 function Home() {
   const [activeId, setActiveId] = useState('gh1')
-  const [switcherOpen, setSwitcherOpen] = useState(false)
   const [showLuxInfo, setShowLuxInfo] = useState(false)
 
   const active = greenhouses.find(g => g.id === activeId)
   const { plant, sensors, devices, autoControl, weather, logs, alert: alertData } = active
 
-  const sensorOrder = ['temp', 'humidity', 'soil', 'lux']
-
   return (
     <div>
-      {/* 알림 배너 */}
       {alertData && (
         <div style={{ margin: '-20px -40px 16px' }}>
           <AlertBanner message={alertData.message} type={alertData.type} />
@@ -138,84 +127,12 @@ function Home() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
 
-        {/* 온실 스위처 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
-          <button
-            onClick={() => setSwitcherOpen(o => !o)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 12px',
-              background: '#fff',
-              border: '0.5px solid #e8e8e8',
-              borderRadius: 10,
-              fontSize: 13, fontWeight: 600,
-              color: '#1a1a1a', cursor: 'pointer',
-              fontFamily: 'var(--ff)',
-            }}
-          >
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%',
-              background: '#2ea84e',
-            }} />
-            {active.name}
-            <span style={{ fontSize: 9, color: '#aaa', marginLeft: 2 }}>▼</span>
-          </button>
-          <button
-            onClick={() => window.alert('온실 추가 — 추후 구현')}
-            title="온실 추가"
-            style={{
-              width: 30, height: 30,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: '#f8fdf9',
-              border: '0.5px solid #ddf2e2',
-              borderRadius: 9,
-              color: '#2ea84e', fontSize: 16, fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'var(--ff)',
-            }}
-          >
-            +
-          </button>
-
-          {switcherOpen && (
-            <div style={{
-              position: 'absolute', top: 38, left: 0, zIndex: 10,
-              minWidth: 160,
-              background: '#fff',
-              border: '0.5px solid #e8e8e8',
-              borderRadius: 10,
-              boxShadow: '0 4px 16px rgba(0,0,0,.06)',
-              padding: 4,
-              display: 'flex', flexDirection: 'column',
-            }}>
-              {greenhouses.map(g => {
-                const isActive = g.id === activeId
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => { setActiveId(g.id); setSwitcherOpen(false) }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      padding: '8px 10px',
-                      background: isActive ? '#f2faf3' : 'none',
-                      border: 'none', borderRadius: 7,
-                      fontSize: 12.5, fontWeight: isActive ? 600 : 500,
-                      color: isActive ? '#1e8a3c' : '#555',
-                      cursor: 'pointer', textAlign: 'left',
-                      fontFamily: 'var(--ff)',
-                    }}
-                  >
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: isActive ? '#2ea84e' : '#ccc',
-                    }} />
-                    {g.name}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <GreenhouseSwitcher
+          greenhouses={greenhouses}
+          activeId={activeId}
+          onChange={setActiveId}
+          onAdd={() => window.alert('온실 추가 — 추후 구현')}
+        />
 
         {/* 식물 카드 (+ 날씨 미니) */}
         <div style={{
@@ -229,7 +146,6 @@ function Home() {
             background: '#4db866', borderRadius: '50%', opacity: .35,
           }} />
 
-          {/* 날씨 미니 (자리만) */}
           <div style={{
             position: 'absolute', right: 12, top: 10,
             display: 'flex', alignItems: 'center', gap: 5,
@@ -325,7 +241,7 @@ function Home() {
           </div>
         </div>
 
-        {/* 수치 카드 4개 (반응형 grid) */}
+        {/* 수치 카드 4개 */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
@@ -335,66 +251,17 @@ function Home() {
             const m = sensors[key]
             const isLux = key === 'lux'
             return (
-              <div key={key} style={{
-                background: '#f8fdf9',
-                border: '0.5px solid #ddf2e2',
-                borderRadius: 12, padding: '10px 10px 9px',
-                position: 'relative',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  fontSize: 10, fontWeight: 500, color: '#999', marginBottom: 4,
-                }}>
-                  {metricLabels[key]}
-                  {isLux && (
-                    <button
-                      onClick={() => setShowLuxInfo(v => !v)}
-                      title="조도 단위 설명"
-                      style={{
-                        width: 12, height: 12,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '0.5px solid #b4e3be',
-                        background: showLuxInfo ? '#2ea84e' : '#f8fdf9',
-                        color: showLuxInfo ? '#fff' : '#2ea84e',
-                        borderRadius: '50%',
-                        fontSize: 8, fontWeight: 700,
-                        cursor: 'pointer',
-                        fontFamily: 'var(--ff)',
-                        padding: 0,
-                        lineHeight: 1,
-                      }}
-                    >
-                      i
-                    </button>
-                  )}
-                </div>
-                <div style={{ fontSize: 19, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
-                  {m.value}
-                  <span style={{ fontSize: 11, fontWeight: 400, color: '#aaa' }}>{m.unit}</span>
-                </div>
-                <div style={{
-                  display: 'inline-block', marginTop: 5,
-                  fontSize: 9.5, fontWeight: 600,
-                  padding: '2px 6px', borderRadius: 6,
-                  ...tagStyle[m.status],
-                }}>
-                  {m.statusText}
-                </div>
-
-                {/* 조도 인포 툴팁 */}
-                {isLux && showLuxInfo && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0,
-                    marginTop: 6, zIndex: 5,
-                    background: '#1a1a1a', color: '#fff',
-                    fontSize: 10.5, lineHeight: 1.5,
-                    padding: '8px 10px', borderRadius: 8,
-                    boxShadow: '0 4px 12px rgba(0,0,0,.15)',
-                  }}>
-                    {LUX_INFO}
-                  </div>
-                )}
-              </div>
+              <MetricCard
+                key={key}
+                label={metricLabels[key]}
+                value={m.value}
+                unit={m.unit}
+                status={m.status}
+                statusText={m.statusText}
+                info={isLux ? LUX_INFO : null}
+                infoOpen={isLux && showLuxInfo}
+                onInfoToggle={isLux ? () => setShowLuxInfo(v => !v) : undefined}
+              />
             )
           })}
         </div>
@@ -439,38 +306,7 @@ function Home() {
           </div>
         </div>
 
-        {/* 이벤트 로그 */}
-        <div style={{
-          background: '#fff', border: '0.5px solid #e8e8e8',
-          borderRadius: 14, overflow: 'hidden',
-        }}>
-          <div style={{
-            padding: '9px 13px 8px',
-            borderBottom: '0.5px solid #e8e8e8',
-            fontSize: 12.5, fontWeight: 600, color: '#1a1a1a',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          }}>
-            이벤트 로그
-            <span style={{ fontSize: 11, color: '#2ea84e', fontWeight: 500 }}>전체 보기 →</span>
-          </div>
-          {logs.map((log, i) => (
-            <div key={i} style={{
-              padding: '7px 13px',
-              borderBottom: i < logs.length - 1 ? '0.5px solid #f0f0f0' : 'none',
-              display: 'flex', alignItems: 'flex-start', gap: 8,
-            }}>
-              <div style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: dotColor[log.type],
-                marginTop: 4, flexShrink: 0,
-              }} />
-              <div>
-                <div style={{ fontSize: 11.5, color: '#555', lineHeight: 1.4 }}>{log.text}</div>
-                <div style={{ fontSize: 10, color: '#aaa' }}>{log.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <EventLog logs={logs} />
 
       </div>
     </div>
