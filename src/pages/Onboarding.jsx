@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { plants, difficultyLabel, difficultyColor } from '../data/plants'
+import { plants, difficultyLabel, difficultyColor, recommendPlants } from '../data/plants'
 
 const stepDesc = {
   1: '어떤 식물을 키우고 싶으세요?',
@@ -10,12 +10,26 @@ const stepDesc = {
 
 function Onboarding() {
   const navigate = useNavigate()
+  const [mode, setMode] = useState('main')
   const [step, setStep] = useState(1)
   const [data, setData] = useState({
     plantId:  null,
     location: null,
     city:     '',
   })
+
+  if (mode === 'recommend') {
+    return (
+      <Recommend
+        onCancel={() => setMode('main')}
+        onSelect={(plantId) => {
+          setData(d => ({ ...d, plantId }))
+          setMode('main')
+          setStep(2)
+        }}
+      />
+    )
+  }
 
   const canNext = (
     (step === 1 && data.plantId) ||
@@ -69,7 +83,7 @@ function Onboarding() {
           <PlantStep
             value={data.plantId}
             onChange={(id) => setData(d => ({ ...d, plantId: id }))}
-            onUnsure={() => window.alert('식물 추천 — 다음 커밋에서 구현')}
+            onUnsure={() => setMode('recommend')}
           />
         )}
         {step === 2 && (
@@ -390,6 +404,294 @@ function OutdoorIcon() {
       <path d="M11 2v2.5M11 17.5V20M2 11h2.5M17.5 11H20M4.6 4.6l1.8 1.8M15.6 15.6l1.8 1.8M4.6 17.4l1.8-1.8M15.6 6.4l1.8-1.8"
         stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────
+   추천 흐름: Survey → Loading → Result
+   ───────────────────────────────────────────────────────── */
+
+function Recommend({ onCancel, onSelect }) {
+  const [phase, setPhase] = useState('survey')
+  const [answers, setAnswers] = useState({ experience: null, sunlight: null })
+  const [results, setResults] = useState([])
+  const [picked, setPicked] = useState(null)
+
+  const handleStart = () => {
+    setPhase('loading')
+    setTimeout(() => {
+      const recs = recommendPlants(answers)
+      setResults(recs)
+      setPicked(recs[0]?.id ?? null)
+      setPhase('result')
+    }, 1500)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 640, margin: '0 auto' }}>
+      <button
+        onClick={onCancel}
+        style={{
+          alignSelf: 'flex-start',
+          padding: '6px 0',
+          background: 'none', border: 'none',
+          fontSize: 12, color: '#666', fontWeight: 500,
+          cursor: 'pointer',
+          fontFamily: 'var(--ff)',
+        }}
+      >
+        ← 직접 선택으로
+      </button>
+
+      <div style={{ padding: '0 2px' }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
+          식물 추천
+        </div>
+        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+          {phase === 'survey'  && '몇 가지만 알려주세요. 맞춤 식물을 추천해드릴게요.'}
+          {phase === 'loading' && '취향에 맞는 식물을 찾고 있어요…'}
+          {phase === 'result'  && '이 식물들을 추천해요.'}
+        </div>
+      </div>
+
+      {phase === 'survey'  && <Survey  answers={answers} onChange={setAnswers} onSubmit={handleStart} />}
+      {phase === 'loading' && <RecommendSkeleton />}
+      {phase === 'result'  && (
+        <RecommendResult
+          results={results}
+          picked={picked}
+          onPick={setPicked}
+          onConfirm={() => picked && onSelect(picked)}
+          onRetry={() => setPhase('survey')}
+        />
+      )}
+    </div>
+  )
+}
+
+const surveyOptions = {
+  experience: [
+    { id: 'beginner',     label: '처음이에요',  desc: '식물 키우기 입문' },
+    { id: 'intermediate', label: '조금 해봤어요', desc: '몇 번 키워봤음' },
+    { id: 'advanced',     label: '능숙해요',     desc: '여러 작물 경험' },
+  ],
+  sunlight: [
+    { id: 'high', label: '햇빛이 잘 들어요', desc: '하루 4시간 이상' },
+    { id: 'low',  label: '햇빛이 부족해요',  desc: '실내 / 음지' },
+  ],
+}
+
+function Survey({ answers, onChange, onSubmit }) {
+  const canSubmit = answers.experience && answers.sunlight
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <SurveyQuestion
+        title="식물 키우기 경험은?"
+        options={surveyOptions.experience}
+        value={answers.experience}
+        onChange={(id) => onChange(a => ({ ...a, experience: id }))}
+      />
+      <SurveyQuestion
+        title="햇빛은 어떤가요?"
+        options={surveyOptions.sunlight}
+        value={answers.sunlight}
+        onChange={(id) => onChange(a => ({ ...a, sunlight: id }))}
+      />
+
+      <button
+        onClick={onSubmit}
+        disabled={!canSubmit}
+        style={{
+          padding: '12px',
+          background: canSubmit ? '#2ea84e' : '#cfe7d4',
+          border: 'none',
+          borderRadius: 10,
+          fontSize: 13, fontWeight: 700,
+          color: '#fff',
+          cursor: canSubmit ? 'pointer' : 'not-allowed',
+          fontFamily: 'var(--ff)',
+        }}
+      >
+        추천 받기 →
+      </button>
+    </div>
+  )
+}
+
+function SurveyQuestion({ title, options, value, onChange }) {
+  return (
+    <div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
+        {title}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+        {options.map(opt => {
+          const selected = value === opt.id
+          return (
+            <button
+              key={opt.id}
+              onClick={() => onChange(opt.id)}
+              style={{
+                padding: '12px 14px',
+                background: selected ? '#f2faf3' : '#fff',
+                border: `1px solid ${selected ? '#2ea84e' : '#e8e8e8'}`,
+                borderRadius: 12,
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a' }}>
+                {opt.label}
+              </div>
+              <div style={{ fontSize: 10.5, color: '#888', marginTop: 2 }}>
+                {opt.desc}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function RecommendSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} className="skeleton" style={{
+          padding: 14,
+          background: '#f5f5f5',
+          border: '0.5px solid #ececec',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: '#e8e8e8' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ height: 12, background: '#e8e8e8', borderRadius: 4, width: '40%' }} />
+            <div style={{ height: 10, background: '#ececec', borderRadius: 4, width: '80%' }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {results.map((p, i) => {
+        const selected = picked === p.id
+        const diff = difficultyColor[p.difficulty]
+        return (
+          <button
+            key={p.id}
+            onClick={() => onPick(p.id)}
+            style={{
+              padding: 14,
+              background: selected ? '#f2faf3' : '#fff',
+              border: `1px solid ${selected ? '#2ea84e' : '#e8e8e8'}`,
+              borderRadius: 12,
+              display: 'flex', alignItems: 'center', gap: 12,
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              textAlign: 'left',
+              position: 'relative',
+            }}
+          >
+            <div style={{
+              width: 48, height: 48,
+              background: p.color,
+              borderRadius: 12,
+              color: '#fff',
+              fontSize: 19, fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {p.name[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {i === 0 && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700,
+                    padding: '2px 6px', borderRadius: 5,
+                    background: '#2ea84e', color: '#fff',
+                  }}>
+                    BEST
+                  </span>
+                )}
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a' }}>
+                  {p.name}
+                </span>
+                <span style={{
+                  fontSize: 9.5, fontWeight: 600,
+                  padding: '1px 6px', borderRadius: 6,
+                  background: diff.bg, color: diff.fg,
+                }}>
+                  {difficultyLabel[p.difficulty]}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4, lineHeight: 1.45 }}>
+                {p.recommendReason}
+              </div>
+            </div>
+            {selected && (
+              <div style={{
+                position: 'absolute', top: 10, right: 10,
+                width: 18, height: 18, borderRadius: '50%',
+                background: '#2ea84e',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <svg width="10" height="10" viewBox="0 0 8 8">
+                  <path d="M1.5 4l1.5 1.5L6.5 2"
+                    stroke="#fff" strokeWidth="1.5" fill="none"
+                    strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
+          </button>
+        )
+      })}
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <button
+          onClick={onRetry}
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: '#fff',
+            border: '0.5px solid #ddd',
+            borderRadius: 10,
+            fontSize: 13, fontWeight: 600,
+            color: '#666',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+          }}
+        >
+          다시 답하기
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={!picked}
+          style={{
+            flex: 2,
+            padding: '12px',
+            background: picked ? '#2ea84e' : '#cfe7d4',
+            border: 'none',
+            borderRadius: 10,
+            fontSize: 13, fontWeight: 700,
+            color: '#fff',
+            cursor: picked ? 'pointer' : 'not-allowed',
+            fontFamily: 'var(--ff)',
+          }}
+        >
+          이 식물로 등록 →
+        </button>
+      </div>
+    </div>
   )
 }
 
