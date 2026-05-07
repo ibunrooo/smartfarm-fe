@@ -6,7 +6,7 @@ function Home() {
   const navigate = useNavigate()
   const myGreenhouses = greenhouses
 
-  const goAdd = () => window.alert('식물 추가 — 추후 구현')
+  const goAdd = () => navigate('/onboarding')
 
   if (myGreenhouses.length === 0) {
     return <EmptyState onAdd={goAdd} />

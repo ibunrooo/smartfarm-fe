@@ -4,7 +4,7 @@ import Home from './pages/Home'
 import Sensor from './pages/Sensor'
 import AIChat from './pages/AIChat'
 import Analysis from './pages/Analysis'
-import Settings from './pages/Settings'
+import Onboarding from './pages/Onboarding'
 import './index.css'
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
           <Route path="sensor"   element={<Sensor />} />
           <Route path="ai"       element={<AIChat />} />
           <Route path="analysis" element={<Analysis />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="onboarding" element={<Onboarding />} />
         </Route>
       </Routes>
     </BrowserRouter>
