@@ -4,14 +4,18 @@ const tagStyle = {
   bad:  { background: '#fff1f1', color: '#991f1f' },
 }
 
-function MetricCard({ label, value, unit, status, statusText, info, infoOpen, onInfoToggle }) {
+function MetricCard({ label, value, unit, status, statusText, info, infoOpen, onInfoToggle, onClick }) {
   return (
-    <div style={{
-      background: '#f8fdf9',
-      border: '0.5px solid #ddf2e2',
-      borderRadius: 12, padding: '10px 10px 9px',
-      position: 'relative',
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: '#f8fdf9',
+        border: '0.5px solid #ddf2e2',
+        borderRadius: 12, padding: '10px 10px 9px',
+        position: 'relative',
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 4,
         fontSize: 10, fontWeight: 500, color: '#999', marginBottom: 4,
@@ -19,7 +23,7 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
         {label}
         {info && (
           <button
-            onClick={onInfoToggle}
+            onClick={(e) => { e.stopPropagation(); onInfoToggle?.() }}
             title={`${label} 단위 설명`}
             style={{
               width: 12, height: 12,
