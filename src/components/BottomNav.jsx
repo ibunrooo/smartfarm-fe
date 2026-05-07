@@ -1,7 +1,7 @@
 function BottomNav({ navItems, currentPath, navigate }) {
   return (
     <nav className="bottom-nav" style={{
-      gridTemplateColumns: 'repeat(5, 1fr)',
+      gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
       background: '#fff',
       borderTop: '0.5px solid #e8e8e8',
       padding: '8px 0 10px',

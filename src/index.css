@@ -48,3 +48,12 @@ body {
   background: #f2faf3;
   color: #2ea84e;
 }
+
+/* 스켈레톤 로딩 */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+.skeleton {
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
