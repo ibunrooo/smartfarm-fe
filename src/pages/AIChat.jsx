@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
+import DailyReportCard from '../components/DailyReportCard'
+import { dailyReports } from '../data/dailyReports'
 
 const initialMessages = [
-  { id: 1, sender: 'ai',   text: '안녕하세요! 팜-므파탈 도우미예요.', time: '08:30', date: '2026-05-08' },
-  { id: 2, sender: 'ai',   text: '오늘 상추 온실 상태를 살펴봤어요. 토양 수분이 임계치 근처라 곧 자동 관수가 실행될 거예요.', time: '08:30', date: '2026-05-08' },
-  { id: 3, sender: 'user', text: '잎 끝이 좀 마른 것 같던데 괜찮을까요?',                                     time: '08:32', date: '2026-05-08' },
-  { id: 4, sender: 'ai',   text: '습도가 55%로 평소보다 다소 높아요. 통풍을 늘리면 도움이 될 거예요. 환기팬이 자동으로 켜져 있어요.', time: '08:32', date: '2026-05-08' },
-  { id: 5, sender: 'user', text: '그럼 일단 지켜볼게요. 고마워요!', time: '08:35', date: '2026-05-08' },
-  { id: 6, sender: 'ai',   text: '네, 변동이 있으면 바로 알려드릴게요.', time: '08:35', date: '2026-05-08' },
+  { id: 1, sender: 'ai',   type: 'text',   text: '안녕하세요! 팜-므파탈 도우미예요.',                                                                  time: '08:30', date: '2026-05-08' },
+  { id: 2, sender: 'ai',   type: 'text',   text: '오늘의 일일 리포트를 보내드릴게요.',                                                                 time: '08:30', date: '2026-05-08' },
+  { id: 3, sender: 'ai',   type: 'report', report: dailyReports[0],                                                                                    time: '08:30', date: '2026-05-08' },
+  { id: 4, sender: 'user', type: 'text',   text: '잎 끝이 좀 마른 것 같던데 괜찮을까요?',                                                              time: '08:32', date: '2026-05-08' },
+  { id: 5, sender: 'ai',   type: 'text',   text: '습도가 55%로 평소보다 다소 높아요. 통풍을 늘리면 도움이 될 거예요. 환기팬이 자동으로 켜져 있어요.',  time: '08:32', date: '2026-05-08' },
+  { id: 6, sender: 'user', type: 'text',   text: '그럼 일단 지켜볼게요. 고마워요!',                                                                    time: '08:35', date: '2026-05-08' },
+  { id: 7, sender: 'ai',   type: 'text',   text: '네, 변동이 있으면 바로 알려드릴게요.',                                                                time: '08:35', date: '2026-05-08' },
 ]
 
 function AIChat() {
@@ -27,7 +30,7 @@ function AIChat() {
     const date = now.toISOString().slice(0, 10)
     setMessages(prev => [
       ...prev,
-      { id: Date.now(), sender: 'user', text: trimmed, time, date },
+      { id: Date.now(), sender: 'user', type: 'text', text: trimmed, time, date },
     ])
     setDraft('')
   }
@@ -215,19 +218,28 @@ function ChatMessage({ message, showAvatar }) {
           <BotPlantIcon size={16} />
         </div>
       )}
-      <div style={{
-        maxWidth: '75%',
-        padding: '8px 12px',
-        background: '#fff',
-        border: '0.5px solid #e8e8e8',
-        color: '#1a1a1a',
-        borderRadius: '16px 16px 16px 4px',
-        fontSize: 12.5,
-        lineHeight: 1.45,
-        wordBreak: 'break-word',
-      }}>
-        {message.text}
-      </div>
+      {message.type === 'report' ? (
+        <div style={{ maxWidth: '85%', minWidth: 0 }}>
+          <DailyReportCard
+            report={message.report}
+            onShowDetail={() => window.alert('상세 리포트 — 추후 구현')}
+          />
+        </div>
+      ) : (
+        <div style={{
+          maxWidth: '75%',
+          padding: '8px 12px',
+          background: '#fff',
+          border: '0.5px solid #e8e8e8',
+          color: '#1a1a1a',
+          borderRadius: '16px 16px 16px 4px',
+          fontSize: 12.5,
+          lineHeight: 1.45,
+          wordBreak: 'break-word',
+        }}>
+          {message.text}
+        </div>
+      )}
       <span style={{ fontSize: 9.5, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
     </div>
   )
