@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
-import { greenhouses } from '../data/greenhouses'
+import SensorMetricCard from '../components/SensorMetricCard'
+import { greenhouses, metricLabels, sensorOrder } from '../data/greenhouses'
+import { generateHistory } from '../data/sensorHistory'
 
 const modeOptions = [
   { id: 'virtual', label: '가상' },
@@ -10,6 +12,17 @@ const modeOptions = [
 function Sensor() {
   const [activeId, setActiveId] = useState('gh1')
   const [sensorMode, setSensorMode] = useState('virtual')
+
+  const active = greenhouses.find(g => g.id === activeId)
+
+  const histories = useMemo(() => (
+    Object.fromEntries(
+      sensorOrder.map(key => [
+        key,
+        generateHistory(activeId, key, active.sensors[key].value),
+      ])
+    )
+  ), [activeId, active])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
@@ -78,8 +91,30 @@ function Sensor() {
         </span>
       </div>
 
+      {/* 실시간 센서 4종 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 10,
+      }}>
+        {sensorOrder.map(key => {
+          const m = active.sensors[key]
+          return (
+            <SensorMetricCard
+              key={key}
+              id={`${activeId}-${key}`}
+              label={metricLabels[key]}
+              value={m.value}
+              unit={m.unit}
+              status={m.status}
+              statusText={m.statusText}
+              history={histories[key]}
+            />
+          )
+        })}
+      </div>
+
       {/* 다음 단계에서 채울 영역들 */}
-      <SectionPlaceholder title="실시간 센서 (4종)" hint="온도 / 습도 / 토양수분 / 조도 + 시계열 차트" />
       <SectionPlaceholder title="디바이스 제어"     hint="펌프 / 환기팬 / LED 토글 + 자동제어 스위치" />
       <SectionPlaceholder title="이벤트 로그 (전체)" hint="필터 + 페이지네이션" />
 
