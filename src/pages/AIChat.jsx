@@ -22,6 +22,14 @@ function AIChat() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('SW 등록 실패:', err)
+      })
+    }
+  }, [])
+
   const handleSend = () => {
     const trimmed = draft.trim()
     if (!trimmed) return
@@ -77,6 +85,8 @@ function AIChat() {
           </div>
         </div>
       </div>
+
+      <NotificationBanner />
 
       {/* 메시지 영역 */}
       <div ref={scrollRef} style={{
@@ -242,6 +252,75 @@ function ChatMessage({ message, showAvatar }) {
       )}
       <span style={{ fontSize: 9.5, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
     </div>
+  )
+}
+
+function NotificationBanner() {
+  const supported = typeof Notification !== 'undefined'
+  const [permission, setPermission] = useState(supported ? Notification.permission : 'unsupported')
+
+  if (!supported || permission !== 'default') return null
+
+  const handleEnable = async () => {
+    try {
+      const result = await Notification.requestPermission()
+      setPermission(result)
+      if (result === 'granted') {
+        new Notification('팜-므파탈', {
+          body: '알림이 켜졌어요. 일일 리포트와 긴급 알림을 보내드릴게요.',
+          icon: '/favicon.svg',
+        })
+      }
+    } catch (err) {
+      console.warn('알림 권한 요청 실패:', err)
+    }
+  }
+
+  return (
+    <div style={{
+      padding: '10px 14px',
+      borderBottom: '0.5px solid #ddf2e2',
+      background: '#f8fdf9',
+      display: 'flex', alignItems: 'center', gap: 10,
+      flexShrink: 0,
+    }}>
+      <BellSmallIcon />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1e8a3c' }}>
+          알림 받기
+        </div>
+        <div style={{ fontSize: 10.5, color: '#666', marginTop: 1, lineHeight: 1.4 }}>
+          매일의 일일 리포트와 긴급 알림을 받아보세요.
+        </div>
+      </div>
+      <button
+        onClick={handleEnable}
+        style={{
+          padding: '7px 12px',
+          background: '#2ea84e',
+          border: 'none',
+          borderRadius: 8,
+          fontSize: 11, fontWeight: 700,
+          color: '#fff',
+          cursor: 'pointer',
+          fontFamily: 'var(--ff)',
+          flexShrink: 0,
+        }}
+      >
+        알림 켜기
+      </button>
+    </div>
+  )
+}
+
+function BellSmallIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M4.5 12.5V8a4.5 4.5 0 019 0v4.5l1.5 1.5h-12l1.5-1.5z"
+        stroke="#2ea84e" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+      <path d="M7 15a2 2 0 004 0"
+        stroke="#2ea84e" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
   )
 }
 
