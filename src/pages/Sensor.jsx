@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
@@ -15,10 +16,14 @@ const modeOptions = [
 ]
 
 function Sensor() {
-  const [activeId, setActiveId] = useState('gh1')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [sensorMode, setSensorMode] = useState('virtual')
 
-  const active = greenhouses.find(g => g.id === activeId)
+  const requestedId = searchParams.get('gh')
+  const active = greenhouses.find(g => g.id === requestedId) ?? greenhouses[0]
+  const activeId = active.id
+
+  const setActiveId = (id) => setSearchParams({ gh: id })
 
   const histories = useMemo(() => (
     Object.fromEntries(
