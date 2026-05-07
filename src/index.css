@@ -57,3 +57,8 @@ body {
 .skeleton {
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
+
+/* 스피너 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
