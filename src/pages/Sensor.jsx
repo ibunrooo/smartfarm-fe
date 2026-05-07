@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
+import SensorEventLog from '../components/SensorEventLog'
 import { DeviceIcon } from '../components/Device'
 import { DEVICE_KEYS, deviceLabels } from '../data/devices'
 import { greenhouses, metricLabels, sensorOrder } from '../data/greenhouses'
 import { generateHistory } from '../data/sensorHistory'
+import { generateLogs } from '../data/eventLogs'
 
 const modeOptions = [
   { id: 'virtual', label: '가상' },
@@ -25,6 +27,8 @@ function Sensor() {
       ])
     )
   ), [activeId, active])
+
+  const logs = useMemo(() => generateLogs(activeId, 32), [activeId])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
@@ -123,8 +127,8 @@ function Sensor() {
         initialAutoControl={active.autoControl}
       />
 
-      {/* 다음 단계에서 채울 영역 */}
-      <SectionPlaceholder title="이벤트 로그 (전체)" hint="필터 + 페이지네이션" />
+      {/* 이벤트 로그 (전체) */}
+      <SensorEventLog logs={logs} />
 
     </div>
   )
@@ -256,25 +260,6 @@ function ToggleSwitch({ checked, disabled, onChange, size = 'md' }) {
         display: 'block',
       }} />
     </button>
-  )
-}
-
-function SectionPlaceholder({ title, hint }) {
-  return (
-    <div style={{
-      background: '#fafafa',
-      border: '0.5px dashed #d0d0d0',
-      borderRadius: 14,
-      padding: '24px 16px',
-      textAlign: 'center',
-    }}>
-      <div style={{ fontSize: 12.5, fontWeight: 600, color: '#666', marginBottom: 4 }}>
-        {title}
-      </div>
-      <div style={{ fontSize: 10.5, color: '#aaa' }}>
-        {hint}
-      </div>
-    </div>
   )
 }
 

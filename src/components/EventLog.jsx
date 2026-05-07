@@ -1,8 +1,4 @@
-const dotColor = {
-  green: '#4db866',
-  amber: '#f0a500',
-  blue:  '#3b82c4',
-}
+import { categoryDotColor } from '../data/eventLogs'
 
 function EventLog({ logs, title = '이벤트 로그', showAllLink = true, onShowAll }) {
   return (
@@ -39,7 +35,7 @@ function EventLog({ logs, title = '이벤트 로그', showAllLink = true, onShow
         }}>
           <div style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: dotColor[log.type],
+            background: categoryDotColor[log.category],
             marginTop: 4, flexShrink: 0,
           }} />
           <div>
