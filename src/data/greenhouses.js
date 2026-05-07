@@ -80,4 +80,28 @@ export const greenhouses = [
     ],
     alert: { message: '오후 조도가 낮아 LED 보광 중입니다', type: 'warn' },
   },
+  {
+    id: 'gh4',
+    name: '고추 온실',
+    plant: {
+      name: '청양고추',
+      sub: '실외 · 서울 · 등록 45일째',
+      status: '온도 위험 — 환기 가동 중',
+    },
+    sensors: {
+      temp:     { value: 38,    unit: '°C',  status: 'bad',  statusText: '위험' },
+      humidity: { value: 35,    unit: '%',   status: 'warn', statusText: '낮음' },
+      soil:     { value: 52,    unit: '%',   status: 'ok',   statusText: '적정' },
+      lux:      { value: 18000, unit: 'lux', status: 'ok',   statusText: '적정' },
+    },
+    devices: { pump: false, fan: true, led: false },
+    autoControl: true,
+    weather: { temp: 32, sky: 'sunny', summary: '맑음' },
+    logs: [
+      { category: 'alert', text: '온도 이상 감지 (38°C)', time: '14:42' },
+      { category: 'fan',   text: '환기팬 자동 가동',       time: '14:42' },
+      { category: 'water', text: '추가 관수 실행',          time: '14:30' },
+    ],
+    alert: { message: '온도가 임계 수준에 도달했어요 (38°C)', type: 'danger' },
+  },
 ]

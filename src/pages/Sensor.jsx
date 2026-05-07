@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
 import SensorEventLog from '../components/SensorEventLog'
@@ -75,6 +76,15 @@ function Sensor() {
           })}
         </div>
       </div>
+
+      {/* 긴급/주의 알림 */}
+      {active.alert && (
+        <AlertBanner
+          message={active.alert.message}
+          type={active.alert.type}
+          variant="card"
+        />
+      )}
 
       {/* 모드 안내 */}
       <div style={{
