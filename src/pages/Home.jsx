@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import MetricCard from '../components/MetricCard'
@@ -8,11 +9,14 @@ import { deviceLabels } from '../data/devices'
 import { greenhouses, metricLabels, sensorOrder, LUX_INFO } from '../data/greenhouses'
 
 function Home() {
+  const navigate = useNavigate()
   const [activeId, setActiveId] = useState('gh1')
   const [showLuxInfo, setShowLuxInfo] = useState(false)
 
   const active = greenhouses.find(g => g.id === activeId)
   const { plant, sensors, devices, autoControl, weather, logs, alert: alertData } = active
+
+  const goSensor = () => navigate('/sensor')
 
   return (
     <div>
@@ -90,11 +94,16 @@ function Home() {
           </div>
         </div>
 
-        {/* 디바이스 뱃지 + 자동제어 */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          flexWrap: 'wrap',
-        }}>
+        {/* 디바이스 뱃지 + 자동제어 — 클릭 시 Sensor로 */}
+        <div
+          onClick={goSensor}
+          title="센서 페이지로 이동"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            flexWrap: 'wrap',
+            cursor: 'pointer',
+          }}
+        >
           {Object.entries(devices).map(([key, on]) => (
             <div key={key} style={{
               display: 'flex', alignItems: 'center', gap: 5,
@@ -155,16 +164,22 @@ function Home() {
                 info={isLux ? LUX_INFO : null}
                 infoOpen={isLux && showLuxInfo}
                 onInfoToggle={isLux ? () => setShowLuxInfo(v => !v) : undefined}
+                onClick={goSensor}
               />
             )
           })}
         </div>
 
-        {/* 차트 */}
-        <div style={{
-          background: '#f8fdf9', border: '0.5px solid #ddf2e2',
-          borderRadius: 14, padding: '12px 13px',
-        }}>
+        {/* 차트 — 클릭 시 Sensor로 */}
+        <div
+          onClick={goSensor}
+          title="센서 페이지로 이동"
+          style={{
+            background: '#f8fdf9', border: '0.5px solid #ddf2e2',
+            borderRadius: 14, padding: '12px 13px',
+            cursor: 'pointer',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 }}>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: '#1a1a1a' }}>토양 수분 (24h)</span>
             <span style={{
@@ -200,7 +215,7 @@ function Home() {
           </div>
         </div>
 
-        <EventLog logs={logs} />
+        <EventLog logs={logs} onShowAll={goSensor} />
 
       </div>
     </div>
