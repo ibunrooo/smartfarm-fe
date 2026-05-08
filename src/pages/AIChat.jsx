@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import DailyReportCard from '../components/DailyReportCard'
+import DailyReportDetail from '../components/DailyReportDetail'
 import { dailyReports } from '../data/dailyReports'
 
 const initialMessages = [
@@ -15,6 +16,7 @@ const initialMessages = [
 function AIChat() {
   const [messages, setMessages] = useState(initialMessages)
   const [draft, setDraft] = useState('')
+  const [activeReport, setActiveReport] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -94,7 +96,7 @@ function AIChat() {
         background: '#f5f7f5',
         padding: '12px 14px',
       }}>
-        {renderWithDateDividers(messages)}
+        {renderWithDateDividers(messages, setActiveReport)}
       </div>
 
       {/* 입력바 */}
@@ -144,11 +146,16 @@ function AIChat() {
           <SendIcon />
         </button>
       </div>
+
+      <DailyReportDetail
+        report={activeReport}
+        onClose={() => setActiveReport(null)}
+      />
     </div>
   )
 }
 
-function renderWithDateDividers(messages) {
+function renderWithDateDividers(messages, onShowReport) {
   const out = []
   let lastDate = null
   let lastSender = null
@@ -164,6 +171,7 @@ function renderWithDateDividers(messages) {
         key={m.id}
         message={m}
         showAvatar={m.sender === 'ai' && lastSender !== 'ai'}
+        onShowReport={onShowReport}
       />
     )
     lastSender = m.sender
@@ -186,7 +194,7 @@ function DateDivider({ date }) {
   )
 }
 
-function ChatMessage({ message, showAvatar }) {
+function ChatMessage({ message, showAvatar, onShowReport }) {
   const isUser = message.sender === 'user'
 
   if (isUser) {
@@ -232,7 +240,7 @@ function ChatMessage({ message, showAvatar }) {
         <div style={{ maxWidth: '85%', minWidth: 0 }}>
           <DailyReportCard
             report={message.report}
-            onShowDetail={() => window.alert('상세 리포트 — 추후 구현')}
+            onShowDetail={() => onShowReport?.(message.report)}
           />
         </div>
       ) : (
