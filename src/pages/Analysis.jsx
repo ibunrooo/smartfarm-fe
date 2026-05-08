@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { diseases, severityStyle } from '../data/diseases'
+import { severityStyle } from '../data/diseases'
+import { predictDisease } from '../api/disease'
 
 function Analysis() {
   const [phase, setPhase] = useState('upload')
   const [imageUrl, setImageUrl] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
   const [result, setResult] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
   const fileInputRef = useRef(null)
 
   useEffect(() => () => {
@@ -19,24 +22,34 @@ function Analysis() {
     if (!file) return
     if (imageUrl) URL.revokeObjectURL(imageUrl)
     setImageUrl(URL.createObjectURL(file))
+    setSelectedFile(file)
     setResult(null)
+    setErrorMsg(null)
     setPhase('preview')
   }
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!selectedFile) return
+    setErrorMsg(null)
     setPhase('loading')
-    setTimeout(() => {
-      const disease = diseases[Math.floor(Math.random() * diseases.length)]
-      const confidence = 75 + Math.floor(Math.random() * 21)
-      setResult({ disease, confidence })
+    try {
+      const data = await predictDisease(selectedFile)
+      if (!data) throw new Error('분석 결과를 받지 못했어요.')
+      setResult(data)
       setPhase('result')
-    }, 1800)
+    } catch (err) {
+      console.error('이미지 분석 실패:', err)
+      setErrorMsg(err.message || '분석 중 오류가 발생했어요.')
+      setPhase('preview')
+    }
   }
 
   const handleReset = () => {
     if (imageUrl) URL.revokeObjectURL(imageUrl)
     setImageUrl(null)
+    setSelectedFile(null)
     setResult(null)
+    setErrorMsg(null)
     setPhase('upload')
   }
 
@@ -67,6 +80,7 @@ function Analysis() {
           imageUrl={imageUrl}
           onReselect={triggerSelect}
           onAnalyze={handleAnalyze}
+          errorMsg={errorMsg}
         />
       )}
       {phase === 'loading' && <LoadingView imageUrl={imageUrl} />}
@@ -117,10 +131,24 @@ function UploadCard({ onClick }) {
   )
 }
 
-function Preview({ imageUrl, onReselect, onAnalyze }) {
+function Preview({ imageUrl, onReselect, onAnalyze, errorMsg }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <ImageBox src={imageUrl} />
+      {errorMsg && (
+        <div style={{
+          padding: '10px 12px',
+          background: '#fff1f1',
+          border: '0.5px solid #fcc',
+          borderRadius: 10,
+          fontSize: 13, color: '#991f1f', lineHeight: 1.5,
+          display: 'flex', alignItems: 'center', gap: 7,
+        }}>
+          <span style={{ fontWeight: 700 }}>분석 실패</span>
+          <span style={{ opacity: .4 }}>·</span>
+          <span>{errorMsg}</span>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={onReselect}
