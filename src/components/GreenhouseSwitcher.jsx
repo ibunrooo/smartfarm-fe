@@ -23,25 +23,27 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
           width: 7, height: 7, borderRadius: '50%',
           background: active.plant?.theme?.main ?? '#2ea84e',
         }} />
-        {active.name}
+        {active.plant?.name ?? active.name}
         <span style={{ fontSize: 9, color: '#aaa', marginLeft: 2 }}>▼</span>
       </button>
-      <button
-        onClick={onAdd}
-        title="온실 추가"
-        style={{
-          width: 30, height: 30,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: '#f8fdf9',
-          border: '0.5px solid #ddf2e2',
-          borderRadius: 9,
-          color: '#2ea84e', fontSize: 16, fontWeight: 500,
-          cursor: 'pointer',
-          fontFamily: 'var(--ff)',
-        }}
-      >
-        +
-      </button>
+      {onAdd && (
+        <button
+          onClick={onAdd}
+          title="온실 추가"
+          style={{
+            width: 30, height: 30,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: '#f8fdf9',
+            border: '0.5px solid #ddf2e2',
+            borderRadius: 9,
+            color: '#2ea84e', fontSize: 16, fontWeight: 500,
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+          }}
+        >
+          +
+        </button>
+      )}
 
       {open && (
         <div style={{
@@ -75,7 +77,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
                   width: 6, height: 6, borderRadius: '50%',
                   background: g.plant?.theme?.main ?? (isActive ? '#2ea84e' : '#ccc'),
                 }} />
-                {g.name}
+                {g.plant?.name ?? g.name}
               </button>
             )
           })}

@@ -45,7 +45,6 @@ function Sensor() {
           greenhouses={greenhouses}
           activeId={activeId}
           onChange={setActiveId}
-          onAdd={() => window.alert('온실 추가 — 추후 구현')}
         />
         <div style={{ flex: 1 }} />
 
