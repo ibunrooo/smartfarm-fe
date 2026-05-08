@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { plants, difficultyLabel, difficultyColor, recommendPlants } from '../data/plants'
+import { upsertGreenhouse } from '../api/greenhouse'
+import { addGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
+
+// 도시 → lat/lon 매핑 (추후 확장 / 동적 geocoding 가능)
+const DEFAULT_LAT_LON = { lat: 37.5665, lon: 126.9780 } // 서울
 
 const stepDesc = {
   1: '어떤 식물을 키우고 싶으세요?',
@@ -12,6 +17,8 @@ function Onboarding() {
   const navigate = useNavigate()
   const [mode, setMode] = useState('main')
   const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [data, setData] = useState({
     plantId:  null,
     location: null,
@@ -45,10 +52,28 @@ function Onboarding() {
     if (step > 1) setStep(step - 1)
     else navigate('/home')
   }
-  const handleSubmit = () => {
-    const plant = plants.find(p => p.id === data.plantId)
-    window.alert(`등록 완료\n식물: ${plant?.name}\n환경: ${data.location === 'indoor' ? '실내' : '실외'}\n위치: ${data.city}\n\n(추후 백엔드 연동)`)
-    navigate('/home')
+  const handleSubmit = async () => {
+    if (submitting) return
+    setSubmitting(true)
+    setSubmitError(null)
+    const newId = `gh-${Date.now()}`
+    try {
+      await upsertGreenhouse({
+        greenhouseId: newId,
+        plantType:    data.plantId,
+        locationType: data.location,
+        useSensor:    true,
+        lat:          DEFAULT_LAT_LON.lat,
+        lon:          DEFAULT_LAT_LON.lon,
+      })
+      addGreenhouseId(newId)
+      setActiveGreenhouseId(newId)
+      navigate('/home')
+    } catch (err) {
+      console.error('온실 등록 실패:', err)
+      setSubmitError(err.message || '등록 중 오류가 발생했어요.')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -101,11 +126,27 @@ function Onboarding() {
         )}
       </div>
 
+      {submitError && (
+        <div style={{
+          padding: '10px 12px',
+          background: '#fff1f1',
+          border: '0.5px solid #fcc',
+          borderRadius: 10,
+          fontSize: 13, color: '#991f1f', lineHeight: 1.5,
+          display: 'flex', alignItems: 'center', gap: 7,
+        }}>
+          <span style={{ fontWeight: 700 }}>등록 실패</span>
+          <span style={{ opacity: .4 }}>·</span>
+          <span>{submitError}</span>
+        </div>
+      )}
+
       {/* 액션 버튼 */}
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         {step > 1 && (
           <button
             onClick={goPrev}
+            disabled={submitting}
             style={{
               flex: 1,
               padding: '12px',
@@ -114,8 +155,9 @@ function Onboarding() {
               borderRadius: 10,
               fontSize: 14, fontWeight: 600,
               color: '#666',
-              cursor: 'pointer',
+              cursor: submitting ? 'not-allowed' : 'pointer',
               fontFamily: 'var(--ff)',
+              opacity: submitting ? 0.5 : 1,
             }}
           >
             이전
@@ -123,20 +165,20 @@ function Onboarding() {
         )}
         <button
           onClick={goNext}
-          disabled={!canNext}
+          disabled={!canNext || submitting}
           style={{
             flex: 2,
             padding: '12px',
-            background: canNext ? '#2ea84e' : '#cfe7d4',
+            background: (canNext && !submitting) ? '#2ea84e' : '#cfe7d4',
             border: 'none',
             borderRadius: 10,
             fontSize: 14, fontWeight: 700,
             color: '#fff',
-            cursor: canNext ? 'pointer' : 'not-allowed',
+            cursor: (canNext && !submitting) ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--ff)',
           }}
         >
-          {step === 3 ? '등록하기' : '다음 →'}
+          {step === 3 ? (submitting ? '등록 중…' : '등록하기') : '다음 →'}
         </button>
       </div>
     </div>
