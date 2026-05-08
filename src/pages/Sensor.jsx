@@ -67,7 +67,7 @@ function Sensor() {
                   borderRadius: 8,
                   background: isActive ? '#fff' : 'transparent',
                   color: isActive ? '#1a1a1a' : '#999',
-                  fontSize: 12, fontWeight: isActive ? 700 : 500,
+                  fontSize: 13.5, fontWeight: isActive ? 700 : 500,
                   cursor: 'pointer',
                   fontFamily: 'var(--ff)',
                   boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.06)' : 'none',
@@ -96,7 +96,7 @@ function Sensor() {
         background: sensorMode === 'virtual' ? '#fff8ec' : '#f2faf3',
         border: `0.5px solid ${sensorMode === 'virtual' ? '#fde8b0' : '#b4e3be'}`,
         borderRadius: 10,
-        fontSize: 11.5,
+        fontSize: 13,
         color: sensorMode === 'virtual' ? '#8a5c00' : '#1e8a3c',
         display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
       }}>
@@ -171,10 +171,10 @@ function DeviceControlPanel({ initialDevices, initialAutoControl }) {
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
             자동제어
           </div>
-          <div style={{ fontSize: 10.5, color: '#666', marginTop: 2, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 12, color: '#666', marginTop: 2, lineHeight: 1.4 }}>
             {autoControl
               ? '룰엔진이 임계값에 따라 디바이스를 자동으로 제어해요.'
               : '디바이스를 수동으로 제어할 수 있어요.'}
@@ -223,11 +223,11 @@ function DeviceRow({ deviceKey, on, disabled, onToggle, isLast }) {
         <DeviceIcon name={deviceKey} size={18} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>
           {deviceLabels[deviceKey]}
         </div>
         <div style={{
-          fontSize: 10.5, fontWeight: 600, marginTop: 1,
+          fontSize: 12, fontWeight: 600, marginTop: 1,
           color: on ? '#2ea84e' : '#aaa',
         }}>
           {on ? 'ON' : 'OFF'}

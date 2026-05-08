@@ -47,7 +47,7 @@ function Analysis() {
         <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
           이미지 분석
         </div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+        <div style={{ fontSize: 13.5, color: '#888', marginTop: 4 }}>
           잎 사진을 업로드하면 AI가 식물 질병을 진단해 드려요.
         </div>
       </div>
@@ -106,10 +106,10 @@ function UploadCard({ onClick }) {
       }}>
         <CameraIcon />
       </div>
-      <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a' }}>
+      <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
         사진 업로드
       </div>
-      <div style={{ fontSize: 11, color: '#888', textAlign: 'center', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 12.5, color: '#888', textAlign: 'center', lineHeight: 1.5 }}>
         잎이 잘 보이는 사진일수록 정확도가 높아요.<br />
         클릭해서 갤러리/카메라에서 선택하세요.
       </div>
@@ -130,7 +130,7 @@ function Preview({ imageUrl, onReselect, onAnalyze }) {
             background: '#fff',
             border: '0.5px solid #ddd',
             borderRadius: 10,
-            fontSize: 13, fontWeight: 600,
+            fontSize: 14, fontWeight: 600,
             color: '#666',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
@@ -146,7 +146,7 @@ function Preview({ imageUrl, onReselect, onAnalyze }) {
             background: '#2ea84e',
             border: 'none',
             borderRadius: 10,
-            fontSize: 13, fontWeight: 700,
+            fontSize: 14, fontWeight: 700,
             color: '#fff',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
@@ -172,10 +172,10 @@ function LoadingView({ imageUrl }) {
       }}>
         <Spinner />
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1e8a3c' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1e8a3c' }}>
             AI가 이미지를 분석 중이에요
           </div>
-          <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
+          <div style={{ fontSize: 12.5, color: '#666', marginTop: 2 }}>
             잠시만 기다려 주세요…
           </div>
         </div>
@@ -205,7 +205,7 @@ function ResultView({ result, imageUrl, onRetry }) {
             {disease.name}
           </span>
           <span style={{
-            fontSize: 10, fontWeight: 700,
+            fontSize: 11.5, fontWeight: 700,
             padding: '3px 8px', borderRadius: 6,
             background: sev.bg, color: sev.fg,
           }}>
@@ -219,10 +219,10 @@ function ResultView({ result, imageUrl, onRetry }) {
             display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
             marginBottom: 5,
           }}>
-            <span style={{ fontSize: 11, color: '#888', fontWeight: 500 }}>
+            <span style={{ fontSize: 12.5, color: '#888', fontWeight: 500 }}>
               신뢰도
             </span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: sev.bar }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: sev.bar }}>
               {confidence}%
             </span>
           </div>
@@ -240,7 +240,7 @@ function ResultView({ result, imageUrl, onRetry }) {
           </div>
         </div>
 
-        <div style={{ fontSize: 12, color: '#444', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 13.5, color: '#444', lineHeight: 1.55 }}>
           {disease.description}
         </div>
       </div>
@@ -252,7 +252,7 @@ function ResultView({ result, imageUrl, onRetry }) {
         border: '0.5px solid #e8e8e8',
         borderRadius: 14,
       }}>
-        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a', marginBottom: 9 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 9 }}>
           권장 조치
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -270,7 +270,7 @@ function ResultView({ result, imageUrl, onRetry }) {
                     strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div style={{ fontSize: 12, color: '#444', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13.5, color: '#444', lineHeight: 1.5 }}>
                 {action}
               </div>
             </div>
@@ -284,7 +284,7 @@ function ResultView({ result, imageUrl, onRetry }) {
         background: '#fafafa',
         border: '0.5px solid #eee',
         borderRadius: 10,
-        fontSize: 10.5, color: '#888', lineHeight: 1.5,
+        fontSize: 12, color: '#888', lineHeight: 1.5,
       }}>
         본 결과는 AI의 추정치입니다. 증상이 심각하거나 확신이 어려운 경우 전문가 상담을 권장해요.
       </div>
@@ -296,7 +296,7 @@ function ResultView({ result, imageUrl, onRetry }) {
           background: '#2ea84e',
           border: 'none',
           borderRadius: 10,
-          fontSize: 13, fontWeight: 700,
+          fontSize: 14, fontWeight: 700,
           color: '#fff',
           cursor: 'pointer',
           fontFamily: 'var(--ff)',

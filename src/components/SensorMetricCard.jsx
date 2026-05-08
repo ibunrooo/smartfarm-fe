@@ -27,18 +27,18 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
         marginBottom: 6,
       }}>
         <div>
-          <div style={{ fontSize: 11.5, fontWeight: 500, color: '#888', marginBottom: 4 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 4 }}>
             {label}
           </div>
           <div style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
             {value}
-            <span style={{ fontSize: 12, fontWeight: 400, color: '#aaa', marginLeft: 1 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 400, color: '#aaa', marginLeft: 1 }}>
               {unit}
             </span>
           </div>
         </div>
         <div style={{
-          fontSize: 10, fontWeight: 600,
+          fontSize: 11.5, fontWeight: 600,
           padding: '3px 8px', borderRadius: 7,
           ...tagStyle[status],
         }}>

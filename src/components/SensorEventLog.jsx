@@ -36,10 +36,10 @@ function SensorEventLog({ logs }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           marginBottom: 8,
         }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
             이벤트 로그
           </div>
-          <div style={{ fontSize: 10.5, color: '#aaa' }}>
+          <div style={{ fontSize: 12, color: '#aaa' }}>
             총 {filtered.length}건
           </div>
         </div>
@@ -65,7 +65,7 @@ function SensorEventLog({ logs }) {
         {visible.length === 0 ? (
           <div style={{
             padding: '24px 14px', textAlign: 'center',
-            fontSize: 11.5, color: '#aaa',
+            fontSize: 13, color: '#aaa',
           }}>
             해당 카테고리의 로그가 없어요.
           </div>
@@ -81,16 +81,16 @@ function SensorEventLog({ logs }) {
               marginTop: 5, flexShrink: 0,
             }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11.5, color: '#444', lineHeight: 1.4 }}>{log.text}</div>
+              <div style={{ fontSize: 13, color: '#444', lineHeight: 1.4 }}>{log.text}</div>
               <div style={{ display: 'flex', gap: 5, marginTop: 3, alignItems: 'center' }}>
                 <span style={{
-                  fontSize: 9.5, fontWeight: 600,
+                  fontSize: 11, fontWeight: 600,
                   color: categoryDotColor[log.category],
                 }}>
                   {categoryLabels[log.category]}
                 </span>
-                <span style={{ fontSize: 9.5, color: '#ccc' }}>·</span>
-                <span style={{ fontSize: 9.5, color: '#aaa' }}>{log.time}</span>
+                <span style={{ fontSize: 11, color: '#ccc' }}>·</span>
+                <span style={{ fontSize: 11, color: '#aaa' }}>{log.time}</span>
               </div>
             </div>
           </div>
@@ -110,7 +110,7 @@ function SensorEventLog({ logs }) {
           >
             ← 이전
           </PageButton>
-          <span style={{ fontSize: 11, color: '#888', fontWeight: 500 }}>
+          <span style={{ fontSize: 12.5, color: '#888', fontWeight: 500 }}>
             {safePage + 1} / {totalPages}
           </span>
           <PageButton
@@ -136,7 +136,7 @@ function FilterChip({ active, dotColor, onClick, children }) {
         border: 'none',
         borderRadius: 12,
         color: active ? '#fff' : '#666',
-        fontSize: 11, fontWeight: 600,
+        fontSize: 12.5, fontWeight: 600,
         cursor: 'pointer',
         fontFamily: 'var(--ff)',
         transition: 'all .15s',
@@ -164,7 +164,7 @@ function PageButton({ disabled, onClick, children }) {
         border: '0.5px solid #ddd',
         borderRadius: 7,
         color: disabled ? '#ccc' : '#555',
-        fontSize: 11, fontWeight: 500,
+        fontSize: 12.5, fontWeight: 500,
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'var(--ff)',
         opacity: disabled ? 0.5 : 1,
