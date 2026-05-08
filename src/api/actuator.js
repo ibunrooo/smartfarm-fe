@@ -1,12 +1,24 @@
 import { apiFetch, buildQuery } from './client'
 
+export function mapActuatorLog(raw) {
+  if (!raw) return null
+  return {
+    greenhouseId: raw.greenhouse_id,
+    actuator:     raw.actuator,
+    action:       raw.action,
+    ts:           raw.ts ?? raw.created_at,
+  }
+}
+
 // GET /api/actuators?greenhouseId=xxx
-export function getActuatorLogs(greenhouseId) {
-  return apiFetch(`/api/actuators${buildQuery({ greenhouseId })}`)
+export async function getActuatorLogs(greenhouseId) {
+  const data = await apiFetch(`/api/actuators${buildQuery({ greenhouseId })}`)
+  return Array.isArray(data) ? data.map(mapActuatorLog) : []
 }
 
 // POST /api/control
-// body: { greenhouseId, actuator: 'pump'|'led'|'window', action: 'ON'|'OFF'|'OPEN'|'CLOSE' }
+// actuator: 'pump' | 'led' | 'window'
+// action:   'ON' | 'OFF' | 'OPEN' | 'CLOSE'
 export function controlActuator(greenhouseId, actuator, action) {
   return apiFetch('/api/control', {
     method: 'POST',
