@@ -21,7 +21,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
       >
         <span style={{
           width: 7, height: 7, borderRadius: '50%',
-          background: '#2ea84e',
+          background: active.plant?.theme?.main ?? '#2ea84e',
         }} />
         {active.name}
         <span style={{ fontSize: 9, color: '#aaa', marginLeft: 2 }}>▼</span>
@@ -73,7 +73,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
               >
                 <span style={{
                   width: 6, height: 6, borderRadius: '50%',
-                  background: isActive ? '#2ea84e' : '#ccc',
+                  background: g.plant?.theme?.main ?? (isActive ? '#2ea84e' : '#ccc'),
                 }} />
                 {g.name}
               </button>

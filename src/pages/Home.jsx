@@ -17,21 +17,14 @@ function Home() {
 
       {/* 헤더 */}
       <div style={{
-        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'baseline', gap: 8,
         padding: '0 2px',
       }}>
-        <div style={{
-          display: 'flex', alignItems: 'baseline', gap: 8,
-        }}>
-          <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
-            내 온실
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#2ea84e' }}>
-            {myGreenhouses.length}
-          </span>
-        </div>
-        <span style={{ fontSize: 11, color: '#999' }}>
-          카드를 눌러 상세보기
+        <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
+          내 온실
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#2ea84e' }}>
+          {myGreenhouses.length}
         </span>
       </div>
 
