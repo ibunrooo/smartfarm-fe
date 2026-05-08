@@ -1,9 +1,29 @@
 import { apiFetch } from './client'
 
+const HEALTHY_ACTIONS = [
+  '현재 관리 패턴 유지',
+  '주 1회 정기 점검',
+]
+const DISEASE_ACTIONS = [
+  '감염 부위 신속 확인',
+  '습도와 통풍 환경 점검',
+  '필요 시 전문가 상담',
+]
+
 export function mapDiseaseResult(raw) {
-  if (!raw?.prediction) return null
-  const { result, label, confidence, message } = raw.prediction
-  return { result, label, confidence, message }
+  const p = raw?.prediction
+  if (!p) return null
+  const isHealthy = p.result === 'healthy'
+  return {
+    disease: {
+      id:          p.label,
+      name:        isHealthy ? '정상' : '질병 의심',
+      severity:    isHealthy ? 'ok' : 'warn',
+      description: p.message,
+      actions:     isHealthy ? HEALTHY_ACTIONS : DISEASE_ACTIONS,
+    },
+    confidence: Math.round((p.confidence ?? 0) * 100),
+  }
 }
 
 // POST /api/disease/predict  (multipart/form-data, field: image)
