@@ -59,7 +59,7 @@ function Layout() {
     <div style={{ display: 'flex', height: '100dvh', background: '#fff', overflow: 'hidden' }}>
       <Sidebar navItems={navItems} currentPath={currentPath} navigate={navigate} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        <div className="page-content" style={{ flex: 1, overflowY: 'auto', padding: '24px 40px' }}>
+        <div className="page-content" style={{ flex: 1, overflowY: 'auto', padding: '24px 40px', display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </div>
         <BottomNav navItems={navItems} currentPath={currentPath} navigate={navigate} />

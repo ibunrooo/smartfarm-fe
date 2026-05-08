@@ -53,7 +53,7 @@ function AIChat() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      height: '100%', width: '100%',
+      flex: 1, minHeight: 0, width: '100%',
       background: '#fff',
       border: '0.5px solid #e8e8e8',
       borderRadius: 14,
