@@ -1,40 +1,130 @@
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
 import SensorEventLog from '../components/SensorEventLog'
 import { DeviceIcon } from '../components/Device'
 import { DEVICE_KEYS, deviceLabels } from '../data/devices'
-import { greenhouses, metricLabels, sensorOrder } from '../data/greenhouses'
-import { generateHistory } from '../data/sensorHistory'
-import { generateLogs } from '../data/eventLogs'
+import { plants } from '../data/plants'
+import { metricLabels, sensorOrder } from '../data/greenhouses'
+import { getGreenhouse } from '../api/greenhouse'
+import { getLatestSensor, getSensorHistory } from '../api/sensor'
+import { getWeather } from '../api/weather'
+import { getAlerts } from '../api/alerts'
+import { getActuatorLogs } from '../api/actuator'
+import { getMyGreenhouseIds } from '../utils/storage'
 
 const modeOptions = [
   { id: 'virtual', label: '가상' },
   { id: 'real',    label: '실제' },
 ]
 
+const INITIAL_DEVICES = { pump: false, led: false, window: false }
+
 function Sensor() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [sensorMode, setSensorMode] = useState('virtual')
 
+  const ids = useMemo(() => getMyGreenhouseIds(), [])
   const requestedId = searchParams.get('gh')
-  const active = greenhouses.find(g => g.id === requestedId) ?? greenhouses[0]
-  const activeId = active.id
+  const activeId = ids.includes(requestedId) ? requestedId : ids[0]
+
+  const [metas, setMetas]       = useState([])
+  const [latest, setLatest]     = useState(null)
+  const [history, setHistory]   = useState([])
+  const [weather, setWeather]   = useState(null)
+  const [alerts, setAlerts]     = useState([])
+  const [actuators, setActuators] = useState([])
+  const [loading, setLoading]   = useState(() => !!activeId)
+  const [error, setError]       = useState(null)
+
+  useEffect(() => {
+    if (!activeId) return
+    let cancelled = false
+
+    Promise.all([
+      Promise.all(ids.map(id => getGreenhouse(id).catch(() => null))),
+      getLatestSensor(activeId).catch(() => null),
+      getSensorHistory(activeId, 60).catch(() => []),
+      getWeather(activeId).catch(() => null),
+      getAlerts(activeId, 20).catch(() => []),
+      getActuatorLogs(activeId).catch(() => []),
+    ])
+      .then(([metaList, latestData, historyData, weatherData, alertList, actuatorList]) => {
+        if (cancelled) return
+        setMetas(metaList.filter(Boolean))
+        setLatest(latestData)
+        setHistory(historyData)
+        setWeather(weatherData)
+        setAlerts(alertList)
+        setActuators(actuatorList)
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('Sensor 데이터 조회 실패:', err)
+        setError(err.message || '데이터를 불러오지 못했어요.')
+        setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [activeId, ids])
 
   const setActiveId = (id) => setSearchParams({ gh: id })
 
-  const histories = useMemo(() => (
-    Object.fromEntries(
-      sensorOrder.map(key => [
-        key,
-        generateHistory(activeId, key, active.sensors[key].value),
-      ])
-    )
-  ), [activeId, active])
+  // 데이터 합성
+  const switcherList = buildSwitcherList(metas, ids)
+  const sensors      = buildSensors(latest, weather)
+  const histories    = buildHistories(history)
+  const eventLogs    = mergeEventLogs(alerts, actuators)
+  const topAlert     = buildTopAlert(alerts)
 
-  const logs = useMemo(() => generateLogs(activeId, 32), [activeId])
+  /* 빈 상태: 등록된 온실 없음 */
+  if (!activeId) {
+    return (
+      <div style={{
+        minHeight: 360,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        gap: 12, textAlign: 'center', color: '#666',
+      }}>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
+          등록된 온실이 없어요
+        </div>
+        <div style={{ fontSize: 13, color: '#888' }}>
+          홈에서 식물을 먼저 추가해주세요.
+        </div>
+        <button
+          onClick={() => navigate('/onboarding')}
+          style={{
+            marginTop: 6,
+            padding: '10px 18px',
+            background: '#2ea84e', color: '#fff',
+            border: 'none', borderRadius: 10,
+            fontSize: 13, fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+          }}
+        >
+          + 식물 추가하기
+        </button>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: 360,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#888', fontSize: 13.5,
+      }}>
+        센서 데이터를 불러오는 중…
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
@@ -42,7 +132,7 @@ function Sensor() {
       {/* 헤더: 온실 스위처 + 센서 모드 토글 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <GreenhouseSwitcher
-          greenhouses={greenhouses}
+          greenhouses={switcherList}
           activeId={activeId}
           onChange={setActiveId}
         />
@@ -82,12 +172,26 @@ function Sensor() {
       </div>
 
       {/* 긴급/주의 알림 */}
-      {active.alert && (
+      {topAlert && (
         <AlertBanner
-          message={active.alert.message}
-          type={active.alert.type}
+          message={topAlert.message}
+          type={topAlert.type}
           variant="card"
         />
+      )}
+
+      {error && (
+        <div style={{
+          padding: '8px 12px',
+          background: '#fff1f1',
+          border: '0.5px solid #fcc',
+          borderRadius: 10,
+          fontSize: 12.5, color: '#991f1f',
+        }}>
+          <span style={{ fontWeight: 700 }}>오류</span>
+          <span style={{ opacity: .4, margin: '0 6px' }}>·</span>
+          <span>{error}</span>
+        </div>
       )}
 
       {/* 모드 안내 */}
@@ -118,7 +222,7 @@ function Sensor() {
         gap: 10,
       }}>
         {sensorOrder.map(key => {
-          const m = active.sensors[key]
+          const m = sensors[key]
           return (
             <SensorMetricCard
               key={key}
@@ -134,19 +238,159 @@ function Sensor() {
         })}
       </div>
 
-      {/* 디바이스 제어 — key={activeId}로 온실 변경 시 자연 리셋 */}
+      {/* 디바이스 제어 — 일단 더미 (control API 미연동) */}
       <DeviceControlPanel
         key={activeId}
-        initialDevices={active.devices}
-        initialAutoControl={active.autoControl}
+        initialDevices={INITIAL_DEVICES}
+        initialAutoControl={true}
       />
 
       {/* 이벤트 로그 (전체) */}
-      <SensorEventLog logs={logs} />
+      <SensorEventLog logs={eventLogs} />
 
     </div>
   )
 }
+
+/* ────────────────────────────────────────
+   BE 데이터 → 화면 형식 합성
+   ──────────────────────────────────────── */
+
+function buildSwitcherList(metas, ids) {
+  return ids.map(id => {
+    const meta = metas.find(m => m?.greenhouseId === id)
+    if (!meta) return { id, name: id, plant: null }
+    const plant = plants.find(p => p.id === meta.plantType)
+    return {
+      id,
+      name: plant?.name ?? meta.plantType ?? id,
+      plant: plant
+        ? { name: plant.name, theme: plant.theme }
+        : { name: meta.plantType ?? id },
+    }
+  })
+}
+
+function buildSensors(latest, weather) {
+  return {
+    temp: {
+      value: latest?.temp ?? '-',
+      unit: '°C',
+      ...statusFor('temp', latest?.temp),
+    },
+    humidity: {
+      value: latest?.humidity ?? '-',
+      unit: '%',
+      ...statusFor('humidity', latest?.humidity),
+    },
+    soil: {
+      value: latest?.soil ?? '-',
+      unit: '%',
+      ...statusFor('soil', latest?.soil),
+    },
+    lux: {
+      value: weather?.lux ?? '-',
+      unit: 'lux',
+      status: 'ok',
+      statusText: '데이터 없음',
+    },
+  }
+}
+
+function statusFor(key, value) {
+  if (value == null) return { status: 'ok', statusText: '데이터 없음' }
+  if (key === 'temp') {
+    if (value >= 35 || value <= 5)  return { status: 'bad',  statusText: '위험' }
+    if (value >= 30 || value <= 10) return { status: 'warn', statusText: '주의' }
+    return { status: 'ok', statusText: '적정' }
+  }
+  if (key === 'humidity') {
+    if (value >= 80 || value <= 25) return { status: 'bad',  statusText: '위험' }
+    if (value >= 70 || value <= 35) return { status: 'warn', statusText: '주의' }
+    return { status: 'ok', statusText: '적정' }
+  }
+  if (key === 'soil') {
+    if (value <= 20)                return { status: 'bad',  statusText: '주의' }
+    if (value <= 30 || value >= 75) return { status: 'warn', statusText: '주의' }
+    return { status: 'ok', statusText: '적정' }
+  }
+  return { status: 'ok', statusText: '적정' }
+}
+
+function buildHistories(history) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return { temp: [], humidity: [], soil: [], lux: [] }
+  }
+  return {
+    temp:     history.map((r, i) => ({ t: i, v: roundOr(r.temp) })),
+    humidity: history.map((r, i) => ({ t: i, v: roundOr(r.humidity) })),
+    soil:     history.map((r, i) => ({ t: i, v: roundOr(r.soil) })),
+    lux:      [],
+  }
+}
+
+function roundOr(v) {
+  if (v == null) return 0
+  return Math.round(v * 10) / 10
+}
+
+function buildTopAlert(alerts) {
+  if (!Array.isArray(alerts) || alerts.length === 0) return null
+  const a = alerts[0]
+  return {
+    message: a.message ?? a.label,
+    type: a.severity === 'danger' ? 'danger' : 'warn',
+  }
+}
+
+function mergeEventLogs(alerts, actuators) {
+  const a = (alerts ?? []).map((x, i) => ({
+    id: `alert-${x.id ?? i}`,
+    category: 'alert',
+    text: x.message ?? x.label ?? x.type,
+    time: formatTime(x.ts),
+    _ts: x.ts,
+  }))
+  const b = (actuators ?? []).map((x, i) => ({
+    id: `act-${x.actuator}-${i}`,
+    category: actuatorCategory(x.actuator),
+    text: actuatorText(x.actuator, x.action),
+    time: formatTime(x.ts),
+    _ts: x.ts,
+  }))
+  return [...a, ...b]
+    .sort((x, y) => (new Date(y._ts ?? 0)) - (new Date(x._ts ?? 0)))
+    .map(({ id, category, text, time }) => ({ id, category, text, time }))
+}
+
+function actuatorCategory(actuator) {
+  if (actuator === 'pump') return 'water'
+  if (actuator === 'led')  return 'led'
+  if (actuator === 'window') return 'window'
+  return 'system'
+}
+
+function actuatorText(actuator, action) {
+  const name = actuator === 'pump' ? '펌프'
+            : actuator === 'led'  ? 'LED'
+            : actuator === 'window' ? '창문' : actuator
+  const act  = action === 'ON'   ? '시작'
+            : action === 'OFF'  ? '정지'
+            : action === 'OPEN' ? '개방'
+            : action === 'CLOSE'? '폐쇄' : action
+  return `${name} ${act}`
+}
+
+function formatTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+/* ────────────────────────────────────────
+   디바이스 제어 패널 (더미 — control API는 별도 단계)
+   ──────────────────────────────────────── */
 
 function DeviceControlPanel({ initialDevices, initialAutoControl }) {
   const [autoControl, setAutoControl] = useState(initialAutoControl)
