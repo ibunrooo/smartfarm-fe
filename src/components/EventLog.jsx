@@ -9,7 +9,7 @@ function EventLog({ logs, title = '이벤트 로그', showAllLink = true, onShow
       <div style={{
         padding: '9px 13px 8px',
         borderBottom: '0.5px solid #e8e8e8',
-        fontSize: 12.5, fontWeight: 600, color: '#1a1a1a',
+        fontSize: 14, fontWeight: 600, color: '#1a1a1a',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         {title}
@@ -17,7 +17,7 @@ function EventLog({ logs, title = '이벤트 로그', showAllLink = true, onShow
           <button
             onClick={onShowAll}
             style={{
-              fontSize: 11, color: '#2ea84e', fontWeight: 500,
+              fontSize: 12.5, color: '#2ea84e', fontWeight: 500,
               background: 'none', border: 'none', cursor: 'pointer',
               padding: 0,
               fontFamily: 'var(--ff)',
@@ -39,8 +39,8 @@ function EventLog({ logs, title = '이벤트 로그', showAllLink = true, onShow
             marginTop: 4, flexShrink: 0,
           }} />
           <div>
-            <div style={{ fontSize: 11.5, color: '#555', lineHeight: 1.4 }}>{log.text}</div>
-            <div style={{ fontSize: 10, color: '#aaa' }}>{log.time}</div>
+            <div style={{ fontSize: 13, color: '#555', lineHeight: 1.4 }}>{log.text}</div>
+            <div style={{ fontSize: 11.5, color: '#aaa' }}>{log.time}</div>
           </div>
         </div>
       ))}

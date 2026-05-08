@@ -76,12 +76,12 @@ function AIChat() {
           <BotPlantIcon />
         </div>
         <div>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
             팜-므파탈 도우미
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2ea84e' }} />
-            <span style={{ fontSize: 10.5, color: '#888' }}>온라인</span>
+            <span style={{ fontSize: 12, color: '#888' }}>온라인</span>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ function AIChat() {
             background: '#f5f5f5',
             border: '0.5px solid #e8e8e8',
             borderRadius: 18,
-            fontSize: 13,
+            fontSize: 14,
             fontFamily: 'var(--ff)',
             outline: 'none',
             resize: 'none',
@@ -180,7 +180,7 @@ function DateDivider({ date }) {
       gap: 8, margin: '14px 0 10px',
     }}>
       <div style={{ flex: 1, height: 0.5, background: '#dcdcdc', maxWidth: 80 }} />
-      <span style={{ fontSize: 10.5, color: '#999', fontWeight: 500 }}>{formatted}</span>
+      <span style={{ fontSize: 12, color: '#999', fontWeight: 500 }}>{formatted}</span>
       <div style={{ flex: 1, height: 0.5, background: '#dcdcdc', maxWidth: 80 }} />
     </div>
   )
@@ -195,14 +195,14 @@ function ChatMessage({ message, showAvatar }) {
         display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end',
         gap: 6, marginBottom: 6,
       }}>
-        <span style={{ fontSize: 9.5, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
+        <span style={{ fontSize: 11, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
         <div style={{
           maxWidth: '75%',
           padding: '8px 12px',
           background: '#2ea84e',
           color: '#fff',
           borderRadius: '16px 16px 4px 16px',
-          fontSize: 12.5,
+          fontSize: 14,
           lineHeight: 1.45,
           wordBreak: 'break-word',
         }}>
@@ -243,14 +243,14 @@ function ChatMessage({ message, showAvatar }) {
           border: '0.5px solid #e8e8e8',
           color: '#1a1a1a',
           borderRadius: '16px 16px 16px 4px',
-          fontSize: 12.5,
+          fontSize: 14,
           lineHeight: 1.45,
           wordBreak: 'break-word',
         }}>
           {message.text}
         </div>
       )}
-      <span style={{ fontSize: 9.5, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
+      <span style={{ fontSize: 11, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
     </div>
   )
 }
@@ -286,10 +286,10 @@ function NotificationBanner() {
     }}>
       <BellSmallIcon />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1e8a3c' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e8a3c' }}>
           알림 받기
         </div>
-        <div style={{ fontSize: 10.5, color: '#666', marginTop: 1, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 12, color: '#666', marginTop: 1, lineHeight: 1.4 }}>
           매일의 일일 리포트와 긴급 알림을 받아보세요.
         </div>
       </div>
@@ -300,7 +300,7 @@ function NotificationBanner() {
           background: '#2ea84e',
           border: 'none',
           borderRadius: 8,
-          fontSize: 11, fontWeight: 700,
+          fontSize: 12.5, fontWeight: 700,
           color: '#fff',
           cursor: 'pointer',
           fontFamily: 'var(--ff)',

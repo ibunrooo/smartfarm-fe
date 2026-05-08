@@ -23,7 +23,7 @@ function Home() {
         <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
           내 온실
         </span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#2ea84e' }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#2ea84e' }}>
           {myGreenhouses.length}
         </span>
       </div>
@@ -72,7 +72,7 @@ function AddCard({ onClick }) {
       }}>
         +
       </div>
-      <div style={{ fontSize: 12, fontWeight: 600 }}>식물 추가하기</div>
+      <div style={{ fontSize: 13.5, fontWeight: 600 }}>식물 추가하기</div>
     </div>
   )
 }
@@ -102,7 +102,7 @@ function EmptyState({ onAdd }) {
       <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
         아직 등록된 식물이 없어요
       </div>
-      <div style={{ fontSize: 12, color: '#888', maxWidth: 240, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13.5, color: '#888', maxWidth: 240, lineHeight: 1.5 }}>
         첫 식물을 등록하고<br />
         스마트팜 관리를 시작해보세요.
       </div>
@@ -113,7 +113,7 @@ function EmptyState({ onAdd }) {
           padding: '10px 20px',
           background: '#2ea84e', color: '#fff',
           border: 'none', borderRadius: 10,
-          fontSize: 13, fontWeight: 700,
+          fontSize: 14, fontWeight: 700,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}

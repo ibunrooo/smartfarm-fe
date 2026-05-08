@@ -36,7 +36,7 @@ function GreenhouseCard({ greenhouse, onClick }) {
         background: chipBg,
         border: `0.5px solid ${chipBd}`,
         borderRadius: 18, padding: '3px 8px',
-        fontSize: 10.5, color: txt, zIndex: 1,
+        fontSize: 12, color: txt, zIndex: 1,
       }}>
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
           <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
@@ -71,7 +71,7 @@ function GreenhouseCard({ greenhouse, onClick }) {
         }}>
           {plant.name}
         </div>
-        <div style={{ fontSize: 11, color: txtSub, marginTop: 2 }}>
+        <div style={{ fontSize: 12.5, color: txtSub, marginTop: 2 }}>
           {plant.sub}
         </div>
         <div style={{
@@ -79,7 +79,7 @@ function GreenhouseCard({ greenhouse, onClick }) {
           background: chipBg,
           border: `0.5px solid ${chipBd}`,
           borderRadius: 20, padding: '3px 9px',
-          fontSize: 10.5, color: txt,
+          fontSize: 12, color: txt,
         }}>
           <div style={{ width: 5, height: 5, background: statusDot, borderRadius: '50%' }} />
           {plant.status}

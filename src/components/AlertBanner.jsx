@@ -15,7 +15,7 @@ function AlertBanner({ message, type = 'warn', variant = 'banner' }) {
         background: s.bg,
         border: `0.5px solid ${s.border}`,
         borderRadius: 10,
-        fontSize: 12,
+        fontSize: 13.5,
         color: s.text,
         fontFamily: 'var(--ff)',
         flexWrap: 'wrap',
@@ -37,7 +37,7 @@ function AlertBanner({ message, type = 'warn', variant = 'banner' }) {
       padding: '8px 16px',
       background: s.bg,
       borderBottom: `0.5px solid ${s.border}`,
-      fontSize: 12,
+      fontSize: 13.5,
       color: s.text,
       fontFamily: 'var(--ff)',
     }}>

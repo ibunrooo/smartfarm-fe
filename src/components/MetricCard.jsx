@@ -18,7 +18,7 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 4,
-        fontSize: 10, fontWeight: 500, color: '#999', marginBottom: 4,
+        fontSize: 11.5, fontWeight: 500, color: '#999', marginBottom: 4,
       }}>
         {label}
         {info && (
@@ -45,11 +45,11 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
       </div>
       <div style={{ fontSize: 19, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
         {value}
-        <span style={{ fontSize: 11, fontWeight: 400, color: '#aaa' }}>{unit}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 400, color: '#aaa' }}>{unit}</span>
       </div>
       <div style={{
         display: 'inline-block', marginTop: 5,
-        fontSize: 9.5, fontWeight: 600,
+        fontSize: 11, fontWeight: 600,
         padding: '2px 6px', borderRadius: 6,
         ...tagStyle[status],
       }}>
@@ -61,7 +61,7 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
           position: 'absolute', top: '100%', left: 0, right: 0,
           marginTop: 6, zIndex: 5,
           background: '#1a1a1a', color: '#fff',
-          fontSize: 10.5, lineHeight: 1.5,
+          fontSize: 12, lineHeight: 1.5,
           padding: '8px 10px', borderRadius: 8,
           boxShadow: '0 4px 12px rgba(0,0,0,.15)',
         }}>

@@ -21,11 +21,11 @@ function DailyReportCard({ report, onShowDetail }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <ChartIcon />
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#1e8a3c' }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1e8a3c' }}>
             일일 리포트
           </span>
         </div>
-        <span style={{ fontSize: 10, color: '#888' }}>
+        <span style={{ fontSize: 11.5, color: '#888' }}>
           {formatDate(report.date)}
         </span>
       </div>
@@ -34,7 +34,7 @@ function DailyReportCard({ report, onShowDetail }) {
       <div style={{ padding: 14 }}>
         {/* 요약 */}
         <div style={{
-          fontSize: 11.5, color: '#444', lineHeight: 1.55, marginBottom: 12,
+          fontSize: 13, color: '#444', lineHeight: 1.55, marginBottom: 12,
         }}>
           {report.summary}
         </div>
@@ -45,10 +45,10 @@ function DailyReportCard({ report, onShowDetail }) {
             display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
             marginBottom: 5,
           }}>
-            <span style={{ fontSize: 10, color: '#888', fontWeight: 500 }}>
+            <span style={{ fontSize: 11.5, color: '#888', fontWeight: 500 }}>
               병해충 위험도
             </span>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color }}>
               {riskLabel[report.riskLevel]} · {report.riskScore}%
             </span>
           </div>
@@ -66,7 +66,7 @@ function DailyReportCard({ report, onShowDetail }) {
         {/* 행동 추천 */}
         <div>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: '#888',
+            fontSize: 11.5, fontWeight: 600, color: '#888',
             marginBottom: 5,
           }}>
             추천 행동
@@ -74,7 +74,7 @@ function DailyReportCard({ report, onShowDetail }) {
           {report.actions.map((action, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: 6,
-              fontSize: 11, color: '#444', lineHeight: 1.5,
+              fontSize: 12.5, color: '#444', lineHeight: 1.5,
               padding: '3px 0',
             }}>
               <div style={{
@@ -97,7 +97,7 @@ function DailyReportCard({ report, onShowDetail }) {
             background: '#f8fdf9',
             border: '0.5px solid #ddf2e2',
             borderRadius: 8,
-            fontSize: 11, fontWeight: 600,
+            fontSize: 12.5, fontWeight: 600,
             color: '#1e8a3c',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',

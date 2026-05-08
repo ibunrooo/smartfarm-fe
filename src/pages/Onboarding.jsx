@@ -59,7 +59,7 @@ function Onboarding() {
           alignSelf: 'flex-start',
           padding: '6px 0',
           background: 'none', border: 'none',
-          fontSize: 12, color: '#666', fontWeight: 500,
+          fontSize: 13.5, color: '#666', fontWeight: 500,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}
@@ -71,7 +71,7 @@ function Onboarding() {
         <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
           식물 추가
         </div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+        <div style={{ fontSize: 13.5, color: '#888', marginTop: 4 }}>
           {stepDesc[step]}
         </div>
       </div>
@@ -112,7 +112,7 @@ function Onboarding() {
               background: '#fff',
               border: '0.5px solid #ddd',
               borderRadius: 10,
-              fontSize: 13, fontWeight: 600,
+              fontSize: 14, fontWeight: 600,
               color: '#666',
               cursor: 'pointer',
               fontFamily: 'var(--ff)',
@@ -130,7 +130,7 @@ function Onboarding() {
             background: canNext ? '#2ea84e' : '#cfe7d4',
             border: 'none',
             borderRadius: 10,
-            fontSize: 13, fontWeight: 700,
+            fontSize: 14, fontWeight: 700,
             color: '#fff',
             cursor: canNext ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--ff)',
@@ -161,14 +161,14 @@ function Stepper({ current, total, labels }) {
                 width: 26, height: 26, borderRadius: '50%',
                 background: filled ? '#2ea84e' : '#e8e8e8',
                 color: filled ? '#fff' : '#aaa',
-                fontSize: 11.5, fontWeight: 700,
+                fontSize: 13, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'var(--ff)',
               }}>
                 {idx}
               </div>
               <div style={{
-                fontSize: 10, fontWeight: active ? 700 : 500,
+                fontSize: 11.5, fontWeight: active ? 700 : 500,
                 color: active ? '#1e8a3c' : '#999',
               }}>
                 {labels[i]}
@@ -228,12 +228,12 @@ function PlantStep({ value, onChange, onUnsure }) {
                 {p.name[0]}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
                   {p.name}
                 </div>
                 <div style={{
                   display: 'inline-block',
-                  fontSize: 9.5, fontWeight: 600,
+                  fontSize: 11, fontWeight: 600,
                   marginTop: 4,
                   padding: '1px 6px',
                   borderRadius: 6,
@@ -268,7 +268,7 @@ function PlantStep({ value, onChange, onUnsure }) {
           background: '#fafafa',
           border: '0.5px dashed #c8c8c8',
           borderRadius: 12,
-          fontSize: 12.5,
+          fontSize: 14,
           color: '#666',
           fontWeight: 600,
           cursor: 'pointer',
@@ -314,10 +314,10 @@ function LocationStep({ value, onChange }) {
             }}>
               {opt.icon}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
               {opt.label}
             </div>
-            <div style={{ fontSize: 10.5, color: '#888', textAlign: 'center', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 12, color: '#888', textAlign: 'center', lineHeight: 1.4 }}>
               {opt.desc}
             </div>
           </button>
@@ -332,7 +332,7 @@ function CityStep({ value, onChange, summary }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
-        <div style={{ fontSize: 11.5, fontWeight: 600, color: '#666', marginBottom: 6 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#666', marginBottom: 6 }}>
           도시
         </div>
         <input
@@ -345,13 +345,13 @@ function CityStep({ value, onChange, summary }) {
             background: '#fff',
             border: '0.5px solid #ddd',
             borderRadius: 10,
-            fontSize: 13,
+            fontSize: 14,
             fontFamily: 'var(--ff)',
             outline: 'none',
             color: '#1a1a1a',
           }}
         />
-        <div style={{ fontSize: 10.5, color: '#aaa', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: '#aaa', marginTop: 6 }}>
           OpenWeather 연동 시 위치 기반 외부 기상이 반영돼요.
         </div>
       </div>
@@ -362,7 +362,7 @@ function CityStep({ value, onChange, summary }) {
         border: '0.5px solid #ddf2e2',
         borderRadius: 12,
       }}>
-        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1e8a3c', marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e8a3c', marginBottom: 8 }}>
           이렇게 등록할게요
         </div>
         <SummaryRow label="식물" value={plant?.name ?? '-'} />
@@ -378,7 +378,7 @@ function SummaryRow({ label, value, dim }) {
     <div style={{
       display: 'flex', justifyContent: 'space-between',
       padding: '4px 0',
-      fontSize: 12,
+      fontSize: 13.5,
     }}>
       <span style={{ color: '#888' }}>{label}</span>
       <span style={{ color: dim ? '#aaa' : '#1a1a1a', fontWeight: 600 }}>{value}</span>
@@ -435,7 +435,7 @@ function Recommend({ onCancel, onSelect }) {
           alignSelf: 'flex-start',
           padding: '6px 0',
           background: 'none', border: 'none',
-          fontSize: 12, color: '#666', fontWeight: 500,
+          fontSize: 13.5, color: '#666', fontWeight: 500,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}
@@ -447,7 +447,7 @@ function Recommend({ onCancel, onSelect }) {
         <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
           식물 추천
         </div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+        <div style={{ fontSize: 13.5, color: '#888', marginTop: 4 }}>
           {phase === 'survey'  && '몇 가지만 알려주세요. 맞춤 식물을 추천해드릴게요.'}
           {phase === 'loading' && '취향에 맞는 식물을 찾고 있어요…'}
           {phase === 'result'  && '이 식물들을 추천해요.'}
@@ -507,7 +507,7 @@ function Survey({ answers, onChange, onSubmit }) {
           background: canSubmit ? '#2ea84e' : '#cfe7d4',
           border: 'none',
           borderRadius: 10,
-          fontSize: 13, fontWeight: 700,
+          fontSize: 14, fontWeight: 700,
           color: '#fff',
           cursor: canSubmit ? 'pointer' : 'not-allowed',
           fontFamily: 'var(--ff)',
@@ -522,7 +522,7 @@ function Survey({ answers, onChange, onSubmit }) {
 function SurveyQuestion({ title, options, value, onChange }) {
   return (
     <div>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>
         {title}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
@@ -542,10 +542,10 @@ function SurveyQuestion({ title, options, value, onChange }) {
                 textAlign: 'left',
               }}
             >
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1a1a1a' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
                 {opt.label}
               </div>
-              <div style={{ fontSize: 10.5, color: '#888', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
                 {opt.desc}
               </div>
             </button>
@@ -615,25 +615,25 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {i === 0 && (
                   <span style={{
-                    fontSize: 9, fontWeight: 700,
+                    fontSize: 11, fontWeight: 700,
                     padding: '2px 6px', borderRadius: 5,
                     background: '#2ea84e', color: '#fff',
                   }}>
                     BEST
                   </span>
                 )}
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a' }}>
+                <span style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
                   {p.name}
                 </span>
                 <span style={{
-                  fontSize: 9.5, fontWeight: 600,
+                  fontSize: 11, fontWeight: 600,
                   padding: '1px 6px', borderRadius: 6,
                   background: diff.bg, color: diff.fg,
                 }}>
                   {difficultyLabel[p.difficulty]}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: '#666', marginTop: 4, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 12.5, color: '#666', marginTop: 4, lineHeight: 1.45 }}>
                 {p.recommendReason}
               </div>
             </div>
@@ -665,7 +665,7 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
             background: '#fff',
             border: '0.5px solid #ddd',
             borderRadius: 10,
-            fontSize: 13, fontWeight: 600,
+            fontSize: 14, fontWeight: 600,
             color: '#666',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
@@ -682,7 +682,7 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
             background: picked ? '#2ea84e' : '#cfe7d4',
             border: 'none',
             borderRadius: 10,
-            fontSize: 13, fontWeight: 700,
+            fontSize: 14, fontWeight: 700,
             color: '#fff',
             cursor: picked ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--ff)',

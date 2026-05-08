@@ -14,7 +14,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
           background: '#fff',
           border: '0.5px solid #e8e8e8',
           borderRadius: 10,
-          fontSize: 13, fontWeight: 600,
+          fontSize: 14, fontWeight: 600,
           color: '#1a1a1a', cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}
@@ -24,7 +24,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
           background: active.plant?.theme?.main ?? '#2ea84e',
         }} />
         {active.plant?.name ?? active.name}
-        <span style={{ fontSize: 9, color: '#aaa', marginLeft: 2 }}>▼</span>
+        <span style={{ fontSize: 11, color: '#aaa', marginLeft: 2 }}>▼</span>
       </button>
       {onAdd && (
         <button
@@ -67,7 +67,7 @@ function GreenhouseSwitcher({ greenhouses, activeId, onChange, onAdd }) {
                   padding: '8px 10px',
                   background: isActive ? '#f2faf3' : 'none',
                   border: 'none', borderRadius: 7,
-                  fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                  fontSize: 14, fontWeight: isActive ? 600 : 500,
                   color: isActive ? '#1e8a3c' : '#555',
                   cursor: 'pointer', textAlign: 'left',
                   fontFamily: 'var(--ff)',
