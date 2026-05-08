@@ -25,7 +25,7 @@ export const greenhouses = [
       soil:     { value: 48,    unit: '%',   status: 'ok', statusText: '적정' },
       lux:      { value: 6500,  unit: 'lux', status: 'ok', statusText: '적정' },
     },
-    devices: { pump: false, fan: false, led: false },
+    devices: { pump: false, led: false, window: false },
     autoControl: true,
     weather: { temp: 22, sky: 'cloudy', summary: '흐림' },
     logs: [
@@ -49,7 +49,7 @@ export const greenhouses = [
       soil:     { value: 55,    unit: '%',   status: 'ok', statusText: '적정' },
       lux:      { value: 4200,  unit: 'lux', status: 'ok', statusText: '적정' },
     },
-    devices: { pump: false, fan: false, led: false },
+    devices: { pump: false, led: false, window: false },
     autoControl: true,
     weather: { temp: 22, sky: 'cloudy', summary: '흐림' },
     logs: [
@@ -72,7 +72,7 @@ export const greenhouses = [
       soil:     { value: 58,    unit: '%',   status: 'ok', statusText: '적정' },
       lux:      { value: 24000, unit: 'lux', status: 'ok', statusText: '적정' },
     },
-    devices: { pump: false, fan: false, led: false },
+    devices: { pump: false, led: false, window: false },
     autoControl: true,
     weather: { temp: 22, sky: 'rain', summary: '비 예보' },
     logs: [
@@ -96,7 +96,7 @@ export const greenhouses = [
       soil:     { value: 32,    unit: '%',   status: 'bad',  statusText: '주의' },
       lux:      { value: 8500,  unit: 'lux', status: 'ok',   statusText: '적정' },
     },
-    devices: { pump: false, fan: true, led: false },
+    devices: { pump: false, led: false, window: true },
     autoControl: true,
     weather: { temp: 22, sky: 'rain', summary: '비 예보' },
     logs: [
@@ -121,7 +121,7 @@ export const greenhouses = [
       soil:     { value: 60,    unit: '%',   status: 'ok', statusText: '적정' },
       lux:      { value: 19000, unit: 'lux', status: 'ok', statusText: '적정' },
     },
-    devices: { pump: false, fan: false, led: false },
+    devices: { pump: false, led: false, window: false },
     autoControl: true,
     weather: { temp: 22, sky: 'cloudy', summary: '흐림' },
     logs: [
