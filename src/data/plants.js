@@ -36,7 +36,7 @@ export const plants = [
     sunPref: 'low',
   },
   {
-    id: 'green_onion',
+    id: 'greenOnion',
     name: '대파',
     difficulty: 'easy',
     color: '#9eaa55',

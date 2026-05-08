@@ -1,10 +1,10 @@
 import { hashStr, seededRandom } from '../utils/random'
 
-export const LOG_CATEGORIES = ['water', 'fan', 'led', 'alert', 'sensor', 'system']
+export const LOG_CATEGORIES = ['water', 'window', 'led', 'alert', 'sensor', 'system']
 
 export const categoryLabels = {
   water:  '관수',
-  fan:    '환기',
+  window: '환기',
   led:    'LED',
   alert:  '알림',
   sensor: '센서',
@@ -13,7 +13,7 @@ export const categoryLabels = {
 
 export const categoryDotColor = {
   water:  '#4db866',
-  fan:    '#3b82c4',
+  window: '#3b82c4',
   led:    '#f0a500',
   alert:  '#e84040',
   sensor: '#9b59b6',
@@ -22,7 +22,7 @@ export const categoryDotColor = {
 
 const templates = {
   water:  ['자동 급수 완료', '관수 5분 실행', '토양 수분 임계 진입 → 관수 시작'],
-  fan:    ['환기팬 자동 가동', '환기팬 정지', '습도 임계 → 환기 시작'],
+  window: ['창문 자동 개방', '창문 자동 폐쇄', '습도 임계 → 환기 시작'],
   led:    ['LED 자동 점등', 'LED 소등', '조도 부족 감지 → 보광 시작'],
   alert:  ['토양 수분 임계치 도달', '온도 이상 감지 (35°C↑)', '습도 이상 감지', '조도 부족 경보'],
   sensor: ['센서 데이터 수신', '센서 캘리브레이션 완료', '센서 통신 복구'],

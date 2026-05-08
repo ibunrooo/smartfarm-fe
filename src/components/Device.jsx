@@ -8,11 +8,12 @@ export function DeviceIcon({ name, size = 12 }) {
         stroke={stroke} strokeWidth={sw} strokeLinejoin="round" fill="none"/>
     </svg>
   )
-  if (name === 'fan') return (
+  if (name === 'window') return (
     <svg width={size} height={size} viewBox="0 0 12 12" fill="none">
-      <circle cx="6" cy="6" r="1" fill={stroke}/>
-      <path d="M6 5V2M6 7v3M5 6H2M7 6h3"
-        stroke={stroke} strokeWidth={sw} strokeLinecap="round"/>
+      <rect x="2" y="2" width="8" height="8" rx="1"
+        stroke={stroke} strokeWidth={sw} fill="none"/>
+      <line x1="6" y1="2" x2="6" y2="10" stroke={stroke} strokeWidth={sw}/>
+      <line x1="2" y1="6" x2="10" y2="6" stroke={stroke} strokeWidth={sw}/>
     </svg>
   )
   if (name === 'led') return (

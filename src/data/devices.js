@@ -1,7 +1,7 @@
-export const DEVICE_KEYS = ['pump', 'fan', 'led']
+export const DEVICE_KEYS = ['pump', 'led', 'window']
 
 export const deviceLabels = {
-  pump: '펌프',
-  fan:  '환기팬',
-  led:  'LED',
+  pump:   '펌프',
+  led:    'LED',
+  window: '창문',
 }
