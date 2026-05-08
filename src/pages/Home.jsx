@@ -1,15 +1,53 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GreenhouseCard from '../components/GreenhouseCard'
-import { greenhouses } from '../data/greenhouses'
+import { plants } from '../data/plants'
+import { getGreenhouse } from '../api/greenhouse'
+import { getWeather } from '../api/weather'
+import { getMyGreenhouseIds } from '../utils/storage'
 
 function Home() {
   const navigate = useNavigate()
-  const myGreenhouses = greenhouses
+  const [cards, setCards] = useState([])
+  const [loading, setLoading] = useState(() => getMyGreenhouseIds().length > 0)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const ids = getMyGreenhouseIds()
+    if (ids.length === 0) return
+
+    Promise.all(
+      ids.map(id =>
+        Promise.all([
+          getGreenhouse(id).catch(() => null),
+          getWeather(id).catch(() => null),
+        ]).then(([gh, weather]) => (gh ? buildCard(gh, weather) : null))
+      )
+    )
+      .then((results) => {
+        if (cancelled) return
+        setCards(results.filter(Boolean))
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('온실 조회 실패:', err)
+        setError(err.message || '온실 정보를 불러오지 못했어요.')
+        setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [])
 
   const goAdd = () => navigate('/onboarding')
 
-  if (myGreenhouses.length === 0) {
-    return <EmptyState onAdd={goAdd} />
+  if (loading) {
+    return <LoadingState />
+  }
+
+  if (cards.length === 0) {
+    return <EmptyState onAdd={goAdd} error={error} />
   }
 
   return (
@@ -24,9 +62,11 @@ function Home() {
           내 온실
         </span>
         <span style={{ fontSize: 14, fontWeight: 600, color: '#2ea84e' }}>
-          {myGreenhouses.length}
+          {cards.length}
         </span>
       </div>
+
+      {error && <ErrorBanner message={error} />}
 
       {/* 카드 그리드 */}
       <div style={{
@@ -34,15 +74,77 @@ function Home() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 12,
       }}>
-        {myGreenhouses.map(gh => (
+        {cards.map(card => (
           <GreenhouseCard
-            key={gh.id}
-            greenhouse={gh}
-            onClick={() => navigate(`/sensor?gh=${gh.id}`)}
+            key={card.id}
+            greenhouse={card}
+            onClick={() => navigate(`/sensor?gh=${card.id}`)}
           />
         ))}
         <AddCard onClick={goAdd} />
       </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────
+   BE 데이터 → GreenhouseCard 형식 합성
+   ──────────────────────────────────────── */
+
+function buildCard(greenhouse, weather) {
+  const plant = plants.find(p => p.id === greenhouse.plantType)
+  const days = computeDaysSince(greenhouse.createdAt)
+  const locationLabel = greenhouse.locationType === 'outdoor' ? '실외' : '실내'
+  return {
+    id: greenhouse.greenhouseId,
+    plant: {
+      name: plant?.name ?? greenhouse.plantType ?? '식물',
+      sub: `${locationLabel} · 등록 ${days}일째`,
+      status: '정상 운영 중',
+      theme: plant?.theme ?? { main: '#2ea84e', accent: '#4db866' },
+    },
+    weather: weather
+      ? { temp: Math.round(weather.temp ?? 0), summary: weather.summary ?? '-' }
+      : { temp: '-', summary: '-' },
+  }
+}
+
+function computeDaysSince(iso) {
+  if (!iso) return 1
+  const created = new Date(iso)
+  if (isNaN(created.getTime())) return 1
+  const diff = Math.floor((Date.now() - created.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.max(1, diff + 1)
+}
+
+/* ────────────────────────────────────────
+   하위 컴포넌트
+   ──────────────────────────────────────── */
+
+function LoadingState() {
+  return (
+    <div style={{
+      minHeight: 360,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#888', fontSize: 13.5,
+    }}>
+      온실 정보를 불러오는 중…
+    </div>
+  )
+}
+
+function ErrorBanner({ message }) {
+  return (
+    <div style={{
+      padding: '10px 12px',
+      background: '#fff1f1',
+      border: '0.5px solid #fcc',
+      borderRadius: 10,
+      fontSize: 13, color: '#991f1f', lineHeight: 1.5,
+    }}>
+      <span style={{ fontWeight: 700 }}>오류</span>
+      <span style={{ opacity: .4, margin: '0 6px' }}>·</span>
+      <span>{message}</span>
     </div>
   )
 }
@@ -77,7 +179,7 @@ function AddCard({ onClick }) {
   )
 }
 
-function EmptyState({ onAdd }) {
+function EmptyState({ onAdd, error }) {
   return (
     <div style={{
       minHeight: 360,
@@ -106,6 +208,11 @@ function EmptyState({ onAdd }) {
         첫 식물을 등록하고<br />
         스마트팜 관리를 시작해보세요.
       </div>
+      {error && (
+        <div style={{ fontSize: 11.5, color: '#991f1f', marginTop: 4 }}>
+          ({error})
+        </div>
+      )}
       <button
         onClick={onAdd}
         style={{

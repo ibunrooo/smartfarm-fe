@@ -260,9 +260,9 @@ function PlantStep({ value, onChange, onUnsure }) {
             >
               <div style={{
                 width: 38, height: 38,
-                background: p.color,
+                background: p.theme.main,
                 borderRadius: 10,
-                color: p.textColor ?? '#fff',
+                color: p.theme.textColor ?? '#fff',
                 fontSize: 16, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
@@ -644,9 +644,9 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
           >
             <div style={{
               width: 48, height: 48,
-              background: p.color,
+              background: p.theme.main,
               borderRadius: 12,
-              color: p.textColor ?? '#fff',
+              color: p.theme.textColor ?? '#fff',
               fontSize: 19, fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
