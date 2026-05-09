@@ -12,7 +12,7 @@ import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
 import { getWeather } from '../api/weather'
 import { getAlerts } from '../api/alerts'
-import { getActuatorLogs } from '../api/actuator'
+import { getActuatorLogs, controlActuator } from '../api/actuator'
 import { getMyGreenhouseIds } from '../utils/storage'
 
 const modeOptions = [
@@ -20,7 +20,21 @@ const modeOptions = [
   { id: 'real',    label: '실제' },
 ]
 
-const INITIAL_DEVICES = { pump: false, led: false, window: false }
+function deriveDeviceState(actuators) {
+  const state = { pump: false, led: false, window: false }
+  if (!Array.isArray(actuators)) return state
+  // actuators가 최신순으로 정렬되어 있다고 가정
+  for (const key of ['pump', 'led', 'window']) {
+    const last = actuators.find(a => a?.actuator === key)
+    if (last) state[key] = last.action === 'ON' || last.action === 'OPEN'
+  }
+  return state
+}
+
+function actionFor(actuator, on) {
+  if (actuator === 'window') return on ? 'OPEN' : 'CLOSE'
+  return on ? 'ON' : 'OFF'
+}
 
 function Sensor() {
   const navigate = useNavigate()
@@ -238,10 +252,11 @@ function Sensor() {
         })}
       </div>
 
-      {/* 디바이스 제어 — 일단 더미 (control API 미연동) */}
+      {/* 디바이스 제어 — BE control API 연동 */}
       <DeviceControlPanel
         key={activeId}
-        initialDevices={INITIAL_DEVICES}
+        greenhouseId={activeId}
+        initialDevices={deriveDeviceState(actuators)}
         initialAutoControl={true}
       />
 
@@ -392,12 +407,27 @@ function formatTime(iso) {
    디바이스 제어 패널 (더미 — control API는 별도 단계)
    ──────────────────────────────────────── */
 
-function DeviceControlPanel({ initialDevices, initialAutoControl }) {
+function DeviceControlPanel({ greenhouseId, initialDevices, initialAutoControl }) {
   const [autoControl, setAutoControl] = useState(initialAutoControl)
   const [devices, setDevices] = useState(initialDevices)
+  const [pending, setPending] = useState({})  // { [key]: true } 동안 비활성
+  const [controlError, setControlError] = useState(null)
 
-  const toggleDevice = (key) => (next) => {
-    setDevices(prev => ({ ...prev, [key]: next }))
+  const toggleDevice = (key) => async (next) => {
+    if (!greenhouseId) return
+    const prev = devices[key]
+    setDevices(d => ({ ...d, [key]: next }))    // optimistic
+    setPending(p => ({ ...p, [key]: true }))
+    setControlError(null)
+    try {
+      await controlActuator(greenhouseId, key, actionFor(key, next))
+    } catch (err) {
+      console.error('디바이스 제어 실패:', err)
+      setDevices(d => ({ ...d, [key]: prev }))  // rollback
+      setControlError(`${deviceLabels[key]} 제어 실패: ${err.message ?? '오류'}`)
+    } finally {
+      setPending(p => ({ ...p, [key]: false }))
+    }
   }
 
   return (
@@ -438,12 +468,23 @@ function DeviceControlPanel({ initialDevices, initialAutoControl }) {
             key={key}
             deviceKey={key}
             on={devices[key]}
-            disabled={autoControl}
+            disabled={autoControl || !!pending[key]}
             onToggle={toggleDevice(key)}
             isLast={i === DEVICE_KEYS.length - 1}
           />
         ))}
       </div>
+
+      {controlError && (
+        <div style={{
+          padding: '8px 14px',
+          borderTop: '0.5px solid #fcc',
+          background: '#fff1f1',
+          fontSize: 12, color: '#991f1f',
+        }}>
+          {controlError}
+        </div>
+      )}
     </div>
   )
 }
