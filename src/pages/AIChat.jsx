@@ -1,20 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
-import { dailyReports } from '../data/dailyReports'
+import { getLatestReport } from '../api/report'
+import { getActiveGreenhouseId } from '../utils/storage'
 
-const initialMessages = [
-  { id: 1, sender: 'ai',   type: 'text',   text: '안녕하세요! 팜-므파탈 도우미예요.',                                                                  time: '08:30', date: '2026-05-08' },
-  { id: 2, sender: 'ai',   type: 'text',   text: '오늘의 일일 리포트를 보내드릴게요.',                                                                 time: '08:30', date: '2026-05-08' },
-  { id: 3, sender: 'ai',   type: 'report', report: dailyReports[0],                                                                                    time: '08:30', date: '2026-05-08' },
-  { id: 4, sender: 'user', type: 'text',   text: '잎 끝이 좀 마른 것 같던데 괜찮을까요?',                                                              time: '08:32', date: '2026-05-08' },
-  { id: 5, sender: 'ai',   type: 'text',   text: '습도가 55%로 평소보다 다소 높아요. 통풍을 늘리면 도움이 될 거예요. 환기팬이 자동으로 켜져 있어요.',  time: '08:32', date: '2026-05-08' },
-  { id: 6, sender: 'user', type: 'text',   text: '그럼 일단 지켜볼게요. 고마워요!',                                                                    time: '08:35', date: '2026-05-08' },
-  { id: 7, sender: 'ai',   type: 'text',   text: '네, 변동이 있으면 바로 알려드릴게요.',                                                                time: '08:35', date: '2026-05-08' },
-]
+function nowParts() {
+  const d = new Date()
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  const date = d.toISOString().slice(0, 10)
+  return { time, date }
+}
+
+function buildInitialMessages() {
+  const { time, date } = nowParts()
+  const ghId = getActiveGreenhouseId()
+  const base = [
+    { id: 'w1', sender: 'ai', type: 'text', text: '안녕하세요! 팜-므파탈 도우미예요.', time, date },
+  ]
+  if (!ghId) {
+    base.push({
+      id: 'w2', sender: 'ai', type: 'text',
+      text: '먼저 식물을 등록해 주세요. 등록하시면 매일의 리포트를 보내드릴게요.',
+      time, date,
+    })
+  } else {
+    base.push({
+      id: 'w-loading', sender: 'ai', type: 'text',
+      text: '오늘의 일일 리포트를 가져오는 중이에요…',
+      time, date,
+    })
+  }
+  return base
+}
 
 function AIChat() {
-  const [messages, setMessages] = useState(initialMessages)
+  const [messages, setMessages] = useState(buildInitialMessages)
   const [draft, setDraft] = useState('')
   const [activeReport, setActiveReport] = useState(null)
   const scrollRef = useRef(null)
@@ -30,6 +50,51 @@ function AIChat() {
         console.warn('SW 등록 실패:', err)
       })
     }
+  }, [])
+
+  useEffect(() => {
+    const ghId = getActiveGreenhouseId()
+    if (!ghId) return
+    let cancelled = false
+
+    getLatestReport(ghId)
+      .then((report) => {
+        if (cancelled) return
+        const { time, date } = nowParts()
+        setMessages(prev => {
+          const without = prev.filter(m => m.id !== 'w-loading')
+          if (report) {
+            return [
+              ...without,
+              { id: 'w2', sender: 'ai', type: 'text', text: '오늘의 일일 리포트를 보내드릴게요.', time, date },
+              { id: `r-${report.date ?? Date.now()}`, sender: 'ai', type: 'report', report, time, date },
+            ]
+          }
+          return [
+            ...without,
+            {
+              id: 'w-no-report', sender: 'ai', type: 'text',
+              text: '아직 일일 리포트가 준비되지 않았어요. 센서 데이터가 충분히 쌓이면 만들어드릴게요.',
+              time, date,
+            },
+          ]
+        })
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('리포트 조회 실패:', err)
+        const { time, date } = nowParts()
+        setMessages(prev => [
+          ...prev.filter(m => m.id !== 'w-loading'),
+          {
+            id: 'w-err', sender: 'ai', type: 'text',
+            text: '리포트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+            time, date,
+          },
+        ])
+      })
+
+    return () => { cancelled = true }
   }, [])
 
   const handleSend = () => {

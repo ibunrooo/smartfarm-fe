@@ -1,7 +1,16 @@
 import { riskLabel, riskColor } from '../data/dailyReports'
 
+function deriveRiskScore(report) {
+  if (typeof report?.riskScore === 'number') return report.riskScore
+  if (report?.riskLevel === 'high')   return 85
+  if (report?.riskLevel === 'medium') return 55
+  return 20
+}
+
 function DailyReportCard({ report, onShowDetail }) {
-  const color = riskColor[report.riskLevel]
+  const color = riskColor[report.riskLevel] ?? '#888'
+  const score = deriveRiskScore(report)
+  const recs  = report.recommendations ?? report.actions ?? []
 
   return (
     <div style={{
@@ -49,14 +58,14 @@ function DailyReportCard({ report, onShowDetail }) {
               병해충 위험도
             </span>
             <span style={{ fontSize: 13, fontWeight: 700, color }}>
-              {riskLabel[report.riskLevel]} · {report.riskScore}%
+              {riskLabel[report.riskLevel] ?? '-'} · {score}%
             </span>
           </div>
           <div style={{
             height: 5, background: '#f0f0f0', borderRadius: 8, overflow: 'hidden',
           }}>
             <div style={{
-              width: `${report.riskScore}%`,
+              width: `${score}%`,
               height: '100%',
               background: color,
             }} />
@@ -71,7 +80,7 @@ function DailyReportCard({ report, onShowDetail }) {
           }}>
             추천 행동
           </div>
-          {report.actions.map((action, i) => (
+          {recs.map((action, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: 6,
               fontSize: 12.5, color: '#444', lineHeight: 1.5,
