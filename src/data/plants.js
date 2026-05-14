@@ -18,7 +18,7 @@ export const plants = [
     sunPref: 'low',
   },
   {
-    id: 'tomato',
+    id: 'cherry_tomato',
     name: '방울토마토',
     difficulty: 'medium',
     theme: { main: '#d44545', accent: '#e8666c' },
@@ -36,7 +36,7 @@ export const plants = [
     sunPref: 'low',
   },
   {
-    id: 'greenOnion',
+    id: 'green_onion',
     name: '대파',
     difficulty: 'easy',
     theme: { main: '#9eaa55', accent: '#b3c06d' },
