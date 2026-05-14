@@ -159,6 +159,7 @@ function Sensor() {
           borderRadius: 10,
           padding: 3,
           gap: 2,
+          marginRight: 44,  // UserMenu 회피
         }}>
           {modeOptions.map(opt => {
             const isActive = sensorMode === opt.id

@@ -172,6 +172,7 @@ function AIChat() {
           onClick={() => navigate('/reports')}
           style={{
             padding: '6px 10px',
+            marginRight: 44,  // UserMenu (우측 fixed 36px + 12 여백) 회피
             background: '#f8fdf9',
             border: '0.5px solid #ddf2e2',
             borderRadius: 8,
