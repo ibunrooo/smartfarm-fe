@@ -29,21 +29,23 @@ function GreenhouseCard({ greenhouse, onClick }) {
         background: theme.accent, borderRadius: '50%', opacity: .35,
       }} />
 
-      {/* 날씨 미니 */}
-      <div style={{
-        position: 'absolute', right: 12, top: 10,
-        display: 'flex', alignItems: 'center', gap: 5,
-        background: chipBg,
-        border: `0.5px solid ${chipBd}`,
-        borderRadius: 18, padding: '3px 8px',
-        fontSize: 12, color: txt, zIndex: 1,
-      }}>
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-          <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
-            stroke={txt} strokeWidth="1" strokeLinecap="round" fill="none" opacity=".9"/>
-        </svg>
-        {weather.temp}° · {weather.summary}
-      </div>
+      {/* 날씨 미니 — 데이터 있을 때만 */}
+      {weather && weather.temp !== '-' && weather.summary !== '-' && (
+        <div style={{
+          position: 'absolute', right: 12, top: 10,
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: chipBg,
+          border: `0.5px solid ${chipBd}`,
+          borderRadius: 18, padding: '3px 8px',
+          fontSize: 12, color: txt, zIndex: 1,
+        }}>
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+            <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
+              stroke={txt} strokeWidth="1" strokeLinecap="round" fill="none" opacity=".9"/>
+          </svg>
+          {weather.temp}° · {weather.summary}
+        </div>
+      )}
 
       {/* 식물 아이콘 */}
       <div style={{

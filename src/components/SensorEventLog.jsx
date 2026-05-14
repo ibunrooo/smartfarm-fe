@@ -67,7 +67,9 @@ function SensorEventLog({ logs }) {
             padding: '24px 14px', textAlign: 'center',
             fontSize: 13, color: '#aaa',
           }}>
-            해당 카테고리의 로그가 없어요.
+            {filter === 'all'
+              ? '아직 기록된 활동이 없어요.'
+              : '해당 카테고리의 로그가 없어요.'}
           </div>
         ) : visible.map((log, i) => (
           <div key={log.id} style={{

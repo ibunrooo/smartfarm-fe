@@ -94,6 +94,7 @@ function Sensor() {
   const histories    = buildHistories(history)
   const eventLogs    = mergeEventLogs(alerts, actuators)
   const topAlert     = buildTopAlert(alerts)
+  const noSensorData = !latest && (!Array.isArray(history) || history.length === 0)
 
   /* 빈 상태: 등록된 온실 없음 */
   if (!activeId) {
@@ -205,6 +206,23 @@ function Sensor() {
           <span style={{ fontWeight: 700 }}>오류</span>
           <span style={{ opacity: .4, margin: '0 6px' }}>·</span>
           <span>{error}</span>
+        </div>
+      )}
+
+      {noSensorData && !error && (
+        <div style={{
+          padding: '10px 12px',
+          background: '#f8fdf9',
+          border: '0.5px solid #ddf2e2',
+          borderRadius: 10,
+          fontSize: 13, color: '#1e8a3c',
+          display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
+        }}>
+          <span style={{ fontWeight: 700 }}>센서 데이터를 기다리는 중</span>
+          <span style={{ opacity: .5 }}>·</span>
+          <span style={{ color: '#444' }}>
+            아직 수집된 측정값이 없어요. 잠시 후 자동으로 표시됩니다.
+          </span>
         </div>
       )}
 
