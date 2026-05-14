@@ -11,7 +11,11 @@ function DailyReportDetail({ report, onClose }) {
 
   if (!report) return null
 
-  const color = riskColor[report.riskLevel]
+  const color = riskColor[report.riskLevel] ?? '#888'
+  const score = typeof report.riskScore === 'number'
+    ? report.riskScore
+    : (report.riskLevel === 'high' ? 85 : report.riskLevel === 'medium' ? 55 : 20)
+  const recs = report.recommendations ?? report.actions ?? []
   const formattedDate = formatFullDate(report.date)
   const createdTime   = formatCreatedTime(report.createdAt)
 
@@ -94,13 +98,13 @@ function DailyReportDetail({ report, onClose }) {
             }}>
               <span style={{ fontSize: 11.5, color: '#888' }}>현재 위험도</span>
               <span style={{ fontSize: 14, fontWeight: 700, color }}>
-                {riskLabel[report.riskLevel]} · {report.riskScore}%
+                {riskLabel[report.riskLevel] ?? '-'} · {score}%
               </span>
             </div>
             <div style={{
               height: 7, borderRadius: 8, background: '#f0f0f0', overflow: 'hidden',
             }}>
-              <div style={{ width: `${report.riskScore}%`, height: '100%', background: color }} />
+              <div style={{ width: `${score}%`, height: '100%', background: color }} />
             </div>
           </Section>
 
@@ -145,7 +149,7 @@ function DailyReportDetail({ report, onClose }) {
           {/* 추천 행동 */}
           <Section title="추천 행동" last>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {report.actions.map((action, i) => (
+              {recs.map((action, i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 8,
                   padding: '8px 10px',
