@@ -41,20 +41,24 @@ export async function getLatestReport(greenhouseId) {
 }
 
 // 호환용 엔드포인트
-// GET /api/reports?limit=7
-export async function getReportList(limit = 7) {
-  const data = await apiFetch(`/api/reports${buildQuery({ limit })}`)
+// GET /api/reports?greenhouseId=xxx&limit=7
+export async function getReportList(greenhouseId, limit = 7) {
+  const data = await apiFetch(`/api/reports${buildQuery({ greenhouseId, limit })}`)
   return Array.isArray(data) ? data.map(mapReport) : []
 }
 
-// GET /api/reports/today
-export async function getTodayReport() {
-  const data = await apiFetch('/api/reports/today')
+// GET /api/reports/today?greenhouseId=xxx
+export async function getTodayReport(greenhouseId) {
+  const data = await apiFetch(`/api/reports/today${buildQuery({ greenhouseId })}`)
   return mapReport(data)
 }
 
 // POST /api/reports/generate
-export async function generateTodayReport() {
-  const data = await apiFetch('/api/reports/generate', { method: 'POST' })
+// body: { greenhouseId }
+export async function generateTodayReport(greenhouseId) {
+  const data = await apiFetch('/api/reports/generate', {
+    method: 'POST',
+    body: JSON.stringify({ greenhouseId }),
+  })
   return mapReport(data)
 }

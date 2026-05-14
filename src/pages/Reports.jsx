@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { riskLabel, riskColor } from '../data/dailyReports'
 import { getReportList, generateTodayReport } from '../api/report'
+import { getActiveGreenhouseId } from '../utils/storage'
 
 function Reports() {
   const navigate = useNavigate()
+  const greenhouseId = getActiveGreenhouseId()
   const [reports, setReports]   = useState([])
-  const [loading, setLoading]   = useState(true)
+  const [loading, setLoading]   = useState(!!greenhouseId)
   const [error, setError]       = useState(null)
   const [active, setActive]     = useState(null)  // 상세 모달
   const [generating, setGenerating] = useState(false)
@@ -40,9 +42,10 @@ function Reports() {
   }
 
   const fetchReports = async () => {
+    if (!greenhouseId) return
     setError(null)
     try {
-      const list = await getReportList(30)
+      const list = await getReportList(greenhouseId, 30)
       setReports(Array.isArray(list) ? list : [])
     } catch (err) {
       console.error('리포트 목록 조회 실패:', err)
@@ -51,8 +54,9 @@ function Reports() {
   }
 
   useEffect(() => {
+    if (!greenhouseId) return
     let cancelled = false
-    getReportList(30)
+    getReportList(greenhouseId, 30)
       .then((list) => {
         if (cancelled) return
         setReports(Array.isArray(list) ? list : [])
@@ -65,14 +69,14 @@ function Reports() {
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [])
+  }, [greenhouseId])
 
   const handleGenerate = async () => {
-    if (generating) return
+    if (generating || !greenhouseId) return
     setGenerating(true)
     setGenerateError(null)
     try {
-      await generateTodayReport()
+      await generateTodayReport(greenhouseId)
       await fetchReports()  // 목록 새로고침
     } catch (err) {
       console.error('리포트 생성 실패:', err)
@@ -112,10 +116,10 @@ function Reports() {
         </div>
         <button
           onClick={handleGenerate}
-          disabled={generating}
+          disabled={generating || !greenhouseId}
           style={{
             padding: '8px 12px',
-            background: generating ? '#cfe7d4' : '#2ea84e',
+            background: (generating || !greenhouseId) ? '#cfe7d4' : '#2ea84e',
             border: 'none', borderRadius: 10,
             fontSize: 12.5, fontWeight: 700,
             color: '#fff',
@@ -140,36 +144,7 @@ function Reports() {
         </div>
       )}
 
-      {!loading && !error && (
-        <MonthCalendar
-          year={viewYear}
-          month={viewMonth}
-          reportByDate={reportByDate}
-          onPrev={movePrev}
-          onNext={moveNext}
-          onDayClick={handleDayClick}
-        />
-      )}
-
-      {loading ? (
-        <div style={{
-          minHeight: 200,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#888', fontSize: 13.5,
-        }}>
-          리포트를 불러오는 중…
-        </div>
-      ) : error ? (
-        <div style={{
-          padding: '10px 12px',
-          background: '#fff1f1',
-          border: '0.5px solid #fcc',
-          borderRadius: 10,
-          fontSize: 13, color: '#991f1f',
-        }}>
-          {error}
-        </div>
-      ) : reports.length === 0 ? (
+      {!greenhouseId ? (
         <div style={{
           minHeight: 200,
           display: 'flex', flexDirection: 'column',
@@ -178,19 +153,81 @@ function Reports() {
           color: '#888',
         }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
-            아직 생성된 리포트가 없어요
+            활성 온실이 없어요
           </div>
           <div style={{ fontSize: 12.5, color: '#888', maxWidth: 280, lineHeight: 1.5 }}>
-            센서 데이터가 충분히 쌓이면 매일 자동으로 만들어져요.<br />
-            지금 만들어보려면 위 "오늘 새로 생성" 버튼을 눌러 주세요.
+            먼저 식물을 등록해 주세요.
           </div>
+          <button
+            onClick={() => navigate('/onboarding')}
+            style={{
+              marginTop: 6,
+              padding: '8px 16px',
+              background: '#2ea84e', color: '#fff',
+              border: 'none', borderRadius: 10,
+              fontSize: 13, fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            + 식물 추가하기
+          </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
-          {reports.map((r) => (
-            <ReportCard key={r.date} report={r} onClick={() => setActive(r)} />
-          ))}
-        </div>
+        <>
+          {!loading && !error && (
+            <MonthCalendar
+              year={viewYear}
+              month={viewMonth}
+              reportByDate={reportByDate}
+              onPrev={movePrev}
+              onNext={moveNext}
+              onDayClick={handleDayClick}
+            />
+          )}
+
+          {loading ? (
+            <div style={{
+              minHeight: 200,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#888', fontSize: 13.5,
+            }}>
+              리포트를 불러오는 중…
+            </div>
+          ) : error ? (
+            <div style={{
+              padding: '10px 12px',
+              background: '#fff1f1',
+              border: '0.5px solid #fcc',
+              borderRadius: 10,
+              fontSize: 13, color: '#991f1f',
+            }}>
+              {error}
+            </div>
+          ) : reports.length === 0 ? (
+            <div style={{
+              minHeight: 200,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 8, padding: 20, textAlign: 'center',
+              color: '#888',
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+                아직 생성된 리포트가 없어요
+              </div>
+              <div style={{ fontSize: 12.5, color: '#888', maxWidth: 280, lineHeight: 1.5 }}>
+                센서 데이터가 충분히 쌓이면 매일 자동으로 만들어져요.<br />
+                지금 만들어보려면 위 "오늘 새로 생성" 버튼을 눌러 주세요.
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+              {reports.map((r) => (
+                <ReportCard key={r.date} report={r} onClick={() => setActive(r)} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <DailyReportDetail report={active} onClose={() => setActive(null)} />
