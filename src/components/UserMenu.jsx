@@ -35,6 +35,7 @@ function UserMenu() {
 
   const handleLogout = async () => {
     setOpen(false)
+    if (!window.confirm('로그아웃 하시겠어요?')) return
     await supabase.auth.signOut().catch(() => {})
     try {
       localStorage.removeItem('farm-me:greenhouseIds')

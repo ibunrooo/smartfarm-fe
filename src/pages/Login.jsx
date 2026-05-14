@@ -11,6 +11,26 @@ function Login() {
   const [info, setInfo] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  const resendConfirmation = async () => {
+    if (loading) return
+    if (!email) {
+      setError('이메일을 먼저 입력해주세요.')
+      return
+    }
+    setError(null)
+    setInfo(null)
+    setLoading(true)
+    try {
+      const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email })
+      if (resendErr) throw resendErr
+      setInfo('확인 메일을 다시 보냈어요. 메일함을 확인해 주세요.')
+    } catch (err) {
+      console.error('재전송 실패:', err)
+      setError(err.message || '메일 재전송에 실패했어요.')
+    }
+    setLoading(false)
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
@@ -144,8 +164,32 @@ function Login() {
           </button>
         </form>
 
+        {mode === 'signin' && (
+          <div style={{
+            textAlign: 'center', marginTop: 12,
+            fontSize: 12, color: '#888',
+          }}>
+            확인 메일을 못 받으셨나요?{' '}
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              disabled={loading}
+              style={{
+                background: 'none', border: 'none',
+                color: '#2ea84e', fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: 12, padding: 0,
+                opacity: loading ? 0.5 : 1,
+              }}
+            >
+              재전송
+            </button>
+          </div>
+        )}
+
         <div style={{
-          textAlign: 'center', marginTop: 16,
+          textAlign: 'center', marginTop: 12,
           fontSize: 12.5, color: '#666',
         }}>
           {mode === 'signin' ? '계정이 없으신가요? ' : '이미 계정이 있으신가요? '}
