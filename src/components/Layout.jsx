@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
+import UserMenu from './UserMenu'
 
 function Layout() {
   const location = useLocation()
@@ -58,11 +59,12 @@ function Layout() {
   return (
     <div style={{ display: 'flex', height: '100dvh', background: '#fff', overflow: 'hidden' }}>
       <Sidebar navItems={navItems} currentPath={currentPath} navigate={navigate} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, position: 'relative' }}>
         <div className="page-content" style={{ flex: 1, overflowY: 'auto', padding: '24px 40px', display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </div>
         <BottomNav navItems={navItems} currentPath={currentPath} navigate={navigate} />
+        <UserMenu />
       </div>
     </div>
   )

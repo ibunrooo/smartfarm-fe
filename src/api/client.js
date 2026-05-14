@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabase'
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
 
 export class ApiError extends Error {
@@ -9,10 +11,19 @@ export class ApiError extends Error {
   }
 }
 
+async function authHeader() {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function apiFetch(path, options = {}) {
   const url = path.startsWith('http') ? path : `${BASE_URL}${path}`
 
-  const headers = { ...(options.headers ?? {}) }
+  const headers = {
+    ...(await authHeader()),
+    ...(options.headers ?? {}),
+  }
   const isFormData = options.body instanceof FormData
   if (!isFormData && options.body && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json'
@@ -30,6 +41,10 @@ export async function apiFetch(path, options = {}) {
   }
 
   if (!res.ok) {
+    if (res.status === 401) {
+      // 인증 만료/실패 → 자동 로그아웃 (ProtectedRoute가 /login으로 redirect)
+      await supabase.auth.signOut().catch(() => {})
+    }
     const message = body?.error ?? body?.message ?? `HTTP ${res.status}`
     throw new ApiError(res.status, message, body)
   }

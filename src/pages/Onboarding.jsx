@@ -1,8 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { plants, difficultyLabel, difficultyColor, recommendPlants } from '../data/plants'
+import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend } from '../data/plants'
 import { upsertGreenhouse } from '../api/greenhouse'
+import { getPlantList, recommendPlant, registerPlant } from '../api/plant'
 import { addGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
+
+const DEFAULT_THEME = { main: '#2ea84e', accent: '#4db866' }
+
+function mergeWithFallback(bePlant) {
+  const fb = fallbackPlants.find(p => p.id === bePlant.id)
+  return {
+    ...(fb ?? {}),
+    ...bePlant,
+    theme:           bePlant.theme ?? fb?.theme ?? DEFAULT_THEME,
+    difficulty:      bePlant.difficulty ?? fb?.difficulty ?? 'easy',
+    recommendReason: bePlant.recommendReason || fb?.recommendReason || '',
+    sunPref:         bePlant.sunPref ?? fb?.sunPref ?? 'low',
+  }
+}
 
 // 도시 → lat/lon 매핑 (추후 확장 / 동적 geocoding 가능)
 const DEFAULT_LAT_LON = { lat: 37.5665, lon: 126.9780 } // 서울
@@ -19,11 +34,24 @@ function Onboarding() {
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [plantList, setPlantList] = useState(fallbackPlants)
   const [data, setData] = useState({
     plantId:  null,
     location: null,
     city:     '',
   })
+
+  // BE 식물 목록 시도 (실패 시 더미 유지)
+  useEffect(() => {
+    let cancelled = false
+    getPlantList()
+      .then((list) => {
+        if (cancelled || list.length === 0) return
+        setPlantList(list.map(mergeWithFallback))
+      })
+      .catch(() => { /* 더미 유지 */ })
+    return () => { cancelled = true }
+  }, [])
 
   if (mode === 'recommend') {
     return (
@@ -66,6 +94,10 @@ function Onboarding() {
         lat:          DEFAULT_LAT_LON.lat,
         lon:          DEFAULT_LAT_LON.lon,
       })
+      // 명세상 식물 등록 endpoint 추가 호출 (실패는 무시 — plantType은 이미 greenhouse에 들어감)
+      await registerPlant(newId, data.plantId).catch((err) => {
+        console.warn('plant 등록 호출 실패 (무시):', err)
+      })
       addGreenhouseId(newId)
       setActiveGreenhouseId(newId)
       navigate('/home')
@@ -106,6 +138,7 @@ function Onboarding() {
       <div style={{ minHeight: 200 }}>
         {step === 1 && (
           <PlantStep
+            plants={plantList}
             value={data.plantId}
             onChange={(id) => setData(d => ({ ...d, plantId: id }))}
             onUnsure={() => setMode('recommend')}
@@ -119,6 +152,7 @@ function Onboarding() {
         )}
         {step === 3 && (
           <CityStep
+            plants={plantList}
             value={data.city}
             onChange={(city) => setData(d => ({ ...d, city }))}
             summary={data}
@@ -231,7 +265,7 @@ function Stepper({ current, total, labels }) {
   )
 }
 
-function PlantStep({ value, onChange, onUnsure }) {
+function PlantStep({ plants, value, onChange, onUnsure }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{
@@ -369,7 +403,7 @@ function LocationStep({ value, onChange }) {
   )
 }
 
-function CityStep({ value, onChange, summary }) {
+function CityStep({ plants, value, onChange, summary }) {
   const plant = plants.find(p => p.id === summary.plantId)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -459,14 +493,31 @@ function Recommend({ onCancel, onSelect }) {
   const [results, setResults] = useState([])
   const [picked, setPicked] = useState(null)
 
-  const handleStart = () => {
+  const handleStart = async () => {
     setPhase('loading')
+    // BE 추천 시도 → 실패/빈 결과면 frontend 더미 알고리즘으로 fallback
+    try {
+      const { plants: beResults } = await recommendPlant({
+        locationType: 'indoor',           // 추천 흐름엔 환경 입력이 없어 기본값
+        lightLevel:   answers.sunlight,
+      })
+      if (beResults && beResults.length > 0) {
+        const merged = beResults.map(mergeWithFallback)
+        setResults(merged)
+        setPicked(merged[0]?.id ?? null)
+        setPhase('result')
+        return
+      }
+    } catch (err) {
+      console.warn('BE 추천 실패, 더미로 fallback:', err)
+    }
+    // fallback (약간의 로딩 느낌 유지)
     setTimeout(() => {
-      const recs = recommendPlants(answers)
+      const recs = fallbackRecommend(answers)
       setResults(recs)
       setPicked(recs[0]?.id ?? null)
       setPhase('result')
-    }, 1500)
+    }, 600)
   }
 
   return (

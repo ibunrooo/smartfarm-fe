@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { getLatestReport } from '../api/report'
@@ -34,6 +35,7 @@ function buildInitialMessages() {
 }
 
 function AIChat() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState(buildInitialMessages)
   const [draft, setDraft] = useState('')
   const [activeReport, setActiveReport] = useState(null)
@@ -100,14 +102,29 @@ function AIChat() {
   const handleSend = () => {
     const trimmed = draft.trim()
     if (!trimmed) return
-    const now = new Date()
-    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    const date = now.toISOString().slice(0, 10)
+    const { time, date } = nowParts()
+    const userId = Date.now()
     setMessages(prev => [
       ...prev,
-      { id: Date.now(), sender: 'user', type: 'text', text: trimmed, time, date },
+      { id: userId, sender: 'user', type: 'text', text: trimmed, time, date },
     ])
     setDraft('')
+
+    // 봇 자동 안내 (실시간 채팅은 미구현)
+    setTimeout(() => {
+      const { time: replyTime, date: replyDate } = nowParts()
+      setMessages(prev => [
+        ...prev,
+        {
+          id: userId + 1,
+          sender: 'ai',
+          type: 'text',
+          text: '실시간 대화 기능은 아직 준비 중이에요. 일일 리포트는 위 카드에서 확인하실 수 있고, 자세한 상태는 센서·분석 탭을 이용해 보세요.',
+          time: replyTime,
+          date: replyDate,
+        },
+      ])
+    }, 600)
   }
 
   const onKeyDown = (e) => {
@@ -142,7 +159,7 @@ function AIChat() {
         }}>
           <BotPlantIcon />
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
             팜-므파탈 도우미
           </div>
@@ -151,6 +168,23 @@ function AIChat() {
             <span style={{ fontSize: 12, color: '#888' }}>온라인</span>
           </div>
         </div>
+        <button
+          onClick={() => navigate('/reports')}
+          style={{
+            padding: '6px 10px',
+            marginRight: 44,  // UserMenu (우측 fixed 36px + 12 여백) 회피
+            background: '#f8fdf9',
+            border: '0.5px solid #ddf2e2',
+            borderRadius: 8,
+            fontSize: 11.5, fontWeight: 600,
+            color: '#1e8a3c',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+            flexShrink: 0,
+          }}
+        >
+          지난 리포트 →
+        </button>
       </div>
 
       <NotificationBanner />
