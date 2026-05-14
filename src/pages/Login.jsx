@@ -11,26 +11,29 @@ function Login() {
   const [info, setInfo] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const handleGoogle = async () => {
+  const handleOAuth = (provider, label) => async () => {
     if (loading) return
     setError(null)
     setInfo(null)
     setLoading(true)
     try {
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider,
         options: {
           redirectTo: `${window.location.origin}/home`,
         },
       })
       if (oauthErr) throw oauthErr
-      // 성공 시 브라우저가 자동으로 Google 페이지로 리다이렉트됩니다.
+      // 성공 시 브라우저가 자동으로 provider 페이지로 리다이렉트됩니다.
     } catch (err) {
-      console.error('Google 로그인 실패:', err)
-      setError(err.message || 'Google 로그인을 시작하지 못했어요.')
+      console.error(`${label} 로그인 실패:`, err)
+      setError(err.message || `${label} 로그인을 시작하지 못했어요.`)
       setLoading(false)
     }
   }
+
+  const handleGoogle = handleOAuth('google', 'Google')
+  const handleKakao  = handleOAuth('kakao',  'Kakao')
 
   const resendConfirmation = async () => {
     if (loading) return
@@ -121,29 +124,53 @@ function Login() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '11px',
-            background: '#fff',
-            border: '0.5px solid #ddd',
-            borderRadius: 10,
-            fontSize: 14, fontWeight: 600,
-            color: '#1a1a1a',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontFamily: 'var(--ff)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 8,
-            opacity: loading ? 0.6 : 1,
-            marginBottom: 14,
-          }}
-        >
-          <GoogleIcon />
-          Google로 계속하기
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '11px',
+              background: '#fff',
+              border: '0.5px solid #ddd',
+              borderRadius: 10,
+              fontSize: 14, fontWeight: 600,
+              color: '#1a1a1a',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--ff)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 8,
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            <GoogleIcon />
+            Google로 계속하기
+          </button>
+
+          <button
+            type="button"
+            onClick={handleKakao}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '11px',
+              background: '#FEE500',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: 14, fontWeight: 600,
+              color: '#1a1a1a',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--ff)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 8,
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            <KakaoIcon />
+            카카오로 계속하기
+          </button>
+        </div>
 
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -289,6 +316,14 @@ function GoogleIcon() {
       <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.32A9 9 0 0 0 9 18z"/>
       <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3.01-2.32z"/>
       <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.36l2.58-2.58A9 9 0 0 0 .96 4.96l3.01 2.32C4.68 5.16 6.66 3.58 9 3.58z"/>
+    </svg>
+  )
+}
+
+function KakaoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
+      <path fill="#000" d="M9 2C4.86 2 1.5 4.62 1.5 7.85c0 2.09 1.4 3.91 3.5 4.94l-.7 2.55c-.06.21.17.38.36.26l3.05-2.01c.43.05.86.07 1.29.07 4.14 0 7.5-2.62 7.5-5.81S13.14 2 9 2z"/>
     </svg>
   )
 }
