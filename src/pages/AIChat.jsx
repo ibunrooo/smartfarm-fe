@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { getLatestReport } from '../api/report'
@@ -34,6 +35,7 @@ function buildInitialMessages() {
 }
 
 function AIChat() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState(buildInitialMessages)
   const [draft, setDraft] = useState('')
   const [activeReport, setActiveReport] = useState(null)
@@ -157,7 +159,7 @@ function AIChat() {
         }}>
           <BotPlantIcon />
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
             팜-므파탈 도우미
           </div>
@@ -166,6 +168,22 @@ function AIChat() {
             <span style={{ fontSize: 12, color: '#888' }}>온라인</span>
           </div>
         </div>
+        <button
+          onClick={() => navigate('/reports')}
+          style={{
+            padding: '6px 10px',
+            background: '#f8fdf9',
+            border: '0.5px solid #ddf2e2',
+            borderRadius: 8,
+            fontSize: 11.5, fontWeight: 600,
+            color: '#1e8a3c',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+            flexShrink: 0,
+          }}
+        >
+          지난 리포트 →
+        </button>
       </div>
 
       <NotificationBanner />

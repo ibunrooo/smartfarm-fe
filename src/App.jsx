@@ -8,6 +8,7 @@ import Sensor from './pages/Sensor'
 import AIChat from './pages/AIChat'
 import Analysis from './pages/Analysis'
 import Onboarding from './pages/Onboarding'
+import Reports from './pages/Reports'
 import './index.css'
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
           <Route path="ai"         element={<AIChat />} />
           <Route path="analysis"   element={<Analysis />} />
           <Route path="onboarding" element={<Onboarding />} />
+          <Route path="reports"    element={<Reports />} />
         </Route>
       </Routes>
     </BrowserRouter>
