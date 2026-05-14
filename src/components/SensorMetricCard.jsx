@@ -47,24 +47,34 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
       </div>
 
       <div style={{ marginTop: 8, height: 70, marginLeft: -4, marginRight: -4 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={history} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor={color} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <Area
-              type="monotone"
-              dataKey="v"
-              stroke={color}
-              strokeWidth={1.6}
-              fill={`url(#${gradId})`}
-              isAnimationActive={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {Array.isArray(history) && history.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={history} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+              <defs>
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor={color} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="v"
+                stroke={color}
+                strokeWidth={1.6}
+                fill={`url(#${gradId})`}
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div style={{
+            height: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, color: '#bbb',
+          }}>
+            아직 시계열 데이터가 없어요
+          </div>
+        )}
       </div>
     </div>
   )
