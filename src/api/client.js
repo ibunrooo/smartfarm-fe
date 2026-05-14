@@ -42,9 +42,8 @@ export async function apiFetch(path, options = {}) {
 
   if (!res.ok) {
     if (res.status === 401) {
-      // TODO: BE 토큰 검증 이슈 해결되면 다시 활성화
       // 인증 만료/실패 → 자동 로그아웃 (ProtectedRoute가 /login으로 redirect)
-      // await supabase.auth.signOut().catch(() => {})
+      await supabase.auth.signOut().catch(() => {})
     }
     const message = body?.error ?? body?.message ?? `HTTP ${res.status}`
     throw new ApiError(res.status, message, body)
