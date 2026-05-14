@@ -1,10 +1,16 @@
 import { apiFetch, buildQuery } from './client'
 
+function toDateOnly(value) {
+  if (!value || typeof value !== 'string') return value
+  const tIdx = value.indexOf('T')
+  return tIdx > 0 ? value.slice(0, tIdx) : value
+}
+
 export function mapReport(raw) {
   if (!raw) return null
   return {
     greenhouseId:     raw.greenhouseId ?? raw.greenhouse_id,
-    date:             raw.date,
+    date:             toDateOnly(raw.date),
     avgTemp:          raw.avgTemp,
     avgHumidity:      raw.avgHumidity,
     avgSoil:          raw.avgSoil,
