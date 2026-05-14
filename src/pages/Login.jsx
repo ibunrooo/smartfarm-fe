@@ -63,6 +63,17 @@ function Login() {
     setLoading(true)
 
     try {
+      if (mode === 'reset') {
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/update-password`,
+        })
+        if (resetErr) throw resetErr
+        setInfo('재설정 메일을 보냈어요. 메일함을 확인해 주세요.')
+        setMode('signin')
+        setLoading(false)
+        return
+      }
+
       const result = mode === 'signin'
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password })
@@ -120,10 +131,13 @@ function Login() {
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>팜-므파탈</div>
           <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
-            {mode === 'signin' ? '로그인해 식물을 돌봐주세요' : '가입하고 시작해보세요'}
+            {mode === 'signin' ? '로그인해 식물을 돌봐주세요'
+              : mode === 'signup' ? '가입하고 시작해보세요'
+              : '비밀번호 재설정 메일을 보내드릴게요'}
           </div>
         </div>
 
+        {mode !== 'reset' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
           <button
             type="button"
@@ -171,15 +185,18 @@ function Login() {
             카카오로 계속하기
           </button>
         </div>
+        )}
 
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          marginBottom: 14,
-        }}>
-          <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
-          <span style={{ fontSize: 11, color: '#aaa' }}>또는 이메일로</span>
-          <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
-        </div>
+        {mode !== 'reset' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            marginBottom: 14,
+          }}>
+            <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
+            <span style={{ fontSize: 11, color: '#aaa' }}>또는 이메일로</span>
+            <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
+          </div>
+        )}
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input
@@ -191,16 +208,18 @@ function Login() {
             onChange={(e) => setEmail(e.target.value)}
             style={fieldStyle}
           />
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            placeholder="비밀번호 (6자 이상)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={fieldStyle}
-          />
+          {mode !== 'reset' && (
+            <input
+              type="password"
+              required
+              minLength={6}
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              placeholder="비밀번호 (6자 이상)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={fieldStyle}
+            />
+          )}
 
           {error && (
             <div style={{
@@ -240,31 +259,49 @@ function Login() {
             }}
           >
             {loading
-              ? (mode === 'signin' ? '로그인 중…' : '가입 중…')
-              : (mode === 'signin' ? '로그인' : '가입하기')}
+              ? (mode === 'signin' ? '로그인 중…' : mode === 'signup' ? '가입 중…' : '메일 보내는 중…')
+              : (mode === 'signin' ? '로그인' : mode === 'signup' ? '가입하기' : '재설정 메일 보내기')}
           </button>
         </form>
 
         {mode === 'signin' && (
           <div style={{
-            textAlign: 'center', marginTop: 12,
-            fontSize: 12, color: '#888',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginTop: 12, fontSize: 12, color: '#888',
           }}>
-            확인 메일을 못 받으셨나요?{' '}
+            <span>
+              메일 못 받으셨나요?{' '}
+              <button
+                type="button"
+                onClick={resendConfirmation}
+                disabled={loading}
+                style={{
+                  background: 'none', border: 'none',
+                  color: '#2ea84e', fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--ff)',
+                  fontSize: 12, padding: 0,
+                  opacity: loading ? 0.5 : 1,
+                }}
+              >
+                재전송
+              </button>
+            </span>
             <button
               type="button"
-              onClick={resendConfirmation}
-              disabled={loading}
+              onClick={() => {
+                setMode('reset')
+                setError(null)
+                setInfo(null)
+              }}
               style={{
                 background: 'none', border: 'none',
                 color: '#2ea84e', fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--ff)',
+                cursor: 'pointer', fontFamily: 'var(--ff)',
                 fontSize: 12, padding: 0,
-                opacity: loading ? 0.5 : 1,
               }}
             >
-              재전송
+              비밀번호 잊으셨나요?
             </button>
           </div>
         )}
@@ -273,7 +310,9 @@ function Login() {
           textAlign: 'center', marginTop: 12,
           fontSize: 12.5, color: '#666',
         }}>
-          {mode === 'signin' ? '계정이 없으신가요? ' : '이미 계정이 있으신가요? '}
+          {mode === 'signin' && '계정이 없으신가요? '}
+          {mode === 'signup' && '이미 계정이 있으신가요? '}
+          {mode === 'reset'  && '로그인 화면으로 '}
           <button
             type="button"
             onClick={() => {
@@ -288,7 +327,7 @@ function Login() {
               fontSize: 12.5, padding: 0,
             }}
           >
-            {mode === 'signin' ? '회원가입' : '로그인'}
+            {mode === 'signin' ? '회원가입' : mode === 'signup' ? '로그인' : '돌아가기'}
           </button>
         </div>
       </div>
