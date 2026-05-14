@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { riskLabel, riskColor } from '../data/dailyReports'
@@ -12,6 +12,32 @@ function Reports() {
   const [active, setActive]     = useState(null)  // 상세 모달
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState(null)
+
+  const today = new Date()
+  const [viewYear, setViewYear]   = useState(today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
+
+  const reportByDate = useMemo(() => {
+    const map = {}
+    for (const r of reports) {
+      if (r?.date) map[r.date] = r
+    }
+    return map
+  }, [reports])
+
+  const handleDayClick = (iso) => {
+    const r = reportByDate[iso]
+    if (r) setActive(r)
+  }
+
+  const movePrev = () => {
+    if (viewMonth === 1) { setViewYear(viewYear - 1); setViewMonth(12) }
+    else setViewMonth(viewMonth - 1)
+  }
+  const moveNext = () => {
+    if (viewMonth === 12) { setViewYear(viewYear + 1); setViewMonth(1) }
+    else setViewMonth(viewMonth + 1)
+  }
 
   const fetchReports = async () => {
     setError(null)
@@ -114,6 +140,17 @@ function Reports() {
         </div>
       )}
 
+      {!loading && !error && (
+        <MonthCalendar
+          year={viewYear}
+          month={viewMonth}
+          reportByDate={reportByDate}
+          onPrev={movePrev}
+          onNext={moveNext}
+          onDayClick={handleDayClick}
+        />
+      )}
+
       {loading ? (
         <div style={{
           minHeight: 200,
@@ -159,6 +196,125 @@ function Reports() {
       <DailyReportDetail report={active} onClose={() => setActive(null)} />
     </div>
   )
+}
+
+function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }) {
+  const firstDay = new Date(year, month - 1, 1)
+  const lastDay  = new Date(year, month, 0)
+  const startWeekday = firstDay.getDay()  // 0=일 ~ 6=토
+  const daysInMonth  = lastDay.getDate()
+
+  const today = new Date()
+  const isThisMonth = today.getFullYear() === year && (today.getMonth() + 1) === month
+  const todayDate = isThisMonth ? today.getDate() : -1
+
+  const cells = []
+  for (let i = 0; i < startWeekday; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+
+  return (
+    <div style={{
+      background: '#fff',
+      border: '0.5px solid #e8e8e8',
+      borderRadius: 14,
+      padding: 14,
+      display: 'flex', flexDirection: 'column', gap: 10,
+    }}>
+      {/* 헤더 */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <button
+          onClick={onPrev}
+          style={navBtnStyle}
+          aria-label="이전 달"
+        >←</button>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+          {year}년 {month}월
+        </div>
+        <button
+          onClick={onNext}
+          style={navBtnStyle}
+          aria-label="다음 달"
+        >→</button>
+      </div>
+
+      {/* 요일 */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: 4,
+      }}>
+        {WEEKDAYS.map((w, i) => (
+          <div key={w} style={{
+            textAlign: 'center',
+            fontSize: 11, fontWeight: 600,
+            color: i === 0 ? '#e84040' : i === 6 ? '#3b82c4' : '#888',
+            padding: '4px 0',
+          }}>
+            {w}
+          </div>
+        ))}
+      </div>
+
+      {/* 날짜 그리드 */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: 4,
+      }}>
+        {cells.map((d, i) => {
+          if (d == null) return <div key={i} />
+          const iso = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+          const report = reportByDate[iso]
+          const hasReport = !!report
+          const isToday = d === todayDate
+          const dotColor = hasReport ? (riskColor[report.riskLevel] ?? '#2ea84e') : null
+          return (
+            <button
+              key={i}
+              onClick={() => onDayClick(iso)}
+              disabled={!hasReport}
+              style={{
+                aspectRatio: '1',
+                background: isToday ? '#f2faf3' : 'transparent',
+                border: isToday ? '1px solid #2ea84e' : '0.5px solid transparent',
+                borderRadius: 8,
+                cursor: hasReport ? 'pointer' : 'default',
+                color: hasReport ? '#1a1a1a' : '#ccc',
+                fontWeight: hasReport ? 600 : 400,
+                fontSize: 12.5,
+                fontFamily: 'var(--ff)',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 2,
+                padding: 0,
+              }}
+            >
+              <span>{d}</span>
+              {dotColor && (
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: dotColor,
+                }} />
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+const navBtnStyle = {
+  width: 28, height: 28,
+  borderRadius: 8,
+  background: '#f5f5f5',
+  border: 'none',
+  color: '#666',
+  fontSize: 13, fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'var(--ff)',
 }
 
 function ReportCard({ report, onClick }) {
