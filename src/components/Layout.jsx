@@ -32,7 +32,7 @@ function Layout() {
       )
     },
     {
-      id: 'ai', label: 'AI', path: '/ai',
+      id: 'ai', label: '리포트', path: '/ai',
       icon: (
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
           <path d="M4 4h12a1 1 0 011 1v7a1 1 0 01-1 1H7l-3 3V5a1 1 0 011-1z"
