@@ -58,6 +58,7 @@ function Sensor() {
     if (!activeId) return
     let cancelled = false
 
+    // 초기 로드 — 전체 데이터 (로딩 표시 ON)
     Promise.all([
       Promise.all(ids.map(id => getGreenhouse(id).catch(() => null))),
       getLatestSensor(activeId).catch(() => null),
@@ -83,7 +84,31 @@ function Sensor() {
         setLoading(false)
       })
 
-    return () => { cancelled = true }
+    // 폴링 — 센서/알림/액추에이터만 조용히 재조회
+    const POLL_INTERVAL_MS = 15_000
+    const intervalId = setInterval(async () => {
+      if (cancelled) return
+      try {
+        const [latestData, historyData, alertList, actuatorList] = await Promise.all([
+          getLatestSensor(activeId).catch(() => null),
+          getSensorHistory(activeId, 60).catch(() => []),
+          getAlerts(activeId, 20).catch(() => []),
+          getActuatorLogs(activeId).catch(() => []),
+        ])
+        if (cancelled) return
+        setLatest(latestData)
+        setHistory(historyData)
+        setAlerts(alertList)
+        setActuators(actuatorList)
+      } catch (err) {
+        console.warn('센서 폴링 실패 (무시):', err)
+      }
+    }, POLL_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      clearInterval(intervalId)
+    }
   }, [activeId, ids])
 
   const setActiveId = (id) => setSearchParams({ gh: id })
