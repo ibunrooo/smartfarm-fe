@@ -2,8 +2,10 @@ function BottomNav({ navItems, currentPath, navigate }) {
   return (
     <nav className="bottom-nav" style={{
       gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
-      background: '#fff',
-      borderTop: '0.5px solid #e8e8e8',
+      background: 'var(--surface-glass)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderTop: '0.5px solid var(--bd-soft)',
       padding: '8px 0 10px',
       flexShrink: 0,
     }}>
@@ -21,15 +23,16 @@ function BottomNav({ navItems, currentPath, navigate }) {
               border: 'none',
               background: 'none',
               cursor: 'pointer',
-              color: isActive ? '#2ea84e' : '#bbb',
+              color: isActive ? 'var(--brand)' : 'var(--tx-4)',
               padding: 0,
+              transition: 'color .15s',
             }}
           >
             {item.icon}
             <span style={{
               fontSize: 11,
               fontWeight: isActive ? 700 : 500,
-              color: isActive ? '#1e8a3c' : '#bbb',
+              color: isActive ? 'var(--brand-strong)' : 'var(--tx-4)',
               fontFamily: 'var(--ff)',
             }}>
               {item.label}
@@ -37,7 +40,7 @@ function BottomNav({ navItems, currentPath, navigate }) {
             {isActive && (
               <div style={{
                 width: 4, height: 4,
-                background: '#2ea84e',
+                background: 'var(--brand)',
                 borderRadius: '50%',
                 marginTop: -1,
               }} />

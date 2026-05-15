@@ -1,19 +1,53 @@
 @import 'pretendard/dist/web/static/pretendard.css';
 
 :root {
-  --g50:  #f2faf3;
-  --g100: #ddf2e2;
-  --g200: #b4e3be;
+  /* Green scale — 유지 (브랜드 정체성) */
+  --g50:  #f4faf6;
+  --g100: #e6f3ea;
+  --g200: #c8e6d0;
   --g300: #7dcc8f;
   --g400: #4db866;
   --g500: #2ea84e;
   --g600: #1e8a3c;
   --g700: #156b2e;
 
+  /* Brand aliases — 의미별 사용 */
+  --brand:        var(--g500);
+  --brand-strong: var(--g600);
+  --brand-soft:   var(--g50);   /* 페일 그린 surface */
+  --brand-tint:   var(--g100);  /* 살짝 진한 페일 — chip/hover */
+  --brand-line:   var(--g200);  /* 페일 보더 */
+
+  /* Surfaces */
+  --bg:        #fafbfa;
+  --surface:   #ffffff;
+  --surface-2: #f7f8f7;
+  --surface-glass: rgba(255, 255, 255, .72);
+
+  /* Borders / dividers — 더 부드럽게 */
+  --bd:        #ececec;
+  --bd-soft:   #f2f2f2;
+  --bd-strong: #dcdcdc;
+
+  /* Text scale */
+  --tx-1: #1a1a1a;
+  --tx-2: #4a4a4a;
+  --tx-3: #8a8a8a;
+  --tx-4: #b5b5b5;
+
+  /* Shadows — airy, greenish */
+  --shadow-xs: 0 1px 1px rgba(20, 40, 30, .03);
+  --shadow-sm: 0 1px 2px rgba(20, 40, 30, .04);
+  --shadow-md: 0 4px 12px rgba(20, 40, 30, .05);
+  --shadow-lg: 0 8px 24px rgba(20, 40, 30, .06);
+  --shadow-pop: 0 4px 16px rgba(20, 40, 30, .08);
+
+  /* Status — 채도 살짝 다운 */
   --warn-bg: #fff8ec;
   --warn-bd: #fde8b0;
   --warn-tx: #8a5c00;
   --danger-bg: #fff1f1;
+  --danger-bd: #fcc;
   --danger-tx: #991f1f;
 
   --ff: 'Pretendard', -apple-system, sans-serif;
@@ -27,26 +61,20 @@
 
 body {
   font-family: var(--ff);
-  background: #fff;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--tx-1);
   -webkit-font-smoothing: antialiased;
 }
 
 
 /* 반응형 — 인라인으로 못 쓰는 것들만 여기서 처리 */
-.sidebar { display: flex; }
+.header-nav { display: flex; }
 .bottom-nav { display: none; }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  .header-nav { display: none; }
   .bottom-nav { display: grid; }
   .page-content { padding: 16px !important; }
-}
-
-/* 네비 hover */
-.nav-btn:hover {
-  background: #f2faf3;
-  color: #2ea84e;
 }
 
 /* 스켈레톤 로딩 */

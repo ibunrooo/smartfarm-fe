@@ -138,46 +138,47 @@ function AIChat() {
     <div style={{
       display: 'flex', flexDirection: 'column',
       flex: 1, minHeight: 0, width: '100%',
-      background: '#fff',
-      border: '0.5px solid #e8e8e8',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14,
       overflow: 'hidden',
     }}>
       {/* 헤더 */}
       <div style={{
         padding: '12px 16px',
-        borderBottom: '0.5px solid #e8e8e8',
-        background: '#fff',
+        borderBottom: '0.5px solid var(--bd-soft)',
+        background: 'var(--surface)',
         display: 'flex', alignItems: 'center', gap: 10,
         flexShrink: 0,
       }}>
         <div style={{
           width: 36, height: 36, borderRadius: 10,
-          background: '#2ea84e',
+          background: 'var(--brand-soft)',
+          border: '0.5px solid var(--brand-line)',
+          color: 'var(--brand)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
           <BotPlantIcon />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--tx-1)' }}>
             팜-므파탈 도우미
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2ea84e' }} />
-            <span style={{ fontSize: 12, color: '#888' }}>온라인</span>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--brand)' }} />
+            <span style={{ fontSize: 12, color: 'var(--tx-3)' }}>온라인</span>
           </div>
         </div>
         <button
           onClick={() => navigate('/reports')}
           style={{
             padding: '6px 10px',
-            marginRight: 44,  // UserMenu (우측 fixed 36px + 12 여백) 회피
-            background: '#f8fdf9',
-            border: '0.5px solid #ddf2e2',
+            background: 'var(--brand-soft)',
+            border: '0.5px solid var(--brand-line)',
             borderRadius: 8,
             fontSize: 11.5, fontWeight: 600,
-            color: '#1e8a3c',
+            color: 'var(--brand-strong)',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
             flexShrink: 0,
@@ -192,7 +193,7 @@ function AIChat() {
       {/* 메시지 영역 */}
       <div ref={scrollRef} style={{
         flex: 1, overflowY: 'auto',
-        background: '#f5f7f5',
+        background: 'var(--surface-2)',
         padding: '12px 14px',
       }}>
         {renderWithDateDividers(messages, setActiveReport)}
@@ -201,8 +202,8 @@ function AIChat() {
       {/* 입력바 */}
       <div style={{
         padding: '10px 12px',
-        background: '#fff',
-        borderTop: '0.5px solid #e8e8e8',
+        background: 'var(--surface)',
+        borderTop: '0.5px solid var(--bd-soft)',
         display: 'flex', alignItems: 'flex-end', gap: 8,
         flexShrink: 0,
       }}>
@@ -215,8 +216,8 @@ function AIChat() {
           style={{
             flex: 1,
             padding: '10px 12px',
-            background: '#f5f5f5',
-            border: '0.5px solid #e8e8e8',
+            background: 'var(--surface-2)',
+            border: '0.5px solid var(--bd-soft)',
             borderRadius: 18,
             fontSize: 14,
             fontFamily: 'var(--ff)',
@@ -225,7 +226,7 @@ function AIChat() {
             minHeight: 38,
             maxHeight: 120,
             lineHeight: 1.4,
-            color: '#1a1a1a',
+            color: 'var(--tx-1)',
           }}
         />
         <button
@@ -234,12 +235,13 @@ function AIChat() {
           style={{
             width: 38, height: 38,
             borderRadius: '50%',
-            background: draft.trim() ? '#2ea84e' : '#cfe7d4',
+            background: draft.trim() ? 'var(--brand)' : 'var(--brand-tint)',
             border: 'none',
             color: '#fff',
             cursor: draft.trim() ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
+            boxShadow: draft.trim() ? 'var(--shadow-xs)' : 'none',
           }}
         >
           <SendIcon />
@@ -286,9 +288,9 @@ function DateDivider({ date }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       gap: 8, margin: '14px 0 10px',
     }}>
-      <div style={{ flex: 1, height: 0.5, background: '#dcdcdc', maxWidth: 80 }} />
-      <span style={{ fontSize: 12, color: '#999', fontWeight: 500 }}>{formatted}</span>
-      <div style={{ flex: 1, height: 0.5, background: '#dcdcdc', maxWidth: 80 }} />
+      <div style={{ flex: 1, height: 0.5, background: 'var(--bd)', maxWidth: 80 }} />
+      <span style={{ fontSize: 12, color: 'var(--tx-3)', fontWeight: 500 }}>{formatted}</span>
+      <div style={{ flex: 1, height: 0.5, background: 'var(--bd)', maxWidth: 80 }} />
     </div>
   )
 }
@@ -302,16 +304,17 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
         display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end',
         gap: 6, marginBottom: 6,
       }}>
-        <span style={{ fontSize: 11, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
+        <span style={{ fontSize: 11, color: 'var(--tx-4)', flexShrink: 0 }}>{message.time}</span>
         <div style={{
           maxWidth: '75%',
           padding: '8px 12px',
-          background: '#2ea84e',
+          background: 'var(--brand)',
           color: '#fff',
           borderRadius: '16px 16px 4px 16px',
           fontSize: 14,
           lineHeight: 1.45,
           wordBreak: 'break-word',
+          boxShadow: 'var(--shadow-xs)',
         }}>
           {message.text}
         </div>
@@ -328,7 +331,9 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
       {showAvatar && (
         <div style={{
           width: 28, height: 28, borderRadius: 9,
-          background: '#2ea84e',
+          background: 'var(--brand-soft)',
+          border: '0.5px solid var(--brand-line)',
+          color: 'var(--brand)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
@@ -346,9 +351,9 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
         <div style={{
           maxWidth: '75%',
           padding: '8px 12px',
-          background: '#fff',
-          border: '0.5px solid #e8e8e8',
-          color: '#1a1a1a',
+          background: 'var(--surface)',
+          border: '0.5px solid var(--bd-soft)',
+          color: 'var(--tx-1)',
           borderRadius: '16px 16px 16px 4px',
           fontSize: 14,
           lineHeight: 1.45,
@@ -357,7 +362,7 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
           {message.text}
         </div>
       )}
-      <span style={{ fontSize: 11, color: '#aaa', flexShrink: 0 }}>{message.time}</span>
+      <span style={{ fontSize: 11, color: 'var(--tx-4)', flexShrink: 0 }}>{message.time}</span>
     </div>
   )
 }
@@ -386,17 +391,17 @@ function NotificationBanner() {
   return (
     <div style={{
       padding: '10px 14px',
-      borderBottom: '0.5px solid #ddf2e2',
-      background: '#f8fdf9',
+      borderBottom: '0.5px solid var(--brand-line)',
+      background: 'var(--brand-soft)',
       display: 'flex', alignItems: 'center', gap: 10,
       flexShrink: 0,
     }}>
       <BellSmallIcon />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e8a3c' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand-strong)' }}>
           알림 받기
         </div>
-        <div style={{ fontSize: 12, color: '#666', marginTop: 1, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 12, color: 'var(--tx-2)', marginTop: 1, lineHeight: 1.4 }}>
           매일의 일일 리포트와 긴급 알림을 받아보세요.
         </div>
       </div>
@@ -404,7 +409,7 @@ function NotificationBanner() {
         onClick={handleEnable}
         style={{
           padding: '7px 12px',
-          background: '#2ea84e',
+          background: 'var(--brand)',
           border: 'none',
           borderRadius: 8,
           fontSize: 12.5, fontWeight: 700,
@@ -412,6 +417,7 @@ function NotificationBanner() {
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
           flexShrink: 0,
+          boxShadow: 'var(--shadow-xs)',
         }}
       >
         알림 켜기
@@ -424,9 +430,9 @@ function BellSmallIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
       <path d="M4.5 12.5V8a4.5 4.5 0 019 0v4.5l1.5 1.5h-12l1.5-1.5z"
-        stroke="#2ea84e" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+        stroke="var(--brand)" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
       <path d="M7 15a2 2 0 004 0"
-        stroke="#2ea84e" strokeWidth="1.4" strokeLinecap="round"/>
+        stroke="var(--brand)" strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
   )
 }
@@ -440,10 +446,10 @@ function BotPlantIcon({ size = 20 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 26 26" fill="none">
       <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-        fill="#fff" opacity=".95"/>
-      <line x1="13" y1="9" x2="13" y2="19" stroke="#2ea84e" strokeWidth="1.2" strokeLinecap="round"/>
+        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
+      <line x1="13" y1="9" x2="13" y2="19" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
       <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-        stroke="#2ea84e" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
+        stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
     </svg>
   )
 }

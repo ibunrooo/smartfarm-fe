@@ -11,7 +11,7 @@ function DailyReportDetail({ report, onClose }) {
 
   if (!report) return null
 
-  const color = riskColor[report.riskLevel] ?? '#888'
+  const color = riskColor[report.riskLevel] ?? 'var(--tx-3)'
   const score = typeof report.riskScore === 'number'
     ? report.riskScore
     : (report.riskLevel === 'high' ? 85 : report.riskLevel === 'medium' ? 55 : 20)
@@ -25,7 +25,9 @@ function DailyReportDetail({ report, onClose }) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,.45)',
+        background: 'rgba(0,0,0,.35)',
+        backdropFilter: 'blur(2px)',
+        WebkitBackdropFilter: 'blur(2px)',
         zIndex: 100,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 16,
@@ -34,8 +36,9 @@ function DailyReportDetail({ report, onClose }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#fff',
+          background: 'var(--surface)',
           borderRadius: 16,
+          boxShadow: 'var(--shadow-lg)',
           width: '100%', maxWidth: 480,
           maxHeight: '90dvh',
           overflow: 'hidden',
@@ -45,16 +48,16 @@ function DailyReportDetail({ report, onClose }) {
         {/* 헤더 */}
         <div style={{
           padding: '14px 16px',
-          borderBottom: '0.5px solid #e8e8e8',
+          borderBottom: '0.5px solid var(--brand-line)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexShrink: 0,
-          background: '#f8fdf9',
+          background: 'var(--brand-soft)',
         }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#1e8a3c' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--brand-strong)' }}>
               일일 리포트
             </div>
-            <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: 'var(--tx-2)', marginTop: 2 }}>
               {formattedDate}
             </div>
           </div>
@@ -67,7 +70,7 @@ function DailyReportDetail({ report, onClose }) {
               border: 'none',
               cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#666',
+              color: 'var(--tx-2)',
               fontSize: 18, lineHeight: 1,
               fontFamily: 'var(--ff)',
             }}
@@ -81,10 +84,10 @@ function DailyReportDetail({ report, onClose }) {
           {/* 요약 */}
           <div style={{
             padding: 14,
-            background: '#f8fdf9',
-            border: '0.5px solid #ddf2e2',
+            background: 'var(--brand-soft)',
+            border: '0.5px solid var(--brand-line)',
             borderRadius: 12,
-            fontSize: 13, color: '#444', lineHeight: 1.55,
+            fontSize: 13, color: 'var(--tx-2)', lineHeight: 1.55,
             marginBottom: 14,
           }}>
             {report.summary}
@@ -96,13 +99,13 @@ function DailyReportDetail({ report, onClose }) {
               display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
               marginBottom: 6,
             }}>
-              <span style={{ fontSize: 11.5, color: '#888' }}>현재 위험도</span>
+              <span style={{ fontSize: 11.5, color: 'var(--tx-3)' }}>현재 위험도</span>
               <span style={{ fontSize: 14, fontWeight: 700, color }}>
                 {riskLabel[report.riskLevel] ?? '-'} · {score}%
               </span>
             </div>
             <div style={{
-              height: 7, borderRadius: 8, background: '#f0f0f0', overflow: 'hidden',
+              height: 7, borderRadius: 8, background: 'var(--surface-2)', overflow: 'hidden',
             }}>
               <div style={{ width: `${score}%`, height: '100%', background: color }} />
             </div>
@@ -130,14 +133,14 @@ function DailyReportDetail({ report, onClose }) {
                   <div key={type} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '8px 12px',
-                    background: '#fff8ec',
-                    border: '0.5px solid #fde8b0',
+                    background: 'var(--warn-bg)',
+                    border: '0.5px solid var(--warn-bd)',
                     borderRadius: 10,
                   }}>
-                    <span style={{ fontSize: 12.5, color: '#8a5c00', fontWeight: 600 }}>
+                    <span style={{ fontSize: 12.5, color: 'var(--warn-tx)', fontWeight: 600 }}>
                       {alertTypeLabel[type] ?? type}
                     </span>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: '#8a5c00' }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--warn-tx)' }}>
                       {count}건
                     </span>
                   </div>
@@ -153,22 +156,22 @@ function DailyReportDetail({ report, onClose }) {
                 <div key={i} style={{
                   display: 'flex', alignItems: 'flex-start', gap: 8,
                   padding: '8px 10px',
-                  background: '#fafafa',
+                  background: 'var(--surface-2)',
                   borderRadius: 10,
                 }}>
                   <div style={{
                     width: 16, height: 16, borderRadius: '50%',
-                    background: '#ddf2e2',
+                    background: 'var(--brand-tint)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginTop: 1, flexShrink: 0,
                   }}>
                     <svg width="9" height="9" viewBox="0 0 8 8">
                       <path d="M1.5 4l1.5 1.5L6.5 2"
-                        stroke="#2ea84e" strokeWidth="1.5" fill="none"
+                        stroke="var(--brand)" strokeWidth="1.5" fill="none"
                         strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <div style={{ fontSize: 12.5, color: '#444', lineHeight: 1.5, flex: 1 }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--tx-2)', lineHeight: 1.5, flex: 1 }}>
                     {action}
                   </div>
                 </div>
@@ -179,9 +182,9 @@ function DailyReportDetail({ report, onClose }) {
           {/* 메타 */}
           <div style={{
             marginTop: 14, paddingTop: 12,
-            borderTop: '0.5px solid #f0f0f0',
+            borderTop: '0.5px solid var(--bd-soft)',
             display: 'flex', justifyContent: 'space-between',
-            fontSize: 11, color: '#999',
+            fontSize: 11, color: 'var(--tx-4)',
           }}>
             <span>데이터 {report.dataCount?.toLocaleString() ?? '-'}건 수집</span>
             <span>{createdTime} 생성</span>
@@ -196,7 +199,7 @@ function Section({ title, children, last }) {
   return (
     <div style={{ marginBottom: last ? 0 : 16 }}>
       <div style={{
-        fontSize: 11.5, fontWeight: 700, color: '#666',
+        fontSize: 11.5, fontWeight: 700, color: 'var(--tx-2)',
         marginBottom: 8,
         letterSpacing: '.02em',
       }}>
@@ -211,16 +214,16 @@ function StatCard({ label, value, unit }) {
   return (
     <div style={{
       padding: '10px 12px',
-      background: '#f8fdf9',
-      border: '0.5px solid #ddf2e2',
+      background: 'var(--surface-2)',
+      border: '0.5px solid var(--bd-soft)',
       borderRadius: 10,
     }}>
-      <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>
+      <div style={{ fontSize: 11, color: 'var(--tx-3)', marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
+      <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)', lineHeight: 1 }}>
         {value}
-        <span style={{ fontSize: 11, fontWeight: 400, color: '#aaa', marginLeft: 2 }}>
+        <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx-4)', marginLeft: 2 }}>
           {unit}
         </span>
       </div>

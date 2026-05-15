@@ -58,10 +58,10 @@ function Home() {
         display: 'flex', alignItems: 'baseline', gap: 8,
         padding: '0 2px',
       }}>
-        <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
+        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)' }}>
           내 온실
         </span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#2ea84e' }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand)' }}>
           {cards.length}
         </span>
       </div>
@@ -126,7 +126,7 @@ function LoadingState() {
     <div style={{
       minHeight: 360,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#888', fontSize: 13.5,
+      color: 'var(--tx-3)', fontSize: 13.5,
     }}>
       온실 정보를 불러오는 중…
     </div>
@@ -137,10 +137,10 @@ function ErrorBanner({ message }) {
   return (
     <div style={{
       padding: '10px 12px',
-      background: '#fff1f1',
-      border: '0.5px solid #fcc',
+      background: 'var(--danger-bg)',
+      border: '0.5px solid var(--danger-bd)',
       borderRadius: 10,
-      fontSize: 13, color: '#991f1f', lineHeight: 1.5,
+      fontSize: 13, color: 'var(--danger-tx)', lineHeight: 1.5,
     }}>
       <span style={{ fontWeight: 700 }}>오류</span>
       <span style={{ opacity: .4, margin: '0 6px' }}>·</span>
@@ -155,21 +155,22 @@ function AddCard({ onClick }) {
       onClick={onClick}
       style={{
         minHeight: 92,
-        background: '#fafafa',
-        border: '1px dashed #c8c8c8',
+        background: 'var(--surface)',
+        border: '0.5px dashed var(--bd-strong)',
         borderRadius: 14,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         gap: 8, cursor: 'pointer',
-        color: '#888',
+        color: 'var(--tx-3)',
+        transition: 'border-color .15s, background .15s',
       }}
     >
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
-        background: '#fff',
-        border: '0.5px solid #ddd',
+        background: 'var(--brand-soft)',
+        border: '0.5px solid var(--brand-line)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 18, color: '#2ea84e', fontWeight: 500,
+        fontSize: 18, color: 'var(--brand)', fontWeight: 500,
         lineHeight: 1,
       }}>
         +
@@ -189,27 +190,29 @@ function EmptyState({ onAdd, error }) {
     }}>
       <div style={{
         width: 72, height: 72, borderRadius: '50%',
-        background: '#f2faf3',
+        background: 'var(--brand-soft)',
+        border: '0.5px solid var(--brand-line)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--brand)',
       }}>
-        <svg width="36" height="36" viewBox="0 0 26 26" fill="none">
+        <svg width="34" height="34" viewBox="0 0 26 26" fill="none">
           <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-            fill="#2ea84e" opacity=".85"/>
+            stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
           <line x1="13" y1="9" x2="13" y2="19"
-            stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+            stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
           <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-            stroke="#fff" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
+            stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
         </svg>
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx-1)' }}>
         아직 등록된 식물이 없어요
       </div>
-      <div style={{ fontSize: 13.5, color: '#888', maxWidth: 240, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13.5, color: 'var(--tx-3)', maxWidth: 240, lineHeight: 1.5 }}>
         첫 식물을 등록하고<br />
         스마트팜 관리를 시작해보세요.
       </div>
       {error && (
-        <div style={{ fontSize: 11.5, color: '#991f1f', marginTop: 4 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--danger-tx)', marginTop: 4 }}>
           ({error})
         </div>
       )}
@@ -218,11 +221,12 @@ function EmptyState({ onAdd, error }) {
         style={{
           marginTop: 8,
           padding: '10px 20px',
-          background: '#2ea84e', color: '#fff',
+          background: 'var(--brand)', color: '#fff',
           border: 'none', borderRadius: 10,
           fontSize: 14, fontWeight: 700,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
+          boxShadow: 'var(--shadow-xs)',
         }}
       >
         + 식물 추가하기

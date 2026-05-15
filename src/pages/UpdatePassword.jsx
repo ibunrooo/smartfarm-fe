@@ -59,25 +59,26 @@ function UpdatePassword() {
       minHeight: '100dvh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 20,
-      background: '#fafafa',
+      background: 'var(--bg)',
       fontFamily: 'var(--ff)',
     }}>
       <div style={{
         width: '100%', maxWidth: 380,
         padding: 28,
-        background: '#fff',
-        border: '0.5px solid #e8e8e8',
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
         borderRadius: 16,
+        boxShadow: 'var(--shadow-sm)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>비밀번호 재설정</div>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx-1)' }}>비밀번호 재설정</div>
+          <div style={{ fontSize: 13, color: 'var(--tx-3)', marginTop: 4 }}>
             새 비밀번호를 입력해 주세요
           </div>
         </div>
 
         {!ready ? (
-          <div style={{ fontSize: 12.5, color: '#888', textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ fontSize: 12.5, color: 'var(--tx-3)', textAlign: 'center', padding: '20px 0' }}>
             인증 정보를 확인하는 중…
           </div>
         ) : (
@@ -106,10 +107,10 @@ function UpdatePassword() {
             {error && (
               <div style={{
                 padding: '10px 12px',
-                background: '#fff1f1',
-                border: '0.5px solid #fcc',
+                background: 'var(--danger-bg)',
+                border: '0.5px solid var(--danger-bd)',
                 borderRadius: 10,
-                fontSize: 12.5, color: '#991f1f', lineHeight: 1.5,
+                fontSize: 12.5, color: 'var(--danger-tx)', lineHeight: 1.5,
               }}>
                 {error}
               </div>
@@ -117,10 +118,10 @@ function UpdatePassword() {
             {info && (
               <div style={{
                 padding: '10px 12px',
-                background: '#f8fdf9',
-                border: '0.5px solid #ddf2e2',
+                background: 'var(--brand-soft)',
+                border: '0.5px solid var(--brand-line)',
                 borderRadius: 10,
-                fontSize: 12.5, color: '#1e8a3c', lineHeight: 1.5,
+                fontSize: 12.5, color: 'var(--brand-strong)', lineHeight: 1.5,
               }}>
                 {info}
               </div>
@@ -132,12 +133,13 @@ function UpdatePassword() {
               style={{
                 marginTop: 4,
                 padding: '12px',
-                background: loading ? '#cfe7d4' : '#2ea84e',
+                background: loading ? 'var(--brand-tint)' : 'var(--brand)',
                 color: '#fff',
                 border: 'none', borderRadius: 10,
                 fontSize: 14, fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 fontFamily: 'var(--ff)',
+                boxShadow: loading ? 'none' : 'var(--shadow-xs)',
               }}
             >
               {loading ? '변경 중…' : '비밀번호 변경'}
@@ -152,13 +154,13 @@ function UpdatePassword() {
 const fieldStyle = {
   width: '100%',
   padding: '12px 14px',
-  background: '#fff',
-  border: '0.5px solid #ddd',
+  background: 'var(--surface)',
+  border: '0.5px solid var(--bd)',
   borderRadius: 10,
   fontSize: 14,
   fontFamily: 'var(--ff)',
   outline: 'none',
-  color: '#1a1a1a',
+  color: 'var(--tx-1)',
   boxSizing: 'border-box',
 }
 

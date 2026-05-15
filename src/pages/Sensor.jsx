@@ -128,12 +128,12 @@ function Sensor() {
         minHeight: 360,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        gap: 12, textAlign: 'center', color: '#666',
+        gap: 12, textAlign: 'center', color: 'var(--tx-2)',
       }}>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1a1a1a' }}>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--tx-1)' }}>
           등록된 온실이 없어요
         </div>
-        <div style={{ fontSize: 13, color: '#888' }}>
+        <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>
           홈에서 식물을 먼저 추가해주세요.
         </div>
         <button
@@ -141,11 +141,12 @@ function Sensor() {
           style={{
             marginTop: 6,
             padding: '10px 18px',
-            background: '#2ea84e', color: '#fff',
+            background: 'var(--brand)', color: '#fff',
             border: 'none', borderRadius: 10,
             fontSize: 13, fontWeight: 700,
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
+            boxShadow: 'var(--shadow-xs)',
           }}
         >
           + 식물 추가하기
@@ -159,7 +160,7 @@ function Sensor() {
       <div style={{
         minHeight: 360,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#888', fontSize: 13.5,
+        color: 'var(--tx-3)', fontSize: 13.5,
       }}>
         센서 데이터를 불러오는 중…
       </div>
@@ -180,11 +181,11 @@ function Sensor() {
 
         <div style={{
           display: 'flex',
-          background: '#f5f5f5',
+          background: 'var(--surface-2)',
+          border: '0.5px solid var(--bd-soft)',
           borderRadius: 10,
           padding: 3,
           gap: 2,
-          marginRight: 44,  // UserMenu 회피
         }}>
           {modeOptions.map(opt => {
             const isActive = sensorMode === opt.id
@@ -196,12 +197,12 @@ function Sensor() {
                   padding: '6px 14px',
                   border: 'none',
                   borderRadius: 8,
-                  background: isActive ? '#fff' : 'transparent',
-                  color: isActive ? '#1a1a1a' : '#999',
+                  background: isActive ? 'var(--surface)' : 'transparent',
+                  color: isActive ? 'var(--tx-1)' : 'var(--tx-3)',
                   fontSize: 13.5, fontWeight: isActive ? 700 : 500,
                   cursor: 'pointer',
                   fontFamily: 'var(--ff)',
-                  boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.06)' : 'none',
+                  boxShadow: isActive ? 'var(--shadow-xs)' : 'none',
                   transition: 'all .15s',
                 }}
               >
@@ -224,10 +225,10 @@ function Sensor() {
       {error && (
         <div style={{
           padding: '8px 12px',
-          background: '#fff1f1',
-          border: '0.5px solid #fcc',
+          background: 'var(--danger-bg)',
+          border: '0.5px solid var(--danger-bd)',
           borderRadius: 10,
-          fontSize: 12.5, color: '#991f1f',
+          fontSize: 12.5, color: 'var(--danger-tx)',
         }}>
           <span style={{ fontWeight: 700 }}>오류</span>
           <span style={{ opacity: .4, margin: '0 6px' }}>·</span>
@@ -238,15 +239,15 @@ function Sensor() {
       {noSensorData && !error && (
         <div style={{
           padding: '10px 12px',
-          background: '#f8fdf9',
-          border: '0.5px solid #ddf2e2',
+          background: 'var(--brand-soft)',
+          border: '0.5px solid var(--brand-line)',
           borderRadius: 10,
-          fontSize: 13, color: '#1e8a3c',
+          fontSize: 13, color: 'var(--brand-strong)',
           display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
         }}>
           <span style={{ fontWeight: 700 }}>센서 데이터를 기다리는 중</span>
           <span style={{ opacity: .5 }}>·</span>
-          <span style={{ color: '#444' }}>
+          <span style={{ color: 'var(--tx-2)' }}>
             아직 수집된 측정값이 없어요. 잠시 후 자동으로 표시됩니다.
           </span>
         </div>
@@ -255,11 +256,11 @@ function Sensor() {
       {/* 모드 안내 */}
       <div style={{
         padding: '8px 12px',
-        background: sensorMode === 'virtual' ? '#fff8ec' : '#f2faf3',
-        border: `0.5px solid ${sensorMode === 'virtual' ? '#fde8b0' : '#b4e3be'}`,
+        background: sensorMode === 'virtual' ? 'var(--warn-bg)' : 'var(--brand-soft)',
+        border: `0.5px solid ${sensorMode === 'virtual' ? 'var(--warn-bd)' : 'var(--brand-line)'}`,
         borderRadius: 10,
         fontSize: 13,
-        color: sensorMode === 'virtual' ? '#8a5c00' : '#1e8a3c',
+        color: sensorMode === 'virtual' ? 'var(--warn-tx)' : 'var(--brand-strong)',
         display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
       }}>
         <span style={{ fontWeight: 700 }}>
@@ -476,23 +477,23 @@ function DeviceControlPanel({ greenhouseId, initialDevices, initialAutoControl }
 
   return (
     <div style={{
-      background: '#fff',
-      border: '0.5px solid #e8e8e8',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14,
       overflow: 'hidden',
     }}>
       {/* 자동제어 헤더 */}
       <div style={{
         padding: '12px 14px',
-        background: '#f8fdf9',
-        borderBottom: '0.5px solid #ddf2e2',
+        background: 'var(--brand-soft)',
+        borderBottom: '0.5px solid var(--brand-line)',
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
             자동제어
           </div>
-          <div style={{ fontSize: 12, color: '#666', marginTop: 2, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 12, color: 'var(--tx-2)', marginTop: 2, lineHeight: 1.4 }}>
             {autoControl
               ? '룰엔진이 임계값에 따라 디바이스를 자동으로 제어해요.'
               : '디바이스를 수동으로 제어할 수 있어요.'}
@@ -522,9 +523,9 @@ function DeviceControlPanel({ greenhouseId, initialDevices, initialAutoControl }
       {controlError && (
         <div style={{
           padding: '8px 14px',
-          borderTop: '0.5px solid #fcc',
-          background: '#fff1f1',
-          fontSize: 12, color: '#991f1f',
+          borderTop: '0.5px solid var(--danger-bd)',
+          background: 'var(--danger-bg)',
+          fontSize: 12, color: 'var(--danger-tx)',
         }}>
           {controlError}
         </div>
@@ -538,26 +539,27 @@ function DeviceRow({ deviceKey, on, disabled, onToggle, isLast }) {
     <div style={{
       padding: '11px 14px',
       display: 'flex', alignItems: 'center', gap: 12,
-      borderBottom: isLast ? 'none' : '0.5px solid #f0f0f0',
+      borderBottom: isLast ? 'none' : '0.5px solid var(--bd-soft)',
       opacity: disabled ? 0.55 : 1,
     }}>
       <div style={{
         width: 36, height: 36,
         borderRadius: 10,
-        background: on ? '#ddf2e2' : '#f5f5f5',
-        color: on ? '#2ea84e' : '#aaa',
+        background: on ? 'var(--brand-soft)' : 'var(--surface-2)',
+        border: `0.5px solid ${on ? 'var(--brand-line)' : 'transparent'}`,
+        color: on ? 'var(--brand)' : 'var(--tx-4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0,
       }}>
         <DeviceIcon name={deviceKey} size={18} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx-1)' }}>
           {deviceLabels[deviceKey]}
         </div>
         <div style={{
           fontSize: 12, fontWeight: 600, marginTop: 1,
-          color: on ? '#2ea84e' : '#aaa',
+          color: on ? 'var(--brand)' : 'var(--tx-4)',
         }}>
           {on ? 'ON' : 'OFF'}
         </div>
@@ -582,7 +584,7 @@ function ToggleSwitch({ checked, disabled, onChange, size = 'md' }) {
       style={{
         width: w, height: h,
         borderRadius: h / 2,
-        background: disabled ? '#e0e0e0' : (checked ? '#2ea84e' : '#cfcfcf'),
+        background: disabled ? '#e0e0e0' : (checked ? 'var(--brand)' : '#cfcfcf'),
         border: 'none',
         position: 'relative',
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -598,7 +600,7 @@ function ToggleSwitch({ checked, disabled, onChange, size = 'md' }) {
         width: knob, height: knob,
         borderRadius: '50%',
         background: '#fff',
-        boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+        boxShadow: '0 1px 2px rgba(0,0,0,.15)',
         transition: 'left .2s',
         display: 'block',
       }} />

@@ -1,9 +1,9 @@
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 
 const tagStyle = {
-  ok:   { background: '#ddf2e2', color: '#156b2e' },
-  warn: { background: '#fff8ec', color: '#8a5c00' },
-  bad:  { background: '#fff1f1', color: '#991f1f' },
+  ok:   { background: 'var(--brand-tint)', color: 'var(--brand-strong)' },
+  warn: { background: 'var(--warn-bg)',    color: 'var(--warn-tx)' },
+  bad:  { background: 'var(--danger-bg)',  color: 'var(--danger-tx)' },
 }
 
 const chartColor = {
@@ -18,8 +18,8 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
 
   return (
     <div style={{
-      background: '#f8fdf9',
-      border: '0.5px solid #ddf2e2',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14, padding: '12px 14px',
     }}>
       <div style={{
@@ -27,12 +27,12 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
         marginBottom: 6,
       }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 4 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx-3)', marginBottom: 4 }}>
             {label}
           </div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--tx-1)', lineHeight: 1 }}>
             {value}
-            <span style={{ fontSize: 13.5, fontWeight: 400, color: '#aaa', marginLeft: 1 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 400, color: 'var(--tx-4)', marginLeft: 1 }}>
               {unit}
             </span>
           </div>
@@ -52,7 +52,7 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
             <AreaChart data={history} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
               <defs>
                 <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor={color} stopOpacity={0.25} />
+                  <stop offset="0%"   stopColor={color} stopOpacity={0.18} />
                   <stop offset="100%" stopColor={color} stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -60,7 +60,7 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
                 type="monotone"
                 dataKey="v"
                 stroke={color}
-                strokeWidth={1.6}
+                strokeWidth={1.5}
                 fill={`url(#${gradId})`}
                 isAnimationActive={false}
               />
@@ -70,7 +70,7 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
           <div style={{
             height: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 11, color: '#bbb',
+            fontSize: 11, color: 'var(--tx-4)',
           }}>
             아직 시계열 데이터가 없어요
           </div>

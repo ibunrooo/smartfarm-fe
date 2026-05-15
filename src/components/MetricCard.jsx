@@ -1,7 +1,7 @@
 const tagStyle = {
-  ok:   { background: '#ddf2e2', color: '#156b2e' },
-  warn: { background: '#fff8ec', color: '#8a5c00' },
-  bad:  { background: '#fff1f1', color: '#991f1f' },
+  ok:   { background: 'var(--brand-tint)', color: 'var(--brand-strong)' },
+  warn: { background: 'var(--warn-bg)',    color: 'var(--warn-tx)' },
+  bad:  { background: 'var(--danger-bg)',  color: 'var(--danger-tx)' },
 }
 
 function MetricCard({ label, value, unit, status, statusText, info, infoOpen, onInfoToggle, onClick }) {
@@ -9,8 +9,8 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
     <div
       onClick={onClick}
       style={{
-        background: '#f8fdf9',
-        border: '0.5px solid #ddf2e2',
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
         borderRadius: 12, padding: '10px 10px 9px',
         position: 'relative',
         cursor: onClick ? 'pointer' : 'default',
@@ -18,7 +18,7 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 4,
-        fontSize: 11.5, fontWeight: 500, color: '#999', marginBottom: 4,
+        fontSize: 11.5, fontWeight: 500, color: 'var(--tx-3)', marginBottom: 4,
       }}>
         {label}
         {info && (
@@ -28,9 +28,9 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
             style={{
               width: 12, height: 12,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '0.5px solid #b4e3be',
-              background: infoOpen ? '#2ea84e' : '#f8fdf9',
-              color: infoOpen ? '#fff' : '#2ea84e',
+              border: '0.5px solid var(--brand-line)',
+              background: infoOpen ? 'var(--brand)' : 'var(--surface)',
+              color: infoOpen ? '#fff' : 'var(--brand)',
               borderRadius: '50%',
               fontSize: 8, fontWeight: 700,
               cursor: 'pointer',
@@ -43,9 +43,9 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
           </button>
         )}
       </div>
-      <div style={{ fontSize: 19, fontWeight: 700, color: '#1a1a1a', lineHeight: 1 }}>
+      <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--tx-1)', lineHeight: 1 }}>
         {value}
-        <span style={{ fontSize: 12.5, fontWeight: 400, color: '#aaa' }}>{unit}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 400, color: 'var(--tx-4)' }}>{unit}</span>
       </div>
       <div style={{
         display: 'inline-block', marginTop: 5,
@@ -60,10 +60,10 @@ function MetricCard({ label, value, unit, status, statusText, info, infoOpen, on
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
           marginTop: 6, zIndex: 5,
-          background: '#1a1a1a', color: '#fff',
+          background: 'var(--tx-1)', color: '#fff',
           fontSize: 12, lineHeight: 1.5,
           padding: '8px 10px', borderRadius: 8,
-          boxShadow: '0 4px 12px rgba(0,0,0,.15)',
+          boxShadow: 'var(--shadow-md)',
         }}>
           {info}
         </div>

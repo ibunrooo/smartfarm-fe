@@ -47,25 +47,21 @@ function UserMenu() {
   const initial = email?.[0]?.toUpperCase() ?? '?'
 
   return (
-    <div ref={ref} style={{
-      position: 'absolute',
-      top: 12, right: 12,
-      zIndex: 50,
-    }}>
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button
         onClick={() => setOpen(o => !o)}
         title={email ?? '사용자'}
         style={{
-          width: 36, height: 36,
+          width: 32, height: 32,
           borderRadius: '50%',
-          background: '#2ea84e',
-          border: 'none',
-          color: '#fff',
-          fontSize: 14, fontWeight: 700,
+          background: 'var(--brand-soft)',
+          border: '0.5px solid var(--brand-line)',
+          color: 'var(--brand-strong)',
+          fontSize: 13, fontWeight: 700,
           cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'var(--ff)',
-          boxShadow: '0 1px 4px rgba(0,0,0,.1)',
+          transition: 'background .15s',
         }}
       >
         {initial}
@@ -74,23 +70,24 @@ function UserMenu() {
       {open && (
         <div style={{
           position: 'absolute',
-          top: 42, right: 0,
+          top: 40, right: 0,
           minWidth: 200,
-          background: '#fff',
-          border: '0.5px solid #e8e8e8',
+          background: 'var(--surface)',
+          border: '0.5px solid var(--bd)',
           borderRadius: 12,
-          boxShadow: '0 4px 16px rgba(0,0,0,.08)',
+          boxShadow: 'var(--shadow-lg)',
           padding: 6,
           fontFamily: 'var(--ff)',
+          zIndex: 50,
         }}>
           <div style={{
             padding: '8px 10px',
-            fontSize: 11.5, color: '#666',
+            fontSize: 11.5, color: 'var(--tx-3)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {email ?? '...'}
           </div>
-          <div style={{ height: 0.5, background: '#eee', margin: '4px 6px' }} />
+          <div style={{ height: 0.5, background: 'var(--bd-soft)', margin: '4px 6px' }} />
           <button
             onClick={handleLogout}
             style={{
@@ -100,7 +97,7 @@ function UserMenu() {
               border: 'none',
               borderRadius: 8,
               fontSize: 13, fontWeight: 600,
-              color: '#991f1f',
+              color: 'var(--danger-tx)',
               cursor: 'pointer',
               textAlign: 'left',
               fontFamily: 'var(--ff)',

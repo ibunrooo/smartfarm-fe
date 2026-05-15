@@ -22,24 +22,24 @@ function SensorEventLog({ logs }) {
 
   return (
     <div style={{
-      background: '#fff',
-      border: '0.5px solid #e8e8e8',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14,
       overflow: 'hidden',
     }}>
       {/* 헤더 + 필터 */}
       <div style={{
         padding: '11px 14px',
-        borderBottom: '0.5px solid #e8e8e8',
+        borderBottom: '0.5px solid var(--bd-soft)',
       }}>
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           marginBottom: 8,
         }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
             이벤트 로그
           </div>
-          <div style={{ fontSize: 12, color: '#aaa' }}>
+          <div style={{ fontSize: 12, color: 'var(--tx-4)' }}>
             총 {filtered.length}건
           </div>
         </div>
@@ -65,7 +65,7 @@ function SensorEventLog({ logs }) {
         {visible.length === 0 ? (
           <div style={{
             padding: '24px 14px', textAlign: 'center',
-            fontSize: 13, color: '#aaa',
+            fontSize: 13, color: 'var(--tx-4)',
           }}>
             {filter === 'all'
               ? '아직 기록된 활동이 없어요.'
@@ -74,7 +74,7 @@ function SensorEventLog({ logs }) {
         ) : visible.map((log, i) => (
           <div key={log.id} style={{
             padding: '9px 14px',
-            borderBottom: i < visible.length - 1 ? '0.5px solid #f0f0f0' : 'none',
+            borderBottom: i < visible.length - 1 ? '0.5px solid var(--bd-soft)' : 'none',
             display: 'flex', alignItems: 'flex-start', gap: 9,
           }}>
             <div style={{
@@ -83,7 +83,7 @@ function SensorEventLog({ logs }) {
               marginTop: 5, flexShrink: 0,
             }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: '#444', lineHeight: 1.4 }}>{log.text}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx-2)', lineHeight: 1.4 }}>{log.text}</div>
               <div style={{ display: 'flex', gap: 5, marginTop: 3, alignItems: 'center' }}>
                 <span style={{
                   fontSize: 11, fontWeight: 600,
@@ -91,8 +91,8 @@ function SensorEventLog({ logs }) {
                 }}>
                   {categoryLabels[log.category]}
                 </span>
-                <span style={{ fontSize: 11, color: '#ccc' }}>·</span>
-                <span style={{ fontSize: 11, color: '#aaa' }}>{log.time}</span>
+                <span style={{ fontSize: 11, color: 'var(--tx-4)' }}>·</span>
+                <span style={{ fontSize: 11, color: 'var(--tx-4)' }}>{log.time}</span>
               </div>
             </div>
           </div>
@@ -103,7 +103,7 @@ function SensorEventLog({ logs }) {
       {filtered.length > PAGE_SIZE && (
         <div style={{
           padding: '9px 14px',
-          borderTop: '0.5px solid #e8e8e8',
+          borderTop: '0.5px solid var(--bd-soft)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <PageButton
@@ -112,7 +112,7 @@ function SensorEventLog({ logs }) {
           >
             ← 이전
           </PageButton>
-          <span style={{ fontSize: 12.5, color: '#888', fontWeight: 500 }}>
+          <span style={{ fontSize: 12.5, color: 'var(--tx-3)', fontWeight: 500 }}>
             {safePage + 1} / {totalPages}
           </span>
           <PageButton
@@ -134,10 +134,10 @@ function FilterChip({ active, dotColor, onClick, children }) {
       style={{
         display: 'flex', alignItems: 'center', gap: 5,
         padding: '4px 10px',
-        background: active ? '#2ea84e' : '#f5f5f5',
-        border: 'none',
+        background: active ? 'var(--brand-soft)' : 'var(--surface-2)',
+        border: `0.5px solid ${active ? 'var(--brand-line)' : 'transparent'}`,
         borderRadius: 12,
-        color: active ? '#fff' : '#666',
+        color: active ? 'var(--brand-strong)' : 'var(--tx-2)',
         fontSize: 12.5, fontWeight: 600,
         cursor: 'pointer',
         fontFamily: 'var(--ff)',
@@ -147,7 +147,7 @@ function FilterChip({ active, dotColor, onClick, children }) {
       {dotColor && (
         <span style={{
           width: 5, height: 5, borderRadius: '50%',
-          background: active ? '#fff' : dotColor,
+          background: dotColor,
         }} />
       )}
       {children}
@@ -163,9 +163,9 @@ function PageButton({ disabled, onClick, children }) {
       style={{
         padding: '5px 11px',
         background: 'transparent',
-        border: '0.5px solid #ddd',
+        border: '0.5px solid var(--bd)',
         borderRadius: 7,
-        color: disabled ? '#ccc' : '#555',
+        color: disabled ? 'var(--tx-4)' : 'var(--tx-2)',
         fontSize: 12.5, fontWeight: 500,
         cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'var(--ff)',

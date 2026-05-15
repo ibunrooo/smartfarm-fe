@@ -8,7 +8,7 @@ function deriveRiskScore(report) {
 }
 
 function DailyReportCard({ report, onShowDetail }) {
-  const color = riskColor[report.riskLevel] ?? '#888'
+  const color = riskColor[report.riskLevel] ?? 'var(--tx-3)'
   const score = deriveRiskScore(report)
   const recs  = report.recommendations ?? report.actions ?? []
 
@@ -16,25 +16,25 @@ function DailyReportCard({ report, onShowDetail }) {
     <div style={{
       width: '100%',
       maxWidth: 320,
-      background: '#fff',
-      border: '0.5px solid #e8e8e8',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14,
       overflow: 'hidden',
     }}>
       {/* 헤더 */}
       <div style={{
         padding: '10px 14px',
-        background: '#f8fdf9',
-        borderBottom: '0.5px solid #ddf2e2',
+        background: 'var(--brand-soft)',
+        borderBottom: '0.5px solid var(--brand-line)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--brand-strong)' }}>
           <ChartIcon />
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1e8a3c' }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700 }}>
             일일 리포트
           </span>
         </div>
-        <span style={{ fontSize: 11.5, color: '#888' }}>
+        <span style={{ fontSize: 11.5, color: 'var(--tx-3)' }}>
           {formatDate(report.date)}
         </span>
       </div>
@@ -43,7 +43,7 @@ function DailyReportCard({ report, onShowDetail }) {
       <div style={{ padding: 14 }}>
         {/* 요약 */}
         <div style={{
-          fontSize: 13, color: '#444', lineHeight: 1.55, marginBottom: 12,
+          fontSize: 13, color: 'var(--tx-2)', lineHeight: 1.55, marginBottom: 12,
         }}>
           {report.summary}
         </div>
@@ -54,7 +54,7 @@ function DailyReportCard({ report, onShowDetail }) {
             display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
             marginBottom: 5,
           }}>
-            <span style={{ fontSize: 11.5, color: '#888', fontWeight: 500 }}>
+            <span style={{ fontSize: 11.5, color: 'var(--tx-3)', fontWeight: 500 }}>
               병해충 위험도
             </span>
             <span style={{ fontSize: 13, fontWeight: 700, color }}>
@@ -62,7 +62,7 @@ function DailyReportCard({ report, onShowDetail }) {
             </span>
           </div>
           <div style={{
-            height: 5, background: '#f0f0f0', borderRadius: 8, overflow: 'hidden',
+            height: 5, background: 'var(--surface-2)', borderRadius: 8, overflow: 'hidden',
           }}>
             <div style={{
               width: `${score}%`,
@@ -75,7 +75,7 @@ function DailyReportCard({ report, onShowDetail }) {
         {/* 행동 추천 */}
         <div>
           <div style={{
-            fontSize: 11.5, fontWeight: 600, color: '#888',
+            fontSize: 11.5, fontWeight: 600, color: 'var(--tx-3)',
             marginBottom: 5,
           }}>
             추천 행동
@@ -83,12 +83,12 @@ function DailyReportCard({ report, onShowDetail }) {
           {recs.map((action, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: 6,
-              fontSize: 12.5, color: '#444', lineHeight: 1.5,
+              fontSize: 12.5, color: 'var(--tx-2)', lineHeight: 1.5,
               padding: '3px 0',
             }}>
               <div style={{
                 width: 4, height: 4, borderRadius: '50%',
-                background: '#2ea84e',
+                background: 'var(--brand)',
                 marginTop: 6, flexShrink: 0,
               }} />
               <div style={{ flex: 1 }}>{action}</div>
@@ -103,11 +103,11 @@ function DailyReportCard({ report, onShowDetail }) {
             marginTop: 10,
             width: '100%',
             padding: '8px 0',
-            background: '#f8fdf9',
-            border: '0.5px solid #ddf2e2',
+            background: 'var(--brand-soft)',
+            border: '0.5px solid var(--brand-line)',
             borderRadius: 8,
             fontSize: 12.5, fontWeight: 600,
-            color: '#1e8a3c',
+            color: 'var(--brand-strong)',
             cursor: 'pointer',
             fontFamily: 'var(--ff)',
           }}

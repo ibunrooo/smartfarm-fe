@@ -1,6 +1,6 @@
 const styles = {
-  warn:   { bg: '#fff8ec', border: '#fde8b0', text: '#8a5c00', dot: '#f0a500', label: '주의' },
-  danger: { bg: '#fff1f1', border: '#fcc',    text: '#991f1f', dot: '#e84040', label: '긴급' },
+  warn:   { bg: 'var(--warn-bg)',   border: 'var(--warn-bd)',   text: 'var(--warn-tx)',   dot: '#f0a500', label: '주의' },
+  danger: { bg: 'var(--danger-bg)', border: 'var(--danger-bd)', text: 'var(--danger-tx)', dot: '#e84040', label: '긴급' },
 }
 
 function AlertBanner({ message, type = 'warn', variant = 'banner' }) {

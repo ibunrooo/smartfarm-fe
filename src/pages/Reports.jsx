@@ -93,7 +93,7 @@ function Reports() {
           alignSelf: 'flex-start',
           padding: '6px 0',
           background: 'none', border: 'none',
-          fontSize: 12.5, color: '#666', fontWeight: 500,
+          fontSize: 12.5, color: 'var(--tx-2)', fontWeight: 500,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}
@@ -107,10 +107,10 @@ function Reports() {
         padding: '0 2px',
       }}>
         <div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)' }}>
             지난 리포트
           </div>
-          <div style={{ fontSize: 12.5, color: '#888', marginTop: 4 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--tx-3)', marginTop: 4 }}>
             매일 자동으로 생성되는 일일 리포트를 모아 보세요.
           </div>
         </div>
@@ -119,13 +119,14 @@ function Reports() {
           disabled={generating || !greenhouseId}
           style={{
             padding: '8px 12px',
-            background: (generating || !greenhouseId) ? '#cfe7d4' : '#2ea84e',
+            background: (generating || !greenhouseId) ? 'var(--brand-tint)' : 'var(--brand)',
             border: 'none', borderRadius: 10,
             fontSize: 12.5, fontWeight: 700,
             color: '#fff',
             cursor: generating ? 'not-allowed' : 'pointer',
             fontFamily: 'var(--ff)',
             flexShrink: 0,
+            boxShadow: (generating || !greenhouseId) ? 'none' : 'var(--shadow-xs)',
           }}
         >
           {generating ? '생성 중…' : '오늘 새로 생성'}
@@ -135,10 +136,10 @@ function Reports() {
       {generateError && (
         <div style={{
           padding: '8px 12px',
-          background: '#fff1f1',
-          border: '0.5px solid #fcc',
+          background: 'var(--danger-bg)',
+          border: '0.5px solid var(--danger-bd)',
           borderRadius: 10,
-          fontSize: 12.5, color: '#991f1f',
+          fontSize: 12.5, color: 'var(--danger-tx)',
         }}>
           {generateError}
         </div>
@@ -150,12 +151,12 @@ function Reports() {
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           gap: 8, padding: 20, textAlign: 'center',
-          color: '#888',
+          color: 'var(--tx-3)',
         }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
             활성 온실이 없어요
           </div>
-          <div style={{ fontSize: 12.5, color: '#888', maxWidth: 280, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12.5, color: 'var(--tx-3)', maxWidth: 280, lineHeight: 1.5 }}>
             먼저 식물을 등록해 주세요.
           </div>
           <button
@@ -163,11 +164,12 @@ function Reports() {
             style={{
               marginTop: 6,
               padding: '8px 16px',
-              background: '#2ea84e', color: '#fff',
+              background: 'var(--brand)', color: '#fff',
               border: 'none', borderRadius: 10,
               fontSize: 13, fontWeight: 700,
               cursor: 'pointer',
               fontFamily: 'var(--ff)',
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
             + 식물 추가하기
@@ -190,17 +192,17 @@ function Reports() {
             <div style={{
               minHeight: 200,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#888', fontSize: 13.5,
+              color: 'var(--tx-3)', fontSize: 13.5,
             }}>
               리포트를 불러오는 중…
             </div>
           ) : error ? (
             <div style={{
               padding: '10px 12px',
-              background: '#fff1f1',
-              border: '0.5px solid #fcc',
+              background: 'var(--danger-bg)',
+              border: '0.5px solid var(--danger-bd)',
               borderRadius: 10,
-              fontSize: 13, color: '#991f1f',
+              fontSize: 13, color: 'var(--danger-tx)',
             }}>
               {error}
             </div>
@@ -210,12 +212,12 @@ function Reports() {
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               gap: 8, padding: 20, textAlign: 'center',
-              color: '#888',
+              color: 'var(--tx-3)',
             }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
                 아직 생성된 리포트가 없어요
               </div>
-              <div style={{ fontSize: 12.5, color: '#888', maxWidth: 280, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12.5, color: 'var(--tx-3)', maxWidth: 280, lineHeight: 1.5 }}>
                 센서 데이터가 충분히 쌓이면 매일 자동으로 만들어져요.<br />
                 지금 만들어보려면 위 "오늘 새로 생성" 버튼을 눌러 주세요.
               </div>
@@ -251,8 +253,8 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
 
   return (
     <div style={{
-      background: '#fff',
-      border: '0.5px solid #e8e8e8',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
       borderRadius: 14,
       padding: 14,
       display: 'flex', flexDirection: 'column', gap: 10,
@@ -266,7 +268,7 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
           style={navBtnStyle}
           aria-label="이전 달"
         >←</button>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
           {year}년 {month}월
         </div>
         <button
@@ -285,7 +287,7 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
           <div key={w} style={{
             textAlign: 'center',
             fontSize: 11, fontWeight: 600,
-            color: i === 0 ? '#e84040' : i === 6 ? '#3b82c4' : '#888',
+            color: i === 0 ? '#e84040' : i === 6 ? '#3b82c4' : 'var(--tx-3)',
             padding: '4px 0',
           }}>
             {w}
@@ -304,7 +306,7 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
           const report = reportByDate[iso]
           const hasReport = !!report
           const isToday = d === todayDate
-          const dotColor = hasReport ? (riskColor[report.riskLevel] ?? '#2ea84e') : null
+          const dotColor = hasReport ? (riskColor[report.riskLevel] ?? 'var(--brand)') : null
           return (
             <button
               key={i}
@@ -312,11 +314,11 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
               disabled={!hasReport}
               style={{
                 aspectRatio: '1',
-                background: isToday ? '#f2faf3' : 'transparent',
-                border: isToday ? '1px solid #2ea84e' : '0.5px solid transparent',
+                background: isToday ? 'var(--brand-soft)' : 'transparent',
+                border: isToday ? '0.5px solid var(--brand-line)' : '0.5px solid transparent',
                 borderRadius: 8,
                 cursor: hasReport ? 'pointer' : 'default',
-                color: hasReport ? '#1a1a1a' : '#ccc',
+                color: hasReport ? 'var(--tx-1)' : 'var(--tx-4)',
                 fontWeight: hasReport ? 600 : 400,
                 fontSize: 12.5,
                 fontFamily: 'var(--ff)',
@@ -346,23 +348,23 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 const navBtnStyle = {
   width: 28, height: 28,
   borderRadius: 8,
-  background: '#f5f5f5',
-  border: 'none',
-  color: '#666',
+  background: 'var(--surface-2)',
+  border: '0.5px solid var(--bd-soft)',
+  color: 'var(--tx-2)',
   fontSize: 13, fontWeight: 700,
   cursor: 'pointer',
   fontFamily: 'var(--ff)',
 }
 
 function ReportCard({ report, onClick }) {
-  const color = riskColor[report.riskLevel] ?? '#888'
+  const color = riskColor[report.riskLevel] ?? 'var(--tx-3)'
   const formattedDate = formatDate(report.date)
   return (
     <button
       onClick={onClick}
       style={{
-        background: '#fff',
-        border: '0.5px solid #e8e8e8',
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
         borderRadius: 14,
         padding: 14,
         cursor: 'pointer',
@@ -374,7 +376,7 @@ function ReportCard({ report, onClick }) {
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx-1)' }}>
           {formattedDate}
         </span>
         <span style={{
@@ -387,7 +389,7 @@ function ReportCard({ report, onClick }) {
         </span>
       </div>
       <div style={{
-        fontSize: 12, color: '#444', lineHeight: 1.5,
+        fontSize: 12, color: 'var(--tx-2)', lineHeight: 1.5,
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
@@ -397,7 +399,7 @@ function ReportCard({ report, onClick }) {
       </div>
       <div style={{
         display: 'flex', gap: 10,
-        fontSize: 11, color: '#888',
+        fontSize: 11, color: 'var(--tx-3)',
       }}>
         <span>알림 {report.alertCount ?? 0}건</span>
         <span style={{ opacity: .4 }}>·</span>

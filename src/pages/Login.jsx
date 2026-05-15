@@ -101,36 +101,39 @@ function Login() {
       minHeight: '100dvh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 20,
-      background: '#fafafa',
+      background: 'var(--bg)',
       fontFamily: 'var(--ff)',
     }}>
       <div style={{
         width: '100%', maxWidth: 380,
         padding: 28,
-        background: '#fff',
-        border: '0.5px solid #e8e8e8',
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
         borderRadius: 16,
+        boxShadow: 'var(--shadow-sm)',
       }}>
         {/* 로고 */}
         <div style={{
           width: 56, height: 56,
-          background: '#2ea84e',
+          background: 'var(--brand-soft)',
+          border: '0.5px solid var(--brand-line)',
+          color: 'var(--brand)',
           borderRadius: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 14px',
         }}>
           <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
             <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-              fill="#fff" opacity=".95"/>
-            <line x1="13" y1="9" x2="13" y2="19" stroke="#2ea84e" strokeWidth="1.4" strokeLinecap="round"/>
+              stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+            <line x1="13" y1="9" x2="13" y2="19" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
             <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-              stroke="#2ea84e" strokeWidth="1.3" strokeLinecap="round" fill="none"/>
+              stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
           </svg>
         </div>
 
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>팜-므파탈</div>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx-1)' }}>팜-므파탈</div>
+          <div style={{ fontSize: 13, color: 'var(--tx-3)', marginTop: 4 }}>
             {mode === 'signin' ? '로그인해 식물을 돌봐주세요'
               : mode === 'signup' ? '가입하고 시작해보세요'
               : '비밀번호 재설정 메일을 보내드릴게요'}
@@ -146,11 +149,11 @@ function Login() {
             style={{
               width: '100%',
               padding: '11px',
-              background: '#fff',
-              border: '0.5px solid #ddd',
+              background: 'var(--surface)',
+              border: '0.5px solid var(--bd)',
               borderRadius: 10,
               fontSize: 14, fontWeight: 600,
-              color: '#1a1a1a',
+              color: 'var(--tx-1)',
               cursor: loading ? 'not-allowed' : 'pointer',
               fontFamily: 'var(--ff)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -192,9 +195,9 @@ function Login() {
             display: 'flex', alignItems: 'center', gap: 8,
             marginBottom: 14,
           }}>
-            <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
-            <span style={{ fontSize: 11, color: '#aaa' }}>또는 이메일로</span>
-            <div style={{ flex: 1, height: 0.5, background: '#e8e8e8' }} />
+            <div style={{ flex: 1, height: 0.5, background: 'var(--bd)' }} />
+            <span style={{ fontSize: 11, color: 'var(--tx-4)' }}>또는 이메일로</span>
+            <div style={{ flex: 1, height: 0.5, background: 'var(--bd)' }} />
           </div>
         )}
 
@@ -224,10 +227,10 @@ function Login() {
           {error && (
             <div style={{
               padding: '10px 12px',
-              background: '#fff1f1',
-              border: '0.5px solid #fcc',
+              background: 'var(--danger-bg)',
+              border: '0.5px solid var(--danger-bd)',
               borderRadius: 10,
-              fontSize: 12.5, color: '#991f1f', lineHeight: 1.5,
+              fontSize: 12.5, color: 'var(--danger-tx)', lineHeight: 1.5,
             }}>
               {error}
             </div>
@@ -235,10 +238,10 @@ function Login() {
           {info && (
             <div style={{
               padding: '10px 12px',
-              background: '#f8fdf9',
-              border: '0.5px solid #ddf2e2',
+              background: 'var(--brand-soft)',
+              border: '0.5px solid var(--brand-line)',
               borderRadius: 10,
-              fontSize: 12.5, color: '#1e8a3c', lineHeight: 1.5,
+              fontSize: 12.5, color: 'var(--brand-strong)', lineHeight: 1.5,
             }}>
               {info}
             </div>
@@ -250,12 +253,13 @@ function Login() {
             style={{
               marginTop: 4,
               padding: '12px',
-              background: loading ? '#cfe7d4' : '#2ea84e',
+              background: loading ? 'var(--brand-tint)' : 'var(--brand)',
               color: '#fff',
               border: 'none', borderRadius: 10,
               fontSize: 14, fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
               fontFamily: 'var(--ff)',
+              boxShadow: loading ? 'none' : 'var(--shadow-xs)',
             }}
           >
             {loading
@@ -267,7 +271,7 @@ function Login() {
         {mode === 'signin' && (
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginTop: 12, fontSize: 12, color: '#888',
+            marginTop: 12, fontSize: 12, color: 'var(--tx-3)',
           }}>
             <span>
               메일 못 받으셨나요?{' '}
@@ -277,7 +281,7 @@ function Login() {
                 disabled={loading}
                 style={{
                   background: 'none', border: 'none',
-                  color: '#2ea84e', fontWeight: 600,
+                  color: 'var(--brand)', fontWeight: 600,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'var(--ff)',
                   fontSize: 12, padding: 0,
@@ -296,7 +300,7 @@ function Login() {
               }}
               style={{
                 background: 'none', border: 'none',
-                color: '#2ea84e', fontWeight: 600,
+                color: 'var(--brand)', fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'var(--ff)',
                 fontSize: 12, padding: 0,
               }}
@@ -308,7 +312,7 @@ function Login() {
 
         <div style={{
           textAlign: 'center', marginTop: 12,
-          fontSize: 12.5, color: '#666',
+          fontSize: 12.5, color: 'var(--tx-2)',
         }}>
           {mode === 'signin' && '계정이 없으신가요? '}
           {mode === 'signup' && '이미 계정이 있으신가요? '}
@@ -322,7 +326,7 @@ function Login() {
             }}
             style={{
               background: 'none', border: 'none',
-              color: '#2ea84e', fontWeight: 700,
+              color: 'var(--brand)', fontWeight: 700,
               cursor: 'pointer', fontFamily: 'var(--ff)',
               fontSize: 12.5, padding: 0,
             }}
@@ -338,13 +342,13 @@ function Login() {
 const fieldStyle = {
   width: '100%',
   padding: '12px 14px',
-  background: '#fff',
-  border: '0.5px solid #ddd',
+  background: 'var(--surface)',
+  border: '0.5px solid var(--bd)',
   borderRadius: 10,
   fontSize: 14,
   fontFamily: 'var(--ff)',
   outline: 'none',
-  color: '#1a1a1a',
+  color: 'var(--tx-1)',
   boxSizing: 'border-box',
 }
 

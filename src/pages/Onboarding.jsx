@@ -116,7 +116,7 @@ function Onboarding() {
           alignSelf: 'flex-start',
           padding: '6px 0',
           background: 'none', border: 'none',
-          fontSize: 13.5, color: '#666', fontWeight: 500,
+          fontSize: 13.5, color: 'var(--tx-2)', fontWeight: 500,
           cursor: 'pointer',
           fontFamily: 'var(--ff)',
         }}
@@ -125,10 +125,10 @@ function Onboarding() {
       </button>
 
       <div style={{ padding: '0 2px' }}>
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)' }}>
           식물 추가
         </div>
-        <div style={{ fontSize: 13.5, color: '#888', marginTop: 4 }}>
+        <div style={{ fontSize: 13.5, color: 'var(--tx-3)', marginTop: 4 }}>
           {stepDesc[step]}
         </div>
       </div>
@@ -163,10 +163,10 @@ function Onboarding() {
       {submitError && (
         <div style={{
           padding: '10px 12px',
-          background: '#fff1f1',
-          border: '0.5px solid #fcc',
+          background: 'var(--danger-bg)',
+          border: '0.5px solid var(--danger-bd)',
           borderRadius: 10,
-          fontSize: 13, color: '#991f1f', lineHeight: 1.5,
+          fontSize: 13, color: 'var(--danger-tx)', lineHeight: 1.5,
           display: 'flex', alignItems: 'center', gap: 7,
         }}>
           <span style={{ fontWeight: 700 }}>등록 실패</span>
@@ -184,11 +184,11 @@ function Onboarding() {
             style={{
               flex: 1,
               padding: '12px',
-              background: '#fff',
-              border: '0.5px solid #ddd',
+              background: 'var(--surface)',
+              border: '0.5px solid var(--bd)',
               borderRadius: 10,
               fontSize: 14, fontWeight: 600,
-              color: '#666',
+              color: 'var(--tx-2)',
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontFamily: 'var(--ff)',
               opacity: submitting ? 0.5 : 1,
@@ -203,13 +203,14 @@ function Onboarding() {
           style={{
             flex: 2,
             padding: '12px',
-            background: (canNext && !submitting) ? '#2ea84e' : '#cfe7d4',
+            background: (canNext && !submitting) ? 'var(--brand)' : 'var(--brand-tint)',
             border: 'none',
             borderRadius: 10,
             fontSize: 14, fontWeight: 700,
             color: '#fff',
             cursor: (canNext && !submitting) ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--ff)',
+            boxShadow: (canNext && !submitting) ? 'var(--shadow-xs)' : 'none',
           }}
         >
           {step === 3 ? (submitting ? '등록 중…' : '등록하기') : '다음 →'}
@@ -235,8 +236,9 @@ function Stepper({ current, total, labels }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
               <div style={{
                 width: 26, height: 26, borderRadius: '50%',
-                background: filled ? '#2ea84e' : '#e8e8e8',
-                color: filled ? '#fff' : '#aaa',
+                background: filled ? 'var(--brand-soft)' : 'var(--surface-2)',
+                border: `0.5px solid ${filled ? 'var(--brand-line)' : 'var(--bd-soft)'}`,
+                color: filled ? 'var(--brand-strong)' : 'var(--tx-4)',
                 fontSize: 13, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'var(--ff)',
@@ -245,7 +247,7 @@ function Stepper({ current, total, labels }) {
               </div>
               <div style={{
                 fontSize: 11.5, fontWeight: active ? 700 : 500,
-                color: active ? '#1e8a3c' : '#999',
+                color: active ? 'var(--brand-strong)' : 'var(--tx-3)',
               }}>
                 {labels[i]}
               </div>
@@ -254,7 +256,7 @@ function Stepper({ current, total, labels }) {
               <div style={{
                 flex: 1,
                 height: 2,
-                background: done ? '#2ea84e' : '#e8e8e8',
+                background: done ? 'var(--brand-line)' : 'var(--bd-soft)',
                 margin: '12px 6px 0',
               }} />
             )}
@@ -282,8 +284,8 @@ function PlantStep({ plants, value, onChange, onUnsure }) {
               onClick={() => onChange(p.id)}
               style={{
                 padding: 12,
-                background: selected ? '#f2faf3' : '#fff',
-                border: `1px solid ${selected ? '#2ea84e' : '#e8e8e8'}`,
+                background: selected ? 'var(--brand-soft)' : 'var(--surface)',
+                border: `0.5px solid ${selected ? 'var(--brand-line)' : 'var(--bd)'}`,
                 borderRadius: 12,
                 display: 'flex', alignItems: 'center', gap: 10,
                 cursor: 'pointer',
@@ -627,8 +629,8 @@ function SurveyQuestion({ title, options, value, onChange }) {
               onClick={() => onChange(opt.id)}
               style={{
                 padding: '12px 14px',
-                background: selected ? '#f2faf3' : '#fff',
-                border: `1px solid ${selected ? '#2ea84e' : '#e8e8e8'}`,
+                background: selected ? 'var(--brand-soft)' : 'var(--surface)',
+                border: `0.5px solid ${selected ? 'var(--brand-line)' : 'var(--bd)'}`,
                 borderRadius: 12,
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
