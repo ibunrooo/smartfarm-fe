@@ -21,6 +21,7 @@ function Login() {
         provider,
         options: {
           redirectTo: `${window.location.origin}/home`,
+          ...(provider === 'kakao' && { scopes: 'profile_nickname,profile_image' }),
         },
       })
       if (oauthErr) throw oauthErr
