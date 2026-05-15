@@ -10,7 +10,6 @@ import { plants } from '../data/plants'
 import { metricLabels, sensorOrder } from '../data/greenhouses'
 import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
-import { getWeather } from '../api/weather'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
 import { getMyGreenhouseIds } from '../utils/storage'
@@ -48,7 +47,6 @@ function Sensor() {
   const [metas, setMetas]       = useState([])
   const [latest, setLatest]     = useState(null)
   const [history, setHistory]   = useState([])
-  const [weather, setWeather]   = useState(null)
   const [alerts, setAlerts]     = useState([])
   const [actuators, setActuators] = useState([])
   const [loading, setLoading]   = useState(() => !!activeId)
@@ -63,16 +61,14 @@ function Sensor() {
       Promise.all(ids.map(id => getGreenhouse(id).catch(() => null))),
       getLatestSensor(activeId).catch(() => null),
       getSensorHistory(activeId, 60).catch(() => []),
-      getWeather(activeId).catch(() => null),
       getAlerts(activeId, 20).catch(() => []),
       getActuatorLogs(activeId).catch(() => []),
     ])
-      .then(([metaList, latestData, historyData, weatherData, alertList, actuatorList]) => {
+      .then(([metaList, latestData, historyData, alertList, actuatorList]) => {
         if (cancelled) return
         setMetas(metaList.filter(Boolean))
         setLatest(latestData)
         setHistory(historyData)
-        setWeather(weatherData)
         setAlerts(alertList)
         setActuators(actuatorList)
         setLoading(false)
@@ -115,7 +111,7 @@ function Sensor() {
 
   // 데이터 합성
   const switcherList = buildSwitcherList(metas, ids)
-  const sensors      = buildSensors(latest, weather)
+  const sensors      = buildSensors(latest)
   const histories    = buildHistories(history)
   const eventLogs    = mergeEventLogs(alerts, actuators)
   const topAlert     = buildTopAlert(alerts)
@@ -331,7 +327,7 @@ function buildSwitcherList(metas, ids) {
   })
 }
 
-function buildSensors(latest, weather) {
+function buildSensors(latest) {
   return {
     temp: {
       value: latest?.temp ?? '-',
@@ -349,10 +345,9 @@ function buildSensors(latest, weather) {
       ...statusFor('soil', latest?.soil),
     },
     lux: {
-      value: weather?.lux ?? '-',
+      value: latest?.lux ?? '-',
       unit: 'lux',
-      status: 'ok',
-      statusText: '데이터 없음',
+      ...statusFor('lux', latest?.lux),
     },
   }
 }
@@ -374,6 +369,11 @@ function statusFor(key, value) {
     if (value <= 30 || value >= 75) return { status: 'warn', statusText: '주의' }
     return { status: 'ok', statusText: '적정' }
   }
+  if (key === 'lux') {
+    if (value <= 100)               return { status: 'bad',  statusText: '부족' }
+    if (value <= 500)               return { status: 'warn', statusText: '주의' }
+    return { status: 'ok', statusText: '적정' }
+  }
   return { status: 'ok', statusText: '적정' }
 }
 
@@ -385,7 +385,7 @@ function buildHistories(history) {
     temp:     history.map((r, i) => ({ t: i, v: roundOr(r.temp) })),
     humidity: history.map((r, i) => ({ t: i, v: roundOr(r.humidity) })),
     soil:     history.map((r, i) => ({ t: i, v: roundOr(r.soil) })),
-    lux:      [],
+    lux:      history.map((r, i) => ({ t: i, v: roundOr(r.lux) })),
   }
 }
 

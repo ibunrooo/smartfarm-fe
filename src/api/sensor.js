@@ -7,6 +7,7 @@ export function mapSensorReading(raw) {
     temp:         raw.temperature,
     humidity:     raw.humidity,
     soil:         raw.soil_moisture,
+    lux:          raw.lux,
     ts:           raw.ts,
   }
 }
