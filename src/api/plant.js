@@ -1,16 +1,17 @@
 import { apiFetch } from './client'
 
-// BE 응답이 어떤 키로 올지 명세에 정확히 없어서 안전하게 normalize
+// BE는 엔드포인트마다 응답 키 케이스가 달라서 (camel/snake) 둘 다 받음
+// 특히 /api/plant/list는 DB row 원본(snake_case)이라 plant_key/name_ko로 옴
 export function mapPlant(raw) {
   if (!raw) return null
   return {
-    id:              raw.plantKey ?? raw.id ?? raw.key ?? null,
-    name:            raw.name ?? '',
+    id:              raw.plantKey ?? raw.plant_key ?? raw.key ?? null,
+    name:            raw.name ?? raw.nameKo ?? raw.name_ko ?? '',
     difficulty:      raw.difficulty ?? null,
     description:     raw.description ?? '',
     recommendReason: raw.recommendReason ?? raw.reason ?? '',
-    sunPref:         raw.sunPref ?? raw.lightLevel ?? null,
-    imageUrl:        raw.imageUrl ?? raw.image ?? null,
+    sunPref:         raw.sunPref ?? raw.lightLevel ?? raw.light_level ?? null,
+    imageUrl:        raw.imageUrl ?? raw.image ?? raw.image_url ?? null,
   }
 }
 
