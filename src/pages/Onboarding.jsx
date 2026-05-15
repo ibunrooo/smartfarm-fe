@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend } from '../data/plants'
+import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial } from '../data/plants'
 import { upsertGreenhouse } from '../api/greenhouse'
 import { getPlantList, recommendPlant, registerPlant } from '../api/plant'
+import { startSimulation } from '../api/simulate'
 import { addGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
 
 const DEFAULT_THEME = { main: '#2ea84e', accent: '#4db866' }
@@ -97,6 +98,13 @@ function Onboarding() {
       // 명세상 식물 등록 endpoint 추가 호출 (실패는 무시 — plantType은 이미 greenhouse에 들어감)
       await registerPlant(newId, data.plantId).catch((err) => {
         console.warn('plant 등록 호출 실패 (무시):', err)
+      })
+      // 가상 센서 시뮬레이션 시작 — 식물별 초기값으로 BE가 주기 발행 (실패해도 온보딩은 진행)
+      await startSimulation(newId, {
+        plantType: data.plantId,
+        ...getSimInitial(data.plantId),
+      }).catch((err) => {
+        console.warn('simulate 시작 실패 (무시):', err)
       })
       addGreenhouseId(newId)
       setActiveGreenhouseId(newId)

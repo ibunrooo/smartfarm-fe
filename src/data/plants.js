@@ -7,6 +7,7 @@ export const plants = [
     description: '공기정화에 탁월한 식물. 물을 자주 안 줘도 잘 자라요.',
     recommendReason: '가장 잘 죽지 않는 식물. 입문자에게 가장 추천돼요.',
     sunPref: 'low',
+    simInitial: { temperature: 21, humidity: 45, soilMoisture: 25, lux: 800 },
   },
   {
     id: 'monstera',
@@ -16,6 +17,7 @@ export const plants = [
     description: '큼직한 잎이 매력적인 인기 관엽식물이에요.',
     recommendReason: '실내 인테리어 식물로 인기. 관리도 쉬워요.',
     sunPref: 'low',
+    simInitial: { temperature: 23, humidity: 65, soilMoisture: 50, lux: 1500 },
   },
   {
     id: 'cherry_tomato',
@@ -25,6 +27,7 @@ export const plants = [
     description: '꾸준한 햇빛과 관수가 필요해요. 수확 보람이 커요.',
     recommendReason: '꾸준한 관리에 보람이 따르는 인기 식물이에요.',
     sunPref: 'high',
+    simInitial: { temperature: 25, humidity: 60, soilMoisture: 55, lux: 8000 },
   },
   {
     id: 'lettuce',
@@ -34,6 +37,7 @@ export const plants = [
     description: '잎채소의 대표주자. 빠르게 자라고 수확이 쉬워요.',
     recommendReason: '초보에게 가장 잘 맞는 잎채소예요.',
     sunPref: 'low',
+    simInitial: { temperature: 18, humidity: 60, soilMoisture: 60, lux: 5000 },
   },
   {
     id: 'green_onion',
@@ -43,8 +47,16 @@ export const plants = [
     description: '뿌리만 있어도 다시 자라는 강한 식물이에요.',
     recommendReason: '한 번 사면 계속 수확 가능. 식비 절약에 좋아요.',
     sunPref: 'high',
+    simInitial: { temperature: 22, humidity: 55, soilMoisture: 50, lux: 6000 },
   },
 ]
+
+const DEFAULT_SIM_INITIAL = { temperature: 22, humidity: 60, soilMoisture: 40, lux: 1000 }
+
+export function getSimInitial(plantId) {
+  const plant = plants.find(p => p.id === plantId)
+  return plant?.simInitial ?? DEFAULT_SIM_INITIAL
+}
 
 export const difficultyLabel = {
   easy:   '쉬움',
