@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { severityStyle } from '../data/diseases'
 import { predictDisease } from '../api/disease'
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
 function Analysis() {
   const [phase, setPhase] = useState('upload')
   const [imageUrl, setImageUrl] = useState(null)
@@ -20,6 +22,11 @@ function Analysis() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+    if (file.size > MAX_IMAGE_BYTES) {
+      setErrorMsg('이미지는 5MB 이하로 업로드해주세요.')
+      setPhase('preview')
+      return
+    }
     if (imageUrl) URL.revokeObjectURL(imageUrl)
     setImageUrl(URL.createObjectURL(file))
     setSelectedFile(file)
