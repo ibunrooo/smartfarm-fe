@@ -10,6 +10,7 @@ import { getLatestReport, postReportChat } from '../api/report'
 import { getMyGreenhouses } from '../api/greenhouse'
 import { getActiveGreenhouseId } from '../utils/storage'
 import { substituteGreenhouseId } from '../utils/reportText'
+import { isPushSupported, enablePushForAllGreenhouses } from '../utils/push'
 
 const CHAT_CACHE_KEY = 'farm-me:aiChatMessages'
 const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro', 'ai-typing'])
@@ -492,23 +493,39 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
 }
 
 function NotificationBanner() {
-  const supported = typeof Notification !== 'undefined'
+  const supported = isPushSupported()
   const [permission, setPermission] = useState(supported ? Notification.permission : 'unsupported')
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState(null)
+
+  // 권한이 이미 granted면 백엔드 구독을 한 번 더 동기화 (디바이스 변경/세션 초기화 대비)
+  useEffect(() => {
+    if (!supported || Notification.permission !== 'granted') return
+    enablePushForAllGreenhouses().catch(err => {
+      console.warn('푸시 자동 재구독 실패:', err)
+    })
+  }, [supported])
 
   if (!supported || permission !== 'default') return null
 
   const handleEnable = async () => {
+    if (pending) return
+    setPending(true)
+    setError(null)
     try {
-      const result = await Notification.requestPermission()
-      setPermission(result)
-      if (result === 'granted') {
-        new Notification('팜-므파탈', {
-          body: '알림이 켜졌어요. 일일 리포트와 긴급 알림을 보내드릴게요.',
-          icon: '/favicon.svg',
-        })
+      const { subscribed, total } = await enablePushForAllGreenhouses()
+      setPermission(Notification.permission)
+      if (total === 0) {
+        setError('식물을 등록한 뒤에 자동으로 구독돼요.')
+      } else if (subscribed === 0) {
+        setError('알림은 켜졌지만 서버 등록에 실패했어요. 잠시 후 다시 시도해 주세요.')
       }
     } catch (err) {
-      console.warn('알림 권한 요청 실패:', err)
+      console.warn('푸시 활성화 실패:', err)
+      setPermission(supported ? Notification.permission : 'unsupported')
+      setError(err.message ?? '알림을 켤 수 없어요.')
+    } finally {
+      setPending(false)
     }
   }
 
@@ -525,26 +542,31 @@ function NotificationBanner() {
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand-strong)' }}>
           알림 받기
         </div>
-        <div style={{ fontSize: 12, color: 'var(--tx-2)', marginTop: 1, lineHeight: 1.4 }}>
-          매일의 일일 리포트와 긴급 알림을 받아보세요.
+        <div style={{
+          fontSize: 12,
+          color: error ? 'var(--danger-tx)' : 'var(--tx-2)',
+          marginTop: 1, lineHeight: 1.4,
+        }}>
+          {error ?? '매일의 일일 리포트와 긴급 알림을 받아보세요.'}
         </div>
       </div>
       <button
         onClick={handleEnable}
+        disabled={pending}
         style={{
           padding: '7px 12px',
-          background: 'var(--brand)',
+          background: pending ? 'var(--brand-tint)' : 'var(--brand)',
           border: 'none',
           borderRadius: 8,
           fontSize: 12.5, fontWeight: 700,
           color: '#fff',
-          cursor: 'pointer',
+          cursor: pending ? 'not-allowed' : 'pointer',
           fontFamily: 'var(--ff)',
           flexShrink: 0,
-          boxShadow: 'var(--shadow-xs)',
+          boxShadow: pending ? 'none' : 'var(--shadow-xs)',
         }}
       >
-        알림 켜기
+        {pending ? '설정 중…' : '알림 켜기'}
       </button>
     </div>
   )
