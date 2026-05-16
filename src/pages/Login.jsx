@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import logo from '../assets/logo.png'
 
 function Login() {
   const navigate = useNavigate()
@@ -114,27 +115,16 @@ function Login() {
         boxShadow: 'var(--shadow-sm)',
       }}>
         {/* 로고 */}
-        <div style={{
-          width: 56, height: 56,
-          background: 'var(--brand-soft)',
-          border: '0.5px solid var(--brand-line)',
-          color: 'var(--brand)',
-          borderRadius: 14,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 14px',
-        }}>
-          <svg width="30" height="30" viewBox="0 0 26 26" fill="none">
-            <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-              stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-            <line x1="13" y1="9" x2="13" y2="19" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
-            <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-              stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
-          </svg>
-        </div>
-
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx-1)' }}>팜-므파탈</div>
-          <div style={{ fontSize: 13, color: 'var(--tx-3)', marginTop: 4 }}>
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <img
+            src={logo}
+            alt="팜-므파탈"
+            style={{
+              height: 72, width: 'auto', display: 'block',
+              margin: '0 auto 6px',
+            }}
+          />
+          <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>
             {mode === 'signin' ? '로그인해 식물을 돌봐주세요'
               : mode === 'signup' ? '가입하고 시작해보세요'
               : '비밀번호 재설정 메일을 보내드릴게요'}
