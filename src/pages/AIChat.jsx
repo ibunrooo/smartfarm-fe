@@ -217,6 +217,7 @@ function AIChat() {
     <div style={{
       display: 'flex', flexDirection: 'column',
       flex: 1, minHeight: 0, width: '100%',
+      maxWidth: 640, margin: '0 auto',
       background: 'var(--surface)',
       border: '0.5px solid var(--bd)',
       borderRadius: 14,

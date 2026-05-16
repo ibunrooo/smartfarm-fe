@@ -157,7 +157,7 @@ function Reports() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 640, margin: '0 auto' }}>
       <button
         onClick={() => navigate('/ai')}
         style={{
