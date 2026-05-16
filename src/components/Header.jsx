@@ -1,4 +1,5 @@
 import UserMenu from './UserMenu'
+import logo from '../assets/logo.png'
 
 function Header({ navItems, currentPath, navigate }) {
   return (
@@ -6,7 +7,7 @@ function Header({ navItems, currentPath, navigate }) {
       display: 'flex',
       alignItems: 'center',
       gap: 12,
-      height: 52,
+      height: 64,
       padding: '0 20px',
       background: 'var(--surface-glass)',
       backdropFilter: 'blur(20px)',
@@ -20,8 +21,9 @@ function Header({ navItems, currentPath, navigate }) {
       {/* 좌측: 로고 */}
       <button
         onClick={() => navigate('/home')}
+        aria-label="홈으로"
         style={{
-          display: 'flex', alignItems: 'center', gap: 9,
+          display: 'flex', alignItems: 'center',
           padding: '4px 6px',
           marginLeft: -6,
           background: 'none',
@@ -31,26 +33,11 @@ function Header({ navItems, currentPath, navigate }) {
           fontFamily: 'var(--ff)',
         }}
       >
-        <div style={{
-          width: 28, height: 28, borderRadius: 9,
-          background: 'var(--brand-soft)',
-          border: '0.5px solid var(--brand-line)',
-          color: 'var(--brand)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2.5C5.7 2.5 4 4.3 4 6.6c0 1.4.7 2.6 1.8 3.4L5.3 13.5h5.4l-.5-3.5c1.1-.8 1.8-2 1.8-3.4 0-2.3-1.7-4.1-4-4.1z"
-              stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none"/>
-            <line x1="8" y1="6" x2="8" y2="12" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <span style={{
-          fontSize: 14.5, fontWeight: 700, color: 'var(--tx-1)',
-          letterSpacing: '-.01em',
-        }}>
-          팜-므파탈
-        </span>
+        <img
+          src={logo}
+          alt="팜-므파탈"
+          style={{ height: 60, width: 'auto', display: 'block' }}
+        />
       </button>
 
       {/* 가운데: 네비 (데스크탑) */}
