@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
 import sproutIcon from '../assets/sprout.png'
@@ -464,18 +466,24 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
           />
         </div>
       ) : (
-        <div style={{
-          maxWidth: '75%',
-          padding: '8px 12px',
-          background: 'var(--surface)',
-          border: '0.5px solid var(--bd-soft)',
-          color: 'var(--tx-1)',
-          borderRadius: '16px 16px 16px 4px',
-          fontSize: 14,
-          lineHeight: 1.45,
-          wordBreak: 'break-word',
-        }}>
-          {message.text}
+        <div
+          className="md-content"
+          style={{
+            maxWidth: '75%',
+            padding: '8px 12px',
+            background: 'var(--surface)',
+            border: '0.5px solid var(--bd-soft)',
+            color: 'var(--tx-1)',
+            borderRadius: '16px 16px 16px 4px',
+            fontSize: 14,
+            lineHeight: 1.45,
+            wordBreak: 'break-word',
+            minWidth: 0,
+          }}
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message.text}
+          </ReactMarkdown>
         </div>
       )}
       <span style={{ fontSize: 11, color: 'var(--tx-4)', flexShrink: 0 }}>{message.time}</span>
