@@ -725,15 +725,15 @@ function Recommend({ onCancel, onSelect }) {
           fontFamily: 'var(--ff)',
         }}
       >
-        ← 직접 선택으로
+        ← 직접 선택하기
       </button>
 
-      <div style={{ padding: '0 2px' }}>
-        <div style={{ fontSize: 17, fontWeight: 700, color: '#1a1a1a' }}>
-          식물 추천
-        </div>
-        <div style={{ fontSize: 13.5, color: '#888', marginTop: 4 }}>
-          {phase === 'survey'  && '몇 가지만 알려주세요. 맞춤 식물을 추천해드릴게요.'}
+      <div style={{ padding: '0 2px', marginBottom: 16 }}>
+        <div style={{
+          fontSize: 18, fontWeight: 700, color: 'var(--tx-1)', lineHeight: 1.5,
+          whiteSpace: 'pre-line',
+        }}>
+          {phase === 'survey'  && '몇 가지 정보만 알려주세요.\nAI가 맞춤 식물을 추천해드릴게요!'}
           {phase === 'loading' && '취향에 맞는 식물을 찾고 있어요…'}
           {phase === 'result'  && '이 식물들을 추천해요.'}
         </div>
@@ -756,9 +756,9 @@ function Recommend({ onCancel, onSelect }) {
 
 const surveyOptions = {
   experience: [
-    { id: 'beginner',     label: '처음이에요',  desc: '식물 키우기 입문' },
-    { id: 'intermediate', label: '조금 해봤어요', desc: '몇 번 키워봤음' },
-    { id: 'advanced',     label: '능숙해요',     desc: '여러 작물 경험' },
+    { id: 'beginner',     label: '처음이에요',   desc: '식물 재배 입문' },
+    { id: 'intermediate', label: '조금 해봤어요', desc: '재배 경험 3회 이하' },
+    { id: 'advanced',     label: '능숙해요',     desc: '여러 작물 재배 경험' },
   ],
   sunlight: [
     { id: 'high', label: '햇빛이 잘 들어요', desc: '하루 4시간 이상' },
@@ -770,15 +770,15 @@ function Survey({ answers, onChange, onSubmit }) {
   const canSubmit = answers.experience && answers.sunlight
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       <SurveyQuestion
-        title="식물 키우기 경험은?"
+        title="식물 재배 경험이 있나요?"
         options={surveyOptions.experience}
         value={answers.experience}
         onChange={(id) => onChange(a => ({ ...a, experience: id }))}
       />
       <SurveyQuestion
-        title="햇빛은 어떤가요?"
+        title="재배 환경이 어떠한가요?"
         options={surveyOptions.sunlight}
         value={answers.sunlight}
         onChange={(id) => onChange(a => ({ ...a, sunlight: id }))}
@@ -963,7 +963,7 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
             fontFamily: 'var(--ff)',
           }}
         >
-          이 식물로 등록 →
+          식물 등록
         </button>
       </div>
     </div>
