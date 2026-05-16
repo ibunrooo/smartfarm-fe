@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DailyReportDetail from '../components/DailyReportDetail'
+import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import { riskLabel, riskColor } from '../data/dailyReports'
 import { plants } from '../data/plants'
 import { getReportList, generateTodayReport } from '../api/report'
@@ -32,6 +33,20 @@ function Reports() {
     }
     return map
   }, [greenhouses])
+
+  // GreenhouseSwitcher용 데이터 (Sensor.jsx의 buildSwitcherList와 동일한 형식)
+  const switcherList = useMemo(() =>
+    greenhouses.map(gh => {
+      const plant = plants.find(p => p.id === gh.plantType)
+      return {
+        id: gh.greenhouseId,
+        name: plant?.name ?? gh.plantType ?? gh.greenhouseId,
+        plant: plant
+          ? { name: plant.name, theme: plant.theme }
+          : { name: gh.plantType ?? gh.greenhouseId },
+      }
+    })
+  , [greenhouses])
 
   // summary 안의 greenhouseId를 식물명으로 치환한 리포트
   const displayReports = useMemo(() =>
@@ -202,36 +217,12 @@ function Reports() {
       )}
 
       {greenhouses.length > 1 && activeId && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px' }}>
-          <span style={{ fontSize: 12.5, color: 'var(--tx-3)', fontWeight: 500 }}>
-            식물 선택
-          </span>
-          <select
-            value={activeId}
-            onChange={(e) => selectActiveId(e.target.value)}
-            style={{
-              padding: '6px 28px 6px 10px',
-              background: 'var(--surface)',
-              border: '0.5px solid var(--bd)',
-              borderRadius: 8,
-              fontSize: 13, fontWeight: 600,
-              fontFamily: 'var(--ff)',
-              color: 'var(--tx-1)',
-              cursor: 'pointer',
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              backgroundImage:
-                'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 10 10\'><path fill=\'none\' stroke=\'%23999\' stroke-width=\'1.4\' stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M2.5 4l2.5 2.5L7.5 4\'/></svg>")',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 8px center',
-            }}
-          >
-            {greenhouses.map(gh => (
-              <option key={gh.greenhouseId} value={gh.greenhouseId}>
-                {plantNameMap[gh.greenhouseId] ?? gh.greenhouseId}
-              </option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '0 2px' }}>
+          <GreenhouseSwitcher
+            greenhouses={switcherList}
+            activeId={activeId}
+            onChange={selectActiveId}
+          />
         </div>
       )}
 
