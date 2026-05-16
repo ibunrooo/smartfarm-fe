@@ -28,10 +28,13 @@ function DailyReportCard({ report, onShowDetail }) {
         borderBottom: '0.5px solid var(--brand-line)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--brand-strong)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--brand-strong)', minWidth: 0 }}>
           <ChartIcon />
-          <span style={{ fontSize: 13.5, fontWeight: 700 }}>
-            일일 리포트
+          <span style={{
+            fontSize: 13.5, fontWeight: 700,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {report.plantName ? `일일 리포트 · ${report.plantName}` : '일일 리포트'}
           </span>
         </div>
         <span style={{ fontSize: 11.5, color: 'var(--tx-3)' }}>

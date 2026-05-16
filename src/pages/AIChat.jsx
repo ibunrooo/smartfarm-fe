@@ -4,9 +4,11 @@ import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { plants } from '../data/plants'
 import { getLatestReport } from '../api/report'
-import { getGreenhouse } from '../api/greenhouse'
-import { getActiveGreenhouseId } from '../utils/storage'
+import { getMyGreenhouses } from '../api/greenhouse'
 import { substituteGreenhouseId } from '../utils/reportText'
+
+const CHAT_CACHE_KEY = 'farm-me:aiChatMessages'
+const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro'])
 
 function nowParts() {
   const d = new Date()
@@ -15,31 +17,53 @@ function nowParts() {
   return { time, date }
 }
 
-function buildInitialMessages() {
-  const { time, date } = nowParts()
-  const ghId = getActiveGreenhouseId()
-  const base = [
-    { id: 'w1', sender: 'ai', type: 'text', text: '안녕하세요! 팜-므파탈 도우미예요.', time, date },
-  ]
-  if (!ghId) {
-    base.push({
-      id: 'w2', sender: 'ai', type: 'text',
-      text: '먼저 식물을 등록해 주세요. 등록하시면 매일의 리포트를 보내드릴게요.',
-      time, date,
-    })
-  } else {
-    base.push({
-      id: 'w-loading', sender: 'ai', type: 'text',
-      text: '오늘의 일일 리포트를 가져오는 중이에요…',
-      time, date,
-    })
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function loadCachedChat() {
+  try {
+    const raw = localStorage.getItem(CHAT_CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.date || !Array.isArray(parsed.messages)) return null
+    if (parsed.date !== todayISO()) return null
+    return parsed.messages
+  } catch {
+    return null
   }
-  return base
+}
+
+function saveCachedChat(messages) {
+  try {
+    localStorage.setItem(CHAT_CACHE_KEY, JSON.stringify({
+      date: todayISO(),
+      messages,
+    }))
+  } catch {
+    /* private mode 등에서 무시 */
+  }
+}
+
+function buildWelcomeMessages() {
+  const { time, date } = nowParts()
+  return [
+    { id: 'w-welcome', sender: 'ai', type: 'text', text: '안녕하세요! 팜-므파탈 도우미예요.', time, date },
+    { id: 'w-loading',  sender: 'ai', type: 'text', text: '오늘의 일일 리포트를 가져오는 중이에요…', time, date },
+  ]
+}
+
+function stripTransient(messages) {
+  return messages.filter(m => !TRANSIENT_IDS.has(m.id))
+}
+
+function hasReportMessage(messages) {
+  return messages.some(m => m.type === 'report')
 }
 
 function AIChat() {
   const navigate = useNavigate()
-  const [messages, setMessages] = useState(buildInitialMessages)
+  const [messages, setMessages] = useState(() => loadCachedChat() ?? buildWelcomeMessages())
   const [draft, setDraft] = useState('')
   const [activeReport, setActiveReport] = useState(null)
   const scrollRef = useRef(null)
@@ -57,40 +81,83 @@ function AIChat() {
     }
   }, [])
 
+  // 캐시: 로딩 중 상태는 저장하지 않음 (settle된 후만 디스크에 반영)
   useEffect(() => {
-    const ghId = getActiveGreenhouseId()
-    if (!ghId) return
+    if (messages.some(m => m.id === 'w-loading')) return
+    saveCachedChat(messages)
+  }, [messages])
+
+  // 리포트 fetch — 이미 캐시에 리포트가 있으면 건너뜀
+  useEffect(() => {
+    if (hasReportMessage(messages)) return
     let cancelled = false
 
-    Promise.all([
-      getLatestReport(ghId),
-      getGreenhouse(ghId).catch(() => null),
-    ])
-      .then(([report, greenhouse]) => {
+    getMyGreenhouses()
+      .then(async (greenhouses) => {
         if (cancelled) return
+
+        if (!greenhouses.length) {
+          const { time, date } = nowParts()
+          setMessages(prev => [
+            ...stripTransient(prev),
+            {
+              id: 'w-no-plant', sender: 'ai', type: 'text',
+              text: '먼저 식물을 등록해 주세요. 등록하시면 매일의 리포트를 보내드릴게요.',
+              time, date,
+            },
+          ])
+          return
+        }
+
+        const results = await Promise.all(
+          greenhouses.map(gh =>
+            getLatestReport(gh.greenhouseId)
+              .then(report => ({ greenhouse: gh, report }))
+              .catch(() => ({ greenhouse: gh, report: null }))
+          )
+        )
+        if (cancelled) return
+
+        const available = results.filter(r => r.report)
         const { time, date } = nowParts()
-        const plant = plants.find(p => p.id === greenhouse?.plantType)
-        const plantName = plant?.name ?? greenhouse?.plantType ?? '식물'
-        setMessages(prev => {
-          const without = prev.filter(m => m.id !== 'w-loading')
-          if (report) {
-            const fixed = {
-              ...report,
-              summary: substituteGreenhouseId(report.summary, ghId, plantName),
-            }
-            return [
-              ...without,
-              { id: 'w2', sender: 'ai', type: 'text', text: '오늘의 일일 리포트를 보내드릴게요.', time, date },
-              { id: `r-${fixed.date ?? Date.now()}`, sender: 'ai', type: 'report', report: fixed, time, date },
-            ]
-          }
-          return [
-            ...without,
+
+        if (available.length === 0) {
+          setMessages(prev => [
+            ...stripTransient(prev),
             {
               id: 'w-no-report', sender: 'ai', type: 'text',
               text: '아직 일일 리포트가 준비되지 않았어요. 센서 데이터가 충분히 쌓이면 만들어드릴게요.',
               time, date,
             },
+          ])
+          return
+        }
+
+        const intro = available.length === 1
+          ? '오늘의 일일 리포트를 보내드릴게요.'
+          : `오늘의 일일 리포트를 보내드릴게요. 등록하신 식물 ${available.length}개 모두 정리해 두었어요.`
+
+        setMessages(prev => {
+          const without = stripTransient(prev)
+          const reportMessages = available.map(({ greenhouse, report }) => {
+            const plant = plants.find(p => p.id === greenhouse.plantType)
+            const plantName = plant?.name ?? greenhouse.plantType ?? '식물'
+            return {
+              id: `r-${greenhouse.greenhouseId}-${report.date ?? Date.now()}`,
+              sender: 'ai',
+              type: 'report',
+              report: {
+                ...report,
+                plantName,
+                summary: substituteGreenhouseId(report.summary, greenhouse.greenhouseId, plantName),
+              },
+              time, date,
+            }
+          })
+          return [
+            ...without,
+            { id: 'w-intro', sender: 'ai', type: 'text', text: intro, time, date },
+            ...reportMessages,
           ]
         })
       })
@@ -99,7 +166,7 @@ function AIChat() {
         console.error('리포트 조회 실패:', err)
         const { time, date } = nowParts()
         setMessages(prev => [
-          ...prev.filter(m => m.id !== 'w-loading'),
+          ...stripTransient(prev),
           {
             id: 'w-err', sender: 'ai', type: 'text',
             text: '리포트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
@@ -109,7 +176,7 @@ function AIChat() {
       })
 
     return () => { cancelled = true }
-  }, [])
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = () => {
     const trimmed = draft.trim()

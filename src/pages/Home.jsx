@@ -6,7 +6,7 @@ import { findCityByCoords } from '../data/koreaCities'
 import { getMyGreenhouses, deleteGreenhouse } from '../api/greenhouse'
 import { getLatestSensor } from '../api/sensor'
 import { stopSimulation } from '../api/simulate'
-import { setMyGreenhouseIds, removeGreenhouseId, setActiveGreenhouseId, getGreenhouseMode, removeGreenhouseMode } from '../utils/storage'
+import { setMyGreenhouseIds, removeGreenhouseId, getActiveGreenhouseId, setActiveGreenhouseId, getGreenhouseMode, removeGreenhouseMode } from '../utils/storage'
 
 function Home() {
   const navigate = useNavigate()
@@ -28,6 +28,10 @@ function Home() {
           setCards([])
           setLoading(false)
           return null
+        }
+        const currentActive = getActiveGreenhouseId()
+        if (!currentActive || !ids.includes(currentActive)) {
+          setActiveGreenhouseId(ids[0])
         }
         return Promise.all(
           myList.map(gh =>
