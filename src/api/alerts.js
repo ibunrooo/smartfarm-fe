@@ -30,7 +30,12 @@ export function mapAlert(raw) {
 }
 
 // GET /api/alerts?greenhouseId=xxx&limit=20
+// 스펙: limit은 1~100
+const ALERTS_MIN_LIMIT = 1
+const ALERTS_MAX_LIMIT = 100
+
 export async function getAlerts(greenhouseId, limit = 20) {
-  const data = await apiFetch(`/api/alerts${buildQuery({ greenhouseId, limit })}`)
+  const clamped = Math.min(ALERTS_MAX_LIMIT, Math.max(ALERTS_MIN_LIMIT, Math.trunc(Number(limit) || 20)))
+  const data = await apiFetch(`/api/alerts${buildQuery({ greenhouseId, limit: clamped })}`)
   return Array.isArray(data) ? data.map(mapAlert) : []
 }

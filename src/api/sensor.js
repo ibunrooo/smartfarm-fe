@@ -22,7 +22,12 @@ export async function getLatestSensor(greenhouseId) {
 }
 
 // GET /api/history?greenhouseId=xxx&minutes=60
+// 스펙: minutes는 1~1440 (1분 ~ 24시간)
+const HISTORY_MIN_MINUTES = 1
+const HISTORY_MAX_MINUTES = 1440
+
 export async function getSensorHistory(greenhouseId, minutes = 60) {
-  const data = await apiFetch(`/api/history${buildQuery({ greenhouseId, minutes })}`)
+  const clamped = Math.min(HISTORY_MAX_MINUTES, Math.max(HISTORY_MIN_MINUTES, Math.trunc(Number(minutes) || 60)))
+  const data = await apiFetch(`/api/history${buildQuery({ greenhouseId, minutes: clamped })}`)
   return Array.isArray(data) ? data.map(mapSensorReading) : []
 }
