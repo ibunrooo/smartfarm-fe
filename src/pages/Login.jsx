@@ -123,14 +123,16 @@ function Login() {
     }}>
       <div style={{
         width: '100%', maxWidth: 380,
+        minHeight: 580,
         padding: 28,
         background: 'var(--surface)',
         border: '0.5px solid var(--bd)',
         borderRadius: 16,
         boxShadow: 'var(--shadow-sm)',
+        display: 'flex', flexDirection: 'column',
       }}>
         {/* 로고 */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <img
             src={logo}
             alt="팜-므파탈"
@@ -139,10 +141,10 @@ function Login() {
               margin: '0 auto',
             }}
           />
-          <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>
-            {mode === 'signin' ? '당신의 작은 스마트팜'
-              : mode === 'signup' ? '가입하고 시작해보세요'
-              : '비밀번호 재설정 메일을 보내드릴게요'}
+          <div style={{ fontSize: 13, color: 'var(--tx-3)', marginTop: -20 }}>
+            {mode === 'reset'
+              ? '비밀번호 재설정 메일을 보내드릴게요'
+              : '당신의 작은 스마트팜'}
           </div>
         </div>
 
