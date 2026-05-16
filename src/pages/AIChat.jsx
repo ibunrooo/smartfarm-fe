@@ -11,6 +11,7 @@ import { getMyGreenhouses } from '../api/greenhouse'
 import { getActiveGreenhouseId } from '../utils/storage'
 import { substituteGreenhouseId } from '../utils/reportText'
 import { isPushSupported, enablePushForAllGreenhouses } from '../utils/push'
+import { sendPushTest } from '../api/push'
 
 const CHAT_CACHE_KEY = 'farm-me:aiChatMessages'
 const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro', 'ai-typing'])
@@ -493,11 +494,23 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
   )
 }
 
+const PUSH_TEST_ACK_KEY = 'farm-me:pushTestAck'
+
+function readPushTestAck() {
+  try { return localStorage.getItem(PUSH_TEST_ACK_KEY) === '1' } catch { return false }
+}
+
+function writePushTestAck() {
+  try { localStorage.setItem(PUSH_TEST_ACK_KEY, '1') } catch { /* private mode 등 무시 */ }
+}
+
 function NotificationBanner() {
   const supported = isPushSupported()
   const [permission, setPermission] = useState(supported ? Notification.permission : 'unsupported')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
+  const [testStatus, setTestStatus] = useState(null) // null | 'sent'
+  const [testAck, setTestAck] = useState(readPushTestAck)
 
   // 권한이 이미 granted면 백엔드 구독을 한 번 더 동기화 (디바이스 변경/세션 초기화 대비)
   useEffect(() => {
@@ -507,7 +520,12 @@ function NotificationBanner() {
     })
   }, [supported])
 
-  if (!supported || permission !== 'default') return null
+  if (!supported || permission === 'denied') return null
+
+  // 권한 granted + 이미 한 번 테스트 완료 → 배너 숨김
+  if (permission === 'granted' && testAck) return null
+
+  const isGranted = permission === 'granted'
 
   const handleEnable = async () => {
     if (pending) return
@@ -530,6 +548,44 @@ function NotificationBanner() {
     }
   }
 
+  const handleTest = async () => {
+    if (pending) return
+    const ghId = getActiveGreenhouseId()
+    if (!ghId) {
+      setError('식물을 등록한 뒤에 테스트할 수 있어요.')
+      return
+    }
+    setPending(true)
+    setError(null)
+    try {
+      const res = await sendPushTest(ghId)
+      if (res?.sent > 0) {
+        setTestStatus('sent')
+        writePushTestAck()
+        setTimeout(() => setTestAck(true), 2500)
+      } else {
+        setError('구독된 디바이스가 없어요. 알림을 다시 켜주세요.')
+      }
+    } catch (err) {
+      console.warn('푸시 테스트 실패:', err)
+      setError(err.message ?? '테스트 알림을 보내지 못했어요.')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  const subtitle = isGranted
+    ? (testStatus === 'sent'
+        ? '테스트 알림을 보냈어요. 잠시 후 알림이 도착해요.'
+        : '알림이 켜져 있어요. 테스트 알림을 한 번 보내볼까요?')
+    : '매일의 일일 리포트와 긴급 알림을 받아보세요.'
+
+  const title = isGranted ? '알림 켜짐' : '알림 받기'
+
+  const buttonLabel = isGranted
+    ? (testStatus === 'sent' ? '✓ 전송됨' : (pending ? '전송 중…' : '테스트 알림'))
+    : (pending ? '설정 중…' : '알림 켜기')
+
   return (
     <div style={{
       padding: '10px 14px',
@@ -541,33 +597,33 @@ function NotificationBanner() {
       <BellSmallIcon />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand-strong)' }}>
-          알림 받기
+          {title}
         </div>
         <div style={{
           fontSize: 12,
           color: error ? 'var(--danger-tx)' : 'var(--tx-2)',
           marginTop: 1, lineHeight: 1.4,
         }}>
-          {error ?? '매일의 일일 리포트와 긴급 알림을 받아보세요.'}
+          {error ?? subtitle}
         </div>
       </div>
       <button
-        onClick={handleEnable}
-        disabled={pending}
+        onClick={isGranted ? handleTest : handleEnable}
+        disabled={pending || testStatus === 'sent'}
         style={{
           padding: '7px 12px',
-          background: pending ? 'var(--brand-tint)' : 'var(--brand)',
+          background: (pending || testStatus === 'sent') ? 'var(--brand-tint)' : 'var(--brand)',
           border: 'none',
           borderRadius: 8,
           fontSize: 12.5, fontWeight: 700,
           color: '#fff',
-          cursor: pending ? 'not-allowed' : 'pointer',
+          cursor: (pending || testStatus === 'sent') ? 'not-allowed' : 'pointer',
           fontFamily: 'var(--ff)',
           flexShrink: 0,
-          boxShadow: pending ? 'none' : 'var(--shadow-xs)',
+          boxShadow: (pending || testStatus === 'sent') ? 'none' : 'var(--shadow-xs)',
         }}
       >
-        {pending ? '설정 중…' : '알림 켜기'}
+        {buttonLabel}
       </button>
     </div>
   )
