@@ -4,6 +4,7 @@ const tagStyle = {
   ok:   { background: 'var(--brand-tint)', color: 'var(--brand-strong)' },
   warn: { background: 'var(--warn-bg)',    color: 'var(--warn-tx)' },
   bad:  { background: 'var(--danger-bg)',  color: 'var(--danger-tx)' },
+  idle: { background: 'var(--surface-2)',  color: 'var(--tx-3)' },
 }
 
 const chartColor = {

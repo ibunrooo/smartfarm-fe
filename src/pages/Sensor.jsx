@@ -406,7 +406,7 @@ function buildSensors(latest) {
 }
 
 function statusFor(key, value) {
-  if (value == null) return { status: 'ok', statusText: '데이터 없음' }
+  if (value == null) return { status: 'idle', statusText: '데이터 없음' }
   if (key === 'temp') {
     if (value >= 35 || value <= 5)  return { status: 'bad',  statusText: '위험' }
     if (value >= 30 || value <= 10) return { status: 'warn', statusText: '주의' }
@@ -434,17 +434,17 @@ function buildHistories(history) {
   if (!Array.isArray(history) || history.length === 0) {
     return { temp: [], humidity: [], soil: [], lux: [] }
   }
+  // 시리즈별 null 값 제외 — 전부 null이면 빈 배열 반환 → 카드가 "데이터 없음" 표시
+  const pick = (key) => history
+    .map((r, i) => ({ t: i, v: r[key] }))
+    .filter(p => p.v != null)
+    .map(p => ({ t: p.t, v: Math.round(p.v * 10) / 10 }))
   return {
-    temp:     history.map((r, i) => ({ t: i, v: roundOr(r.temp) })),
-    humidity: history.map((r, i) => ({ t: i, v: roundOr(r.humidity) })),
-    soil:     history.map((r, i) => ({ t: i, v: roundOr(r.soil) })),
-    lux:      history.map((r, i) => ({ t: i, v: roundOr(r.lux) })),
+    temp:     pick('temp'),
+    humidity: pick('humidity'),
+    soil:     pick('soil'),
+    lux:      pick('lux'),
   }
-}
-
-function roundOr(v) {
-  if (v == null) return 0
-  return Math.round(v * 10) / 10
 }
 
 function buildTopAlert(alerts) {
