@@ -68,3 +68,14 @@ export async function generateTodayReport(greenhouseId) {
   })
   return mapReport(data)
 }
+
+// POST /api/report/chat
+// body: { greenhouseId, message, chatHistory?: [{role, content}] }
+// 서버는 chatHistory의 최근 10개만 사용
+export async function postReportChat(greenhouseId, message, chatHistory = []) {
+  const data = await apiFetch('/api/report/chat', {
+    method: 'POST',
+    body: JSON.stringify({ greenhouseId, message, chatHistory }),
+  })
+  return data
+}

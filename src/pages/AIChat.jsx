@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
+import sproutIcon from '../assets/sprout.png'
 import { plants } from '../data/plants'
-import { getLatestReport } from '../api/report'
+import { getLatestReport, postReportChat } from '../api/report'
 import { getMyGreenhouses } from '../api/greenhouse'
+import { getActiveGreenhouseId } from '../utils/storage'
 import { substituteGreenhouseId } from '../utils/reportText'
 
 const CHAT_CACHE_KEY = 'farm-me:aiChatMessages'
-const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro'])
+const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro', 'ai-typing'])
 
 function nowParts() {
   const d = new Date()
@@ -48,7 +50,7 @@ function saveCachedChat(messages) {
 function buildWelcomeMessages() {
   const { time, date } = nowParts()
   return [
-    { id: 'w-welcome', sender: 'ai', type: 'text', text: '안녕하세요! 팜-므파탈 도우미예요.', time, date },
+    { id: 'w-welcome', sender: 'ai', type: 'text', text: '안녕하세요. 팜-므파탈 AI 재배 도우미예요!', time, date },
     { id: 'w-loading',  sender: 'ai', type: 'text', text: '오늘의 일일 리포트를 가져오는 중이에요…', time, date },
   ]
 }
@@ -66,6 +68,7 @@ function AIChat() {
   const [messages, setMessages] = useState(() => loadCachedChat() ?? buildWelcomeMessages())
   const [draft, setDraft] = useState('')
   const [activeReport, setActiveReport] = useState(null)
+  const [sending, setSending] = useState(false)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -133,9 +136,7 @@ function AIChat() {
           return
         }
 
-        const intro = available.length === 1
-          ? '오늘의 일일 리포트를 보내드릴게요.'
-          : `오늘의 일일 리포트를 보내드릴게요. 등록하신 식물 ${available.length}개 모두 정리해 두었어요.`
+        const intro = '오늘의 일일 리포트를 보내드릴게요.'
 
         setMessages(prev => {
           const without = stripTransient(prev)
@@ -178,32 +179,70 @@ function AIChat() {
     return () => { cancelled = true }
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = draft.trim()
-    if (!trimmed) return
+    if (!trimmed || sending) return
+
+    const ghId = getActiveGreenhouseId()
     const { time, date } = nowParts()
     const userId = Date.now()
+
+    setDraft('')
+    setSending(true)
     setMessages(prev => [
       ...prev,
       { id: userId, sender: 'user', type: 'text', text: trimmed, time, date },
+      { id: 'ai-typing', sender: 'ai', type: 'text', text: '답변을 작성하고 있어요…', time, date },
     ])
-    setDraft('')
 
-    // 봇 자동 안내 (실시간 채팅은 미구현)
-    setTimeout(() => {
-      const { time: replyTime, date: replyDate } = nowParts()
+    if (!ghId) {
+      const { time: t, date: d } = nowParts()
       setMessages(prev => [
-        ...prev,
+        ...prev.filter(m => m.id !== 'ai-typing'),
         {
-          id: userId + 1,
-          sender: 'ai',
-          type: 'text',
-          text: '실시간 대화 기능은 아직 준비 중이에요. 일일 리포트는 위 카드에서 확인하실 수 있고, 자세한 상태는 센서·분석 탭을 이용해 보세요.',
-          time: replyTime,
-          date: replyDate,
+          id: userId + 1, sender: 'ai', type: 'text',
+          text: '먼저 식물을 등록해 주세요. 등록하시면 대화도 시작할 수 있어요.',
+          time: t, date: d,
         },
       ])
-    }, 600)
+      setSending(false)
+      return
+    }
+
+    // 직전 텍스트 메시지들로 chatHistory 구성 (안내성 메시지 제외, 최근 10개)
+    const chatHistory = messages
+      .filter(m => m.type === 'text' && !TRANSIENT_IDS.has(m.id) && m.id !== 'w-welcome')
+      .slice(-10)
+      .map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }))
+
+    try {
+      const res = await postReportChat(ghId, trimmed, chatHistory)
+      const { time: t, date: d } = nowParts()
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== 'ai-typing'),
+        {
+          id: userId + 1, sender: 'ai', type: 'text',
+          text: res?.reply ?? '죄송해요, 응답을 받지 못했어요.',
+          time: t, date: d,
+        },
+      ])
+    } catch (err) {
+      console.error('AI 채팅 실패:', err)
+      const { time: t, date: d } = nowParts()
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== 'ai-typing'),
+        {
+          id: userId + 1, sender: 'ai', type: 'text',
+          text: '답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.',
+          time: t, date: d,
+        },
+      ])
+    } finally {
+      setSending(false)
+    }
   }
 
   const onKeyDown = (e) => {
@@ -235,19 +274,17 @@ function AIChat() {
           width: 36, height: 36, borderRadius: 10,
           background: 'var(--brand-soft)',
           border: '0.5px solid var(--brand-line)',
-          color: 'var(--brand)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <BotPlantIcon />
+          <LogoSproutIcon size={22} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--tx-1)' }}>
-            일일 리포트
+            AI 재배 도우미
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--brand)' }} />
-            <span style={{ fontSize: 12, color: 'var(--tx-3)' }}>온라인</span>
+          <div style={{ fontSize: 10.5, color: 'var(--tx-4)', marginTop: 1, lineHeight: 1.3 }}>
+            대화는 매일 00시에 초기화돼요.
           </div>
         </div>
         <button
@@ -264,7 +301,7 @@ function AIChat() {
             flexShrink: 0,
           }}
         >
-          지난 리포트 →
+          지난 리포트
         </button>
       </div>
 
@@ -311,17 +348,17 @@ function AIChat() {
         />
         <button
           onClick={handleSend}
-          disabled={!draft.trim()}
+          disabled={!draft.trim() || sending}
           style={{
             width: 38, height: 38,
             borderRadius: '50%',
-            background: draft.trim() ? 'var(--brand)' : 'var(--brand-tint)',
+            background: (draft.trim() && !sending) ? 'var(--brand)' : 'var(--brand-tint)',
             border: 'none',
             color: '#fff',
-            cursor: draft.trim() ? 'pointer' : 'not-allowed',
+            cursor: (draft.trim() && !sending) ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
-            boxShadow: draft.trim() ? 'var(--shadow-xs)' : 'none',
+            boxShadow: (draft.trim() && !sending) ? 'var(--shadow-xs)' : 'none',
           }}
         >
           <SendIcon />
@@ -413,11 +450,10 @@ function ChatMessage({ message, showAvatar, onShowReport }) {
           width: 28, height: 28, borderRadius: 9,
           background: 'var(--brand-soft)',
           border: '0.5px solid var(--brand-line)',
-          color: 'var(--brand)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           flexShrink: 0,
         }}>
-          <BotPlantIcon size={16} />
+          <LogoSproutIcon size={18} />
         </div>
       )}
       {message.type === 'report' ? (
@@ -522,15 +558,15 @@ function formatDate(isoDate) {
   return `${y}년 ${parseInt(m, 10)}월 ${parseInt(d, 10)}일`
 }
 
-function BotPlantIcon({ size = 20 }) {
+function LogoSproutIcon({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 26 26" fill="none">
-      <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
-      <line x1="13" y1="9" x2="13" y2="19" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
-      <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-        stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
-    </svg>
+    <img
+      src={sproutIcon}
+      alt=""
+      width={size}
+      height={size}
+      style={{ display: 'block', objectFit: 'contain' }}
+    />
   )
 }
 
