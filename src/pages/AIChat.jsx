@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
+import { plants } from '../data/plants'
 import { getLatestReport } from '../api/report'
+import { getGreenhouse } from '../api/greenhouse'
 import { getActiveGreenhouseId } from '../utils/storage'
+import { substituteGreenhouseId } from '../utils/reportText'
 
 function nowParts() {
   const d = new Date()
@@ -59,17 +62,26 @@ function AIChat() {
     if (!ghId) return
     let cancelled = false
 
-    getLatestReport(ghId)
-      .then((report) => {
+    Promise.all([
+      getLatestReport(ghId),
+      getGreenhouse(ghId).catch(() => null),
+    ])
+      .then(([report, greenhouse]) => {
         if (cancelled) return
         const { time, date } = nowParts()
+        const plant = plants.find(p => p.id === greenhouse?.plantType)
+        const plantName = plant?.name ?? greenhouse?.plantType ?? '식물'
         setMessages(prev => {
           const without = prev.filter(m => m.id !== 'w-loading')
           if (report) {
+            const fixed = {
+              ...report,
+              summary: substituteGreenhouseId(report.summary, ghId, plantName),
+            }
             return [
               ...without,
               { id: 'w2', sender: 'ai', type: 'text', text: '오늘의 일일 리포트를 보내드릴게요.', time, date },
-              { id: `r-${report.date ?? Date.now()}`, sender: 'ai', type: 'report', report, time, date },
+              { id: `r-${fixed.date ?? Date.now()}`, sender: 'ai', type: 'report', report: fixed, time, date },
             ]
           }
           return [
@@ -163,7 +175,7 @@ function AIChat() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--tx-1)' }}>
-            팜-므파탈 도우미
+            일일 리포트
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--brand)' }} />

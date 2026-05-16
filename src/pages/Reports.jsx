@@ -2,14 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DailyReportDetail from '../components/DailyReportDetail'
 import { riskLabel, riskColor } from '../data/dailyReports'
+import { plants } from '../data/plants'
 import { getReportList, generateTodayReport } from '../api/report'
-import { getActiveGreenhouseId } from '../utils/storage'
+import { getMyGreenhouses } from '../api/greenhouse'
+import { getActiveGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
+import { substituteGreenhouseId } from '../utils/reportText'
 
 function Reports() {
   const navigate = useNavigate()
-  const greenhouseId = getActiveGreenhouseId()
+  const [greenhouses, setGreenhouses] = useState([])
+  const [activeId, setActiveIdState] = useState(getActiveGreenhouseId())
   const [reports, setReports]   = useState([])
-  const [loading, setLoading]   = useState(!!greenhouseId)
+  const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(null)
   const [active, setActive]     = useState(null)  // 상세 모달
   const [generating, setGenerating] = useState(false)
@@ -19,13 +23,36 @@ function Reports() {
   const [viewYear, setViewYear]   = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
 
+  // greenhouseId → 식물명 매핑 (요약 텍스트의 'gh-XXX' 치환용)
+  const plantNameMap = useMemo(() => {
+    const map = {}
+    for (const gh of greenhouses) {
+      const plant = plants.find(p => p.id === gh.plantType)
+      map[gh.greenhouseId] = plant?.name ?? gh.plantType ?? '식물'
+    }
+    return map
+  }, [greenhouses])
+
+  // summary 안의 greenhouseId를 식물명으로 치환한 리포트
+  const displayReports = useMemo(() =>
+    reports.map(r => ({
+      ...r,
+      summary: substituteGreenhouseId(r.summary, r.greenhouseId, plantNameMap[r.greenhouseId]),
+    }))
+  , [reports, plantNameMap])
+
   const reportByDate = useMemo(() => {
     const map = {}
-    for (const r of reports) {
+    for (const r of displayReports) {
       if (r?.date) map[r.date] = r
     }
     return map
-  }, [reports])
+  }, [displayReports])
+
+  const selectActiveId = (id) => {
+    setActiveIdState(id)
+    setActiveGreenhouseId(id)
+  }
 
   const handleDayClick = (iso) => {
     const r = reportByDate[iso]
@@ -41,11 +68,11 @@ function Reports() {
     else setViewMonth(viewMonth + 1)
   }
 
-  const fetchReports = async () => {
-    if (!greenhouseId) return
+  const fetchReports = async (id) => {
+    if (!id) return
     setError(null)
     try {
-      const list = await getReportList(greenhouseId, 30)
+      const list = await getReportList(id, 30)
       setReports(Array.isArray(list) ? list : [])
     } catch (err) {
       console.error('리포트 목록 조회 실패:', err)
@@ -53,10 +80,31 @@ function Reports() {
     }
   }
 
+  // 마운트 시 내 온실 목록 + 활성 온실 보정
   useEffect(() => {
-    if (!greenhouseId) return
     let cancelled = false
-    getReportList(greenhouseId, 30)
+    getMyGreenhouses()
+      .then((list) => {
+        if (cancelled) return
+        setGreenhouses(list)
+        const ids = list.map(g => g.greenhouseId)
+        if (!ids.includes(activeId) && ids.length > 0) {
+          selectActiveId(ids[0])
+        }
+      })
+      .catch((err) => console.error('온실 목록 조회 실패:', err))
+    return () => { cancelled = true }
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 활성 온실 바뀌면 해당 온실 리포트 fetch
+  useEffect(() => {
+    if (!activeId) {
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    getReportList(activeId, 30)
       .then((list) => {
         if (cancelled) return
         setReports(Array.isArray(list) ? list : [])
@@ -69,19 +117,27 @@ function Reports() {
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [greenhouseId])
+  }, [activeId])
 
+  // 모든 온실에 대해 리포트 생성 (병렬), 완료 후 활성 온실 리포트 새로고침
   const handleGenerate = async () => {
-    if (generating || !greenhouseId) return
+    if (generating || greenhouses.length === 0) return
     setGenerating(true)
     setGenerateError(null)
-    try {
-      await generateTodayReport(greenhouseId)
-      await fetchReports()  // 목록 새로고침
-    } catch (err) {
-      console.error('리포트 생성 실패:', err)
-      setGenerateError(err.message || '리포트 생성에 실패했어요.')
+    const targets = greenhouses.map(g => g.greenhouseId)
+    const results = await Promise.allSettled(
+      targets.map(id => generateTodayReport(id))
+    )
+    const failures = results
+      .map((r, i) => r.status === 'rejected' ? targets[i] : null)
+      .filter(Boolean)
+    if (failures.length === targets.length) {
+      setGenerateError('모든 온실의 리포트 생성에 실패했어요.')
+    } else if (failures.length > 0) {
+      const names = failures.map(id => plantNameMap[id] ?? id).join(', ')
+      setGenerateError(`일부 실패: ${names}`)
     }
+    await fetchReports(activeId)
     setGenerating(false)
   }
 
@@ -116,17 +172,17 @@ function Reports() {
         </div>
         <button
           onClick={handleGenerate}
-          disabled={generating || !greenhouseId}
+          disabled={generating || !activeId}
           style={{
             padding: '8px 12px',
-            background: (generating || !greenhouseId) ? 'var(--brand-tint)' : 'var(--brand)',
+            background: (generating || !activeId) ? 'var(--brand-tint)' : 'var(--brand)',
             border: 'none', borderRadius: 10,
             fontSize: 12.5, fontWeight: 700,
             color: '#fff',
             cursor: generating ? 'not-allowed' : 'pointer',
             fontFamily: 'var(--ff)',
             flexShrink: 0,
-            boxShadow: (generating || !greenhouseId) ? 'none' : 'var(--shadow-xs)',
+            boxShadow: (generating || !activeId) ? 'none' : 'var(--shadow-xs)',
           }}
         >
           {generating ? '생성 중…' : '오늘 새로 생성'}
@@ -145,7 +201,41 @@ function Reports() {
         </div>
       )}
 
-      {!greenhouseId ? (
+      {greenhouses.length > 1 && activeId && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px' }}>
+          <span style={{ fontSize: 12.5, color: 'var(--tx-3)', fontWeight: 500 }}>
+            식물 선택
+          </span>
+          <select
+            value={activeId}
+            onChange={(e) => selectActiveId(e.target.value)}
+            style={{
+              padding: '6px 28px 6px 10px',
+              background: 'var(--surface)',
+              border: '0.5px solid var(--bd)',
+              borderRadius: 8,
+              fontSize: 13, fontWeight: 600,
+              fontFamily: 'var(--ff)',
+              color: 'var(--tx-1)',
+              cursor: 'pointer',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              backgroundImage:
+                'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 10 10\'><path fill=\'none\' stroke=\'%23999\' stroke-width=\'1.4\' stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M2.5 4l2.5 2.5L7.5 4\'/></svg>")',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 8px center',
+            }}
+          >
+            {greenhouses.map(gh => (
+              <option key={gh.greenhouseId} value={gh.greenhouseId}>
+                {plantNameMap[gh.greenhouseId] ?? gh.greenhouseId}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!activeId ? (
         <div style={{
           minHeight: 200,
           display: 'flex', flexDirection: 'column',
@@ -206,7 +296,7 @@ function Reports() {
             }}>
               {error}
             </div>
-          ) : reports.length === 0 ? (
+          ) : displayReports.length === 0 ? (
             <div style={{
               minHeight: 200,
               display: 'flex', flexDirection: 'column',
@@ -224,7 +314,7 @@ function Reports() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
-              {reports.map((r) => (
+              {displayReports.map((r) => (
                 <ReportCard key={r.date} report={r} onClick={() => setActive(r)} />
               ))}
             </div>
