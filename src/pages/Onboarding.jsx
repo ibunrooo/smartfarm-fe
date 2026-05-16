@@ -423,7 +423,7 @@ function PlantStep({ plants, value, onChange, onUnsure }) {
           fontFamily: 'var(--ff)',
         }}
       >
-        뭐 키울지 잘 모르겠어요 → 추천 받기
+        식물 추천받기
       </button>
     </div>
   )

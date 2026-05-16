@@ -226,7 +226,7 @@ function Sensor() {
         <span style={{ opacity: .5 }}>·</span>
         <span>
           {sensorMode === 'virtual'
-            ? '시뮬레이션 데이터로 동작 중이에요. 디바이스 제어도 시뮬레이션입니다.'
+            ? '시뮬레이션 데이터로 동작 중이에요.'
             : '실제 센서/디바이스에 연결되어 있어요.'}
         </span>
       </div>
