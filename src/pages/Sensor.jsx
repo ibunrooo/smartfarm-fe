@@ -286,20 +286,6 @@ function Sensor() {
                 ? '센서값이 없어 외부 날씨 데이터로 대체된 값이에요.'
                 : '실제 센서/디바이스에 연결되어 있어요.')}
         </span>
-        {sensorMode === 'real' && isWeatherFallback && (
-          <span style={{
-            padding: '2px 7px',
-            background: 'var(--surface)',
-            border: '0.5px solid var(--brand-line)',
-            borderRadius: 6,
-            fontSize: 11, fontWeight: 700,
-            color: 'var(--brand-strong)',
-            flexShrink: 0,
-            letterSpacing: '-.01em',
-          }}>
-            외부 날씨 대체
-          </span>
-        )}
         {sensorMode === 'virtual' && (
           <button
             onClick={() => setPublishOpen(true)}
