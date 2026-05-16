@@ -72,10 +72,17 @@ export async function generateTodayReport(greenhouseId) {
 // POST /api/report/chat
 // body: { greenhouseId, message, chatHistory?: [{role, content}] }
 // 서버는 chatHistory의 최근 10개만 사용
+export const REPORT_CHAT_MAX_MESSAGE_LENGTH = 1000
+
 export async function postReportChat(greenhouseId, message, chatHistory = []) {
+  const text = String(message ?? '')
+  if (text.length > REPORT_CHAT_MAX_MESSAGE_LENGTH) {
+    throw new Error(`메시지는 ${REPORT_CHAT_MAX_MESSAGE_LENGTH}자 이하로 입력해주세요.`)
+  }
+  const trimmedHistory = Array.isArray(chatHistory) ? chatHistory.slice(-10) : []
   const data = await apiFetch('/api/report/chat', {
     method: 'POST',
-    body: JSON.stringify({ greenhouseId, message, chatHistory }),
+    body: JSON.stringify({ greenhouseId, message: text, chatHistory: trimmedHistory }),
   })
   return data
 }

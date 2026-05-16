@@ -3,6 +3,7 @@ import { severityStyle } from '../data/diseases'
 import { predictDisease } from '../api/disease'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 function Analysis() {
   const [phase, setPhase] = useState('upload')
@@ -22,6 +23,11 @@ function Analysis() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      setErrorMsg('JPG, PNG, WEBP 형식의 이미지만 업로드할 수 있어요.')
+      setPhase('preview')
+      return
+    }
     if (file.size > MAX_IMAGE_BYTES) {
       setErrorMsg('이미지는 5MB 이하로 업로드해주세요.')
       setPhase('preview')
@@ -76,7 +82,7 @@ function Analysis() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />

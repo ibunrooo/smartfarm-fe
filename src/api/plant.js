@@ -45,3 +45,13 @@ export function registerPlant(greenhouseId, plantKey) {
     body: JSON.stringify({ greenhouseId, plantKey }),
   })
 }
+
+// DELETE /api/plant/register
+// body: { greenhouseId, plantKey? } — plantKey 생략 시 해당 온실 전체 해제
+export function unregisterPlant(greenhouseId, plantKey) {
+  const body = plantKey ? { greenhouseId, plantKey } : { greenhouseId }
+  return apiFetch('/api/plant/register', {
+    method: 'DELETE',
+    body: JSON.stringify(body),
+  })
+}

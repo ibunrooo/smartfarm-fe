@@ -6,7 +6,7 @@ import DailyReportCard from '../components/DailyReportCard'
 import DailyReportDetail from '../components/DailyReportDetail'
 import sproutIcon from '../assets/sprout.png'
 import { plants } from '../data/plants'
-import { getLatestReport, postReportChat } from '../api/report'
+import { getLatestReport, postReportChat, REPORT_CHAT_MAX_MESSAGE_LENGTH } from '../api/report'
 import { getMyGreenhouses } from '../api/greenhouse'
 import { getActiveGreenhouseId } from '../utils/storage'
 import { substituteGreenhouseId } from '../utils/reportText'
@@ -333,6 +333,7 @@ function AIChat() {
           onKeyDown={onKeyDown}
           placeholder="메시지를 입력하세요"
           rows={1}
+          maxLength={REPORT_CHAT_MAX_MESSAGE_LENGTH}
           style={{
             flex: 1,
             padding: '10px 12px',

@@ -4,7 +4,7 @@ import PlantAvatar from '../components/PlantAvatar'
 import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial, sortPlants } from '../data/plants'
 import { koreaRegions, findCityCoords, findCityByCoords } from '../data/koreaCities'
 import { upsertGreenhouse, getGreenhouse } from '../api/greenhouse'
-import { recommendPlant, registerPlant } from '../api/plant'
+import { recommendPlant, registerPlant, unregisterPlant } from '../api/plant'
 import { startSimulation, stopSimulation } from '../api/simulate'
 import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode, getGreenhouseMode } from '../utils/storage'
 
@@ -42,6 +42,8 @@ function Onboarding() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [prefillLoading, setPrefillLoading] = useState(isEdit)
+  // 수정 모드에서 식물이 바뀌면 옛 plantKey를 BE에서 해제하기 위해 보관
+  const [initialPlantId, setInitialPlantId] = useState(null)
   // 식물 목록은 FE static 데이터만 사용 — BE 호출에서 오는 props 변동(flicker) 방지
   const plantList = useMemo(() => sortPlants(fallbackPlants), [])
   const [data, setData] = useState({
@@ -65,6 +67,7 @@ function Onboarding() {
           city:       cityFromCoords?.name ?? '',
           sensorMode: getGreenhouseMode(editId),
         })
+        setInitialPlantId(gh.plantType ?? null)
         setPrefillLoading(false)
       })
       .catch((err) => {
@@ -123,6 +126,12 @@ function Onboarding() {
         lat:          coords.lat,
         lon:          coords.lon,
       })
+      // 수정 모드에서 식물이 바뀌었으면 기존 plantKey를 먼저 해제
+      if (isEdit && initialPlantId && initialPlantId !== data.plantId) {
+        await unregisterPlant(targetId, initialPlantId).catch((err) => {
+          console.warn('plant 해제 호출 실패 (무시):', err)
+        })
+      }
       // plantType이 바뀐 경우(또는 신규)에 user_plants 갱신
       await registerPlant(targetId, data.plantId).catch((err) => {
         console.warn('plant 등록 호출 실패 (무시):', err)
