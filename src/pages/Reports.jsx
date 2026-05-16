@@ -14,7 +14,9 @@ function Reports() {
   const [greenhouses, setGreenhouses] = useState([])
   const [activeId, setActiveIdState] = useState(getActiveGreenhouseId())
   const [reports, setReports]   = useState([])
-  const [loading, setLoading]   = useState(true)
+  // loading은 상태가 아닌 파생값 (마지막으로 fetch 완료된 activeId 기준)
+  const [fetchedActiveId, setFetchedActiveId] = useState(null)
+  const loading = !!activeId && fetchedActiveId !== activeId
   const [error, setError]       = useState(null)
   const [active, setActive]     = useState(null)  // 상세 모달
   const [generating, setGenerating] = useState(false)
@@ -112,24 +114,21 @@ function Reports() {
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // 활성 온실 바뀌면 해당 온실 리포트 fetch
+  // loading은 fetchedActiveId !== activeId로 파생되므로 effect 본문에서 setState 불필요
   useEffect(() => {
-    if (!activeId) {
-      setLoading(false)
-      return
-    }
+    if (!activeId) return
     let cancelled = false
-    setLoading(true)
     getReportList(activeId, 30)
       .then((list) => {
         if (cancelled) return
         setReports(Array.isArray(list) ? list : [])
-        setLoading(false)
+        setFetchedActiveId(activeId)
       })
       .catch((err) => {
         if (cancelled) return
         console.error('리포트 목록 조회 실패:', err)
         setError(err.message || '리포트를 불러오지 못했어요.')
-        setLoading(false)
+        setFetchedActiveId(activeId)
       })
     return () => { cancelled = true }
   }, [activeId])
