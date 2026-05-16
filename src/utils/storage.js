@@ -1,6 +1,7 @@
 /* localStorage 헬퍼
- * BE에 "내 온실 목록" endpoint가 없어서, 사용자가 등록한 greenhouseId를
- * 브라우저에 보관해 두기 위한 모듈.
+ * - greenhouseIds: GET /api/greenhouses 결과의 캐시 (페이지 전환 시 빠른 초기 렌더용)
+ * - activeGreenhouseId: 사용자가 마지막으로 선택한 온실 (FE 전용 UI 상태)
+ * - greenhouseModes: virtual/real 모드 매핑 (BE에 useSensor만 저장되어 모드를 보존하지 못함)
  */
 
 const GREENHOUSE_IDS_KEY   = 'farm-me:greenhouseIds'

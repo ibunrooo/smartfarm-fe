@@ -80,14 +80,6 @@ function AIChat() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.warn('SW 등록 실패:', err)
-      })
-    }
-  }, [])
-
   // 캐시: 로딩 중 상태는 저장하지 않음 (settle된 후만 디스크에 반영)
   useEffect(() => {
     if (messages.some(m => m.id === 'w-loading')) return
