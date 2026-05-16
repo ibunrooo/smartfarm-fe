@@ -51,7 +51,7 @@ function aggregateStatus(latest) {
 
 function GreenhouseCard({ greenhouse, onClick, onEdit, onDelete }) {
   const {
-    plantName, plantTheme,
+    plantName,
     locationLabel, cityLabel, daysSince, modeLabel,
     latest,
   } = greenhouse
@@ -74,13 +74,8 @@ function GreenhouseCard({ greenhouse, onClick, onEdit, onDelete }) {
         transition: 'border-color .15s, box-shadow .15s',
       }}
     >
-      {/* 헤더: 식물명 + 메뉴 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{
-          width: 9, height: 9, borderRadius: '50%',
-          background: plantTheme?.main ?? 'var(--brand)',
-          flexShrink: 0,
-        }} />
+      {/* 헤더: 식물명 + 상태 + 메뉴 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{
           flex: 1, minWidth: 0,
           fontSize: 16, fontWeight: 700, color: 'var(--tx-1)',
@@ -88,6 +83,21 @@ function GreenhouseCard({ greenhouse, onClick, onEdit, onDelete }) {
         }}>
           {plantName}
         </div>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '3px 8px', borderRadius: 14,
+          background: statusStyle.bg,
+          border: `0.5px solid ${statusStyle.bd}`,
+          fontSize: 11, fontWeight: 700,
+          color: statusStyle.fg,
+          flexShrink: 0,
+        }}>
+          <span style={{
+            width: 5, height: 5, borderRadius: '50%',
+            background: statusStyle.dot,
+          }} />
+          {status.label}
+        </span>
         {(onEdit || onDelete) && (
           <KebabMenu onEdit={onEdit} onDelete={onDelete} />
         )}
@@ -140,22 +150,6 @@ function GreenhouseCard({ greenhouse, onClick, onEdit, onDelete }) {
         })}
       </div>
 
-      {/* 상태 칩 */}
-      <div style={{
-        display: 'inline-flex', alignSelf: 'flex-start',
-        alignItems: 'center', gap: 6,
-        padding: '4px 10px', borderRadius: 20,
-        background: statusStyle.bg,
-        border: `0.5px solid ${statusStyle.bd}`,
-        fontSize: 12, fontWeight: 700,
-        color: statusStyle.fg,
-      }}>
-        <span style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: statusStyle.dot,
-        }} />
-        {status.label}
-      </div>
     </div>
   )
 }
