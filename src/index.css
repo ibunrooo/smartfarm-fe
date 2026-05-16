@@ -91,6 +91,17 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* 이미지 분석 — 스캔 라인 */
+@keyframes scan-line-anim {
+  0%   { top: -80px; opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.scan-line {
+  animation: scan-line-anim 1.8s ease-in-out infinite;
+}
+
 /* 시뮬레이션 슬라이더 — 채워진 부분은 브랜드 그린, 빈 부분은 연한 회색
    각 input은 inline style={{ '--filled-pct': '50%' }} 로 채움 비율 전달 */
 .sim-slider {
