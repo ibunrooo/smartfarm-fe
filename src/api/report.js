@@ -25,38 +25,16 @@ export function mapReport(raw) {
   }
 }
 
-// POST /api/report/daily  (UPSERT)
-export async function generateDailyReport(greenhouseId, date) {
-  const data = await apiFetch('/api/report/daily', {
-    method: 'POST',
-    body: JSON.stringify({ greenhouseId, date }),
-  })
-  return mapReport(data)
-}
-
-// GET /api/report/daily?greenhouseId=xxx&date=YYYY-MM-DD
-export async function getDailyReport(greenhouseId, date) {
-  const data = await apiFetch(`/api/report/daily${buildQuery({ greenhouseId, date })}`)
-  return mapReport(data)
-}
-
 // GET /api/report/latest?greenhouseId=xxx
 export async function getLatestReport(greenhouseId) {
   const data = await apiFetch(`/api/report/latest${buildQuery({ greenhouseId })}`)
   return mapReport(data)
 }
 
-// 호환용 엔드포인트
 // GET /api/reports?greenhouseId=xxx&limit=7
 export async function getReportList(greenhouseId, limit = 7) {
   const data = await apiFetch(`/api/reports${buildQuery({ greenhouseId, limit })}`)
   return Array.isArray(data) ? data.map(mapReport) : []
-}
-
-// GET /api/reports/today?greenhouseId=xxx
-export async function getTodayReport(greenhouseId) {
-  const data = await apiFetch(`/api/reports/today${buildQuery({ greenhouseId })}`)
-  return mapReport(data)
 }
 
 // POST /api/reports/generate
