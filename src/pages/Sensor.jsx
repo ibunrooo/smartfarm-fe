@@ -6,12 +6,13 @@ import SensorMetricCard from '../components/SensorMetricCard'
 import SensorEventLog from '../components/SensorEventLog'
 import { DeviceIcon } from '../components/Device'
 import { DEVICE_KEYS, deviceLabels } from '../data/devices'
-import { plants } from '../data/plants'
+import { plants, getSimInitial } from '../data/plants'
 import { metricLabels, sensorOrder } from '../data/greenhouses'
 import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
+import { startSimulation } from '../api/simulate'
 import { getMyGreenhouseIds, getGreenhouseMode } from '../utils/storage'
 
 function deriveDeviceState(actuators) {
@@ -67,6 +68,22 @@ function Sensor() {
         setAlerts(alertList)
         setActuators(actuatorList)
         setLoading(false)
+
+        // 자동 복구: 가상 모드인데 시계열이 비어있으면 simulate 세션이 죽은 상태
+        // (BE 재배포 시 sessions Map이 wipe됨). 신규 그린하우스(생성 30초 이내) 제외.
+        if (getGreenhouseMode(activeId) === 'virtual'
+            && Array.isArray(historyData) && historyData.length === 0) {
+          const meta = metaList.find(m => m?.greenhouseId === activeId)
+          const ageMs = meta?.createdAt
+            ? Date.now() - new Date(meta.createdAt).getTime()
+            : Number.POSITIVE_INFINITY
+          if (meta?.plantType && ageMs > 30_000) {
+            startSimulation(activeId, {
+              plantType: meta.plantType,
+              ...getSimInitial(meta.plantType),
+            }).catch((err) => console.warn('simulate 자동 재시작 실패:', err))
+          }
+        }
       })
       .catch((err) => {
         if (cancelled) return
