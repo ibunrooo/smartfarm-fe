@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import PlantAvatar from '../components/PlantAvatar'
 import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial, sortPlants } from '../data/plants'
 import { koreaRegions, findCityCoords, findCityByCoords } from '../data/koreaCities'
 import { upsertGreenhouse, getGreenhouse } from '../api/greenhouse'
@@ -364,17 +365,7 @@ function PlantStep({ plants, value, onChange, onUnsure }) {
                 position: 'relative',
               }}
             >
-              <div style={{
-                width: 38, height: 38,
-                background: p.theme.main,
-                borderRadius: 10,
-                color: p.theme.textColor ?? '#fff',
-                fontSize: 16, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {p.name[0]}
-              </div>
+              <PlantAvatar plant={p} size={38} radius={10} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
                   {p.name}
@@ -894,17 +885,7 @@ function RecommendResult({ results, picked, onPick, onConfirm, onRetry }) {
               position: 'relative',
             }}
           >
-            <div style={{
-              width: 48, height: 48,
-              background: p.theme.main,
-              borderRadius: 12,
-              color: p.theme.textColor ?? '#fff',
-              fontSize: 19, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              {p.name[0]}
-            </div>
+            <PlantAvatar plant={p} size={48} radius={12} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {i === 0 && (

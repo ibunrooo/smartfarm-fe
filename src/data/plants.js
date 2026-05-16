@@ -2,6 +2,7 @@ export const plants = [
   {
     id: 'sansevieria',
     name: '산세베리아',
+    image: '/plants/sansevieria.jpg',
     difficulty: 'easy',
     theme: { main: '#6ba259', accent: '#8bbf75' },
     description: '공기정화에 탁월한 식물. 물을 자주 안 줘도 잘 자라요.',
@@ -12,6 +13,7 @@ export const plants = [
   {
     id: 'monstera',
     name: '몬스테라',
+    image: '/plants/monstera.jpg',
     difficulty: 'easy',
     theme: { main: '#c2a05a', accent: '#d8b96e' },
     description: '큼직한 잎이 매력적인 인기 관엽식물이에요.',
@@ -22,6 +24,7 @@ export const plants = [
   {
     id: 'cherry_tomato',
     name: '방울토마토',
+    image: '/plants/cherry_tomato.jpg',
     difficulty: 'medium',
     theme: { main: '#d44545', accent: '#e8666c' },
     description: '꾸준한 햇빛과 관수가 필요해요. 수확 보람이 커요.',
@@ -32,6 +35,7 @@ export const plants = [
   {
     id: 'lettuce',
     name: '상추',
+    image: '/plants/lettuce.jpg',
     difficulty: 'easy',
     theme: { main: '#8b5a9b', accent: '#a672ba' },
     description: '잎채소의 대표주자. 빠르게 자라고 수확이 쉬워요.',
@@ -42,6 +46,7 @@ export const plants = [
   {
     id: 'green_onion',
     name: '대파',
+    image: '/plants/green_onion.jpg',
     difficulty: 'easy',
     theme: { main: '#9eaa55', accent: '#b3c06d' },
     description: '뿌리만 있어도 다시 자라는 강한 식물이에요.',
