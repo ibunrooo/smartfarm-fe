@@ -37,26 +37,6 @@ function Login() {
   const handleGoogle = handleOAuth('google', 'Google')
   const handleKakao  = handleOAuth('kakao',  'Kakao')
 
-  const resendConfirmation = async () => {
-    if (loading) return
-    if (!email) {
-      setError('이메일을 먼저 입력해주세요.')
-      return
-    }
-    setError(null)
-    setInfo(null)
-    setLoading(true)
-    try {
-      const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email })
-      if (resendErr) throw resendErr
-      setInfo('확인 메일을 다시 보냈어요. 메일함을 확인해 주세요.')
-    } catch (err) {
-      console.error('재전송 실패:', err)
-      setError(err.message || '메일 재전송에 실패했어요.')
-    }
-    setLoading(false)
-  }
-
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
@@ -120,12 +100,12 @@ function Login() {
             src={logo}
             alt="팜-므파탈"
             style={{
-              height: 72, width: 'auto', display: 'block',
-              margin: '0 auto 6px',
+              height: 92, width: 'auto', display: 'block',
+              margin: '0 auto 8px',
             }}
           />
           <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>
-            {mode === 'signin' ? '로그인해 식물을 돌봐주세요'
+            {mode === 'signin' ? '오늘 내 식물은 어떨까요?'
               : mode === 'signup' ? '가입하고 시작해보세요'
               : '비밀번호 재설정 메일을 보내드릴게요'}
           </div>
@@ -259,50 +239,8 @@ function Login() {
           </button>
         </form>
 
-        {mode === 'signin' && (
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginTop: 12, fontSize: 12, color: 'var(--tx-3)',
-          }}>
-            <span>
-              메일 못 받으셨나요?{' '}
-              <button
-                type="button"
-                onClick={resendConfirmation}
-                disabled={loading}
-                style={{
-                  background: 'none', border: 'none',
-                  color: 'var(--brand)', fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontFamily: 'var(--ff)',
-                  fontSize: 12, padding: 0,
-                  opacity: loading ? 0.5 : 1,
-                }}
-              >
-                재전송
-              </button>
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('reset')
-                setError(null)
-                setInfo(null)
-              }}
-              style={{
-                background: 'none', border: 'none',
-                color: 'var(--brand)', fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'var(--ff)',
-                fontSize: 12, padding: 0,
-              }}
-            >
-              비밀번호 잊으셨나요?
-            </button>
-          </div>
-        )}
-
         <div style={{
-          textAlign: 'center', marginTop: 12,
+          textAlign: 'center', marginTop: 14,
           fontSize: 12.5, color: 'var(--tx-2)',
         }}>
           {mode === 'signin' && '계정이 없으신가요? '}
@@ -325,6 +263,30 @@ function Login() {
             {mode === 'signin' ? '회원가입' : mode === 'signup' ? '로그인' : '돌아가기'}
           </button>
         </div>
+
+        {mode === 'signin' && (
+          <div style={{
+            textAlign: 'center', marginTop: 8,
+            fontSize: 12.5, color: 'var(--tx-3)',
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('reset')
+                setError(null)
+                setInfo(null)
+              }}
+              style={{
+                background: 'none', border: 'none',
+                color: 'var(--brand)', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'var(--ff)',
+                fontSize: 12.5, padding: 0,
+              }}
+            >
+              비밀번호를 잊으셨나요?
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
