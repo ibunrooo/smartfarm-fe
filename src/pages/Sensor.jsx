@@ -11,6 +11,7 @@ import { plants, getSimInitial } from '../data/plants'
 import { metricLabels, sensorOrder } from '../data/greenhouses'
 import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
+import { getWeather } from '../api/weather'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
 import { startSimulation, publishOnce } from '../api/simulate'
@@ -46,6 +47,7 @@ function Sensor() {
   const [history, setHistory]   = useState([])
   const [alerts, setAlerts]     = useState([])
   const [actuators, setActuators] = useState([])
+  const [weather, setWeather]   = useState(null)
   const [loading, setLoading]   = useState(() => !!activeId)
   const [publishOpen, setPublishOpen] = useState(false)
   const [error, setError]       = useState(null)
@@ -61,14 +63,16 @@ function Sensor() {
       getSensorHistory(activeId, 60).catch(() => []),
       getAlerts(activeId, 20).catch(() => []),
       getActuatorLogs(activeId).catch(() => []),
+      getWeather(activeId).catch(() => null),
     ])
-      .then(([metaList, latestData, historyData, alertList, actuatorList]) => {
+      .then(([metaList, latestData, historyData, alertList, actuatorList, weatherData]) => {
         if (cancelled) return
         setMetas(metaList.filter(Boolean))
         setLatest(latestData)
         setHistory(historyData)
         setAlerts(alertList)
         setActuators(actuatorList)
+        setWeather(weatherData)
         setLoading(false)
 
         // 자동 복구: 가상 모드인데 시계열이 비어있으면 simulate 세션이 죽은 상태
@@ -115,9 +119,18 @@ function Sensor() {
       }
     }, POLL_INTERVAL_MS)
 
+    // 외부 날씨는 분 단위로 자주 바뀌지 않으므로 30분 폴링
+    const WEATHER_POLL_MS = 30 * 60 * 1000
+    const weatherIntervalId = setInterval(async () => {
+      if (cancelled) return
+      const w = await getWeather(activeId).catch(() => null)
+      if (!cancelled && w) setWeather(w)
+    }, WEATHER_POLL_MS)
+
     return () => {
       cancelled = true
       clearInterval(intervalId)
+      clearInterval(weatherIntervalId)
     }
   }, [activeId, ids])
 
@@ -307,6 +320,11 @@ function Sensor() {
         )}
       </div>
 
+      {/* 외부 날씨 — 실외 모드에서만 노출 */}
+      {locationType === 'outdoor' && weather && (
+        <WeatherCard weather={weather} />
+      )}
+
       {/* 실시간 센서 4종 */}
       <div style={{
         display: 'grid',
@@ -378,6 +396,99 @@ function Sensor() {
       )}
 
     </div>
+  )
+}
+
+/* ────────────────────────────────────────
+   외부 날씨 카드 (실외 모드용)
+   ──────────────────────────────────────── */
+
+function WeatherCard({ weather }) {
+  const temp     = weather.temp     != null ? `${Math.round(weather.temp * 10) / 10}°C` : '-'
+  const humidity = weather.humidity != null ? `${Math.round(weather.humidity)}%`        : '-'
+  const rainProb = weather.rainProb != null ? `${Math.round(weather.rainProb)}%`        : '-'
+  return (
+    <div style={{
+      padding: '10px 12px',
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
+      borderRadius: 10,
+      display: 'flex', alignItems: 'center', gap: 12,
+    }}>
+      <div style={{
+        width: 38, height: 38, borderRadius: 10,
+        background: 'var(--brand-soft)',
+        border: '0.5px solid var(--brand-line)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--brand-strong)',
+        flexShrink: 0,
+      }}>
+        <WeatherIcon summary={weather.summary} />
+      </div>
+      <div style={{ minWidth: 0, flex: '0 1 auto' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx-3)', letterSpacing: '-.01em' }}>
+          외부 날씨
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx-1)', marginTop: 1 }}>
+          {weather.summary ?? '-'}
+        </div>
+      </div>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
+        <MiniMetric label="기온"   value={temp} />
+        <MiniMetric label="습도"   value={humidity} />
+        <MiniMetric label="강수확률" value={rainProb} />
+      </div>
+    </div>
+  )
+}
+
+function MiniMetric({ label, value }) {
+  return (
+    <div style={{ textAlign: 'right', minWidth: 48 }}>
+      <div style={{ fontSize: 10.5, color: 'var(--tx-3)' }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx-1)', marginTop: 1 }}>{value}</div>
+    </div>
+  )
+}
+
+function WeatherIcon({ summary }) {
+  // 한글 요약(맑음/흐림/비/눈/천둥)에 맞춘 단순 SVG
+  if (summary?.includes('비')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M5 12a4 4 0 014-4 4.5 4.5 0 018.7 1.2A3 3 0 0117 15H7a3 3 0 01-2-3z"
+          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+        <path d="M8 17l-1 2M12 17l-1 2M16 17l-1 2"
+          stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+    )
+  }
+  if (summary?.includes('눈')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M5 12a4 4 0 014-4 4.5 4.5 0 018.7 1.2A3 3 0 0117 15H7a3 3 0 01-2-3z"
+          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+        <circle cx="8" cy="18" r="0.8" fill="currentColor"/>
+        <circle cx="12" cy="18" r="0.8" fill="currentColor"/>
+        <circle cx="16" cy="18" r="0.8" fill="currentColor"/>
+      </svg>
+    )
+  }
+  if (summary?.includes('흐림') || summary?.includes('천둥')) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M5 13a4 4 0 014-4 4.5 4.5 0 018.7 1.2A3 3 0 0117 16H7a3 3 0 01-2-3z"
+          stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+      </svg>
+    )
+  }
+  // 기본: 맑음
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="11" r="4" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M11 2v2.5M11 17.5V20M2 11h2.5M17.5 11H20M4.6 4.6l1.8 1.8M15.6 15.6l1.8 1.8M4.6 17.4l1.8-1.8M15.6 6.4l1.8-1.8"
+        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
   )
 }
 
