@@ -11,11 +11,13 @@ function Login() {
   const [error, setError] = useState(null)
   const [info, setInfo] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [showResend, setShowResend] = useState(false)
 
   const handleOAuth = (provider, label) => async () => {
     if (loading) return
     setError(null)
     setInfo(null)
+    setShowResend(false)
     setLoading(true)
     try {
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
@@ -37,11 +39,38 @@ function Login() {
   const handleGoogle = handleOAuth('google', 'Google')
   const handleKakao  = handleOAuth('kakao',  'Kakao')
 
+  const resendConfirmation = async () => {
+    if (loading) return
+    if (!email) {
+      setError('이메일을 먼저 입력해주세요.')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    try {
+      const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email })
+      if (resendErr) throw resendErr
+      setInfo('확인 메일을 다시 보냈어요. 메일함을 확인해 주세요.')
+      setShowResend(false)
+    } catch (err) {
+      console.error('재전송 실패:', err)
+      setError(err.message || '메일 재전송에 실패했어요.')
+    }
+    setLoading(false)
+  }
+
+  const isEmailNotConfirmedError = (err) => {
+    const code = err?.code || ''
+    const msg = (err?.message || '').toLowerCase()
+    return code === 'email_not_confirmed' || msg.includes('email not confirmed')
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
     setError(null)
     setInfo(null)
+    setShowResend(false)
     setLoading(true)
 
     try {
@@ -65,6 +94,7 @@ function Login() {
       // signup: 이메일 확인이 필요한 프로젝트는 세션이 즉시 안 만들어짐
       if (mode === 'signup' && !result.data.session) {
         setInfo('가입 메일을 보냈어요. 메일함을 확인해 주세요.')
+        setShowResend(true)
         setMode('signin')
         setLoading(false)
         return
@@ -73,7 +103,12 @@ function Login() {
       navigate('/home', { replace: true })
     } catch (err) {
       console.error('인증 실패:', err)
-      setError(translateAuthError(err))
+      if (isEmailNotConfirmedError(err)) {
+        setError('이메일이 아직 인증되지 않았어요. 메일함을 확인해 주세요.')
+        setShowResend(true)
+      } else {
+        setError(translateAuthError(err))
+      }
       setLoading(false)
     }
   }
@@ -95,17 +130,17 @@ function Login() {
         boxShadow: 'var(--shadow-sm)',
       }}>
         {/* 로고 */}
-        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img
             src={logo}
             alt="팜-므파탈"
             style={{
               height: 92, width: 'auto', display: 'block',
-              margin: '0 auto 8px',
+              margin: '0 auto',
             }}
           />
           <div style={{ fontSize: 13, color: 'var(--tx-3)' }}>
-            {mode === 'signin' ? '오늘 내 식물은 어떨까요?'
+            {mode === 'signin' ? '당신의 작은 스마트팜'
               : mode === 'signup' ? '가입하고 시작해보세요'
               : '비밀번호 재설정 메일을 보내드릴게요'}
           </div>
@@ -202,8 +237,27 @@ function Login() {
               border: '0.5px solid var(--danger-bd)',
               borderRadius: 10,
               fontSize: 12.5, color: 'var(--danger-tx)', lineHeight: 1.5,
+              display: 'flex', flexDirection: 'column', gap: 6,
             }}>
-              {error}
+              <span>{error}</span>
+              {showResend && (
+                <button
+                  type="button"
+                  onClick={resendConfirmation}
+                  disabled={loading}
+                  style={{
+                    alignSelf: 'flex-start',
+                    background: 'none', border: 'none', padding: 0,
+                    color: 'var(--danger-tx)', fontWeight: 700,
+                    fontSize: 12, fontFamily: 'var(--ff)',
+                    textDecoration: 'underline', textUnderlineOffset: 2,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                  }}
+                >
+                  인증 메일 재전송
+                </button>
+              )}
             </div>
           )}
           {info && (
@@ -215,6 +269,26 @@ function Login() {
               fontSize: 12.5, color: 'var(--brand-strong)', lineHeight: 1.5,
             }}>
               {info}
+              {showResend && (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={loading}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      color: 'var(--brand-strong)', fontWeight: 700,
+                      fontSize: 12.5, fontFamily: 'var(--ff)',
+                      textDecoration: 'underline', textUnderlineOffset: 2,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.5 : 1,
+                    }}
+                  >
+                    재전송
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -252,6 +326,7 @@ function Login() {
               setMode(mode === 'signin' ? 'signup' : 'signin')
               setError(null)
               setInfo(null)
+              setShowResend(false)
             }}
             style={{
               background: 'none', border: 'none',
@@ -266,7 +341,7 @@ function Login() {
 
         {mode === 'signin' && (
           <div style={{
-            textAlign: 'center', marginTop: 8,
+            textAlign: 'center', marginTop: 8, marginBottom: 14,
             fontSize: 12.5, color: 'var(--tx-3)',
           }}>
             <button
@@ -275,6 +350,7 @@ function Login() {
                 setMode('reset')
                 setError(null)
                 setInfo(null)
+                setShowResend(false)
               }}
               style={{
                 background: 'none', border: 'none',
