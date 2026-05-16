@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial, sortPlants } from '../data/plants'
 import { koreaRegions, findCityCoords, findCityByCoords } from '../data/koreaCities'
 import { upsertGreenhouse, getGreenhouse } from '../api/greenhouse'
-import { getPlantList, recommendPlant, registerPlant } from '../api/plant'
+import { recommendPlant, registerPlant } from '../api/plant'
 import { startSimulation, stopSimulation } from '../api/simulate'
 import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode, getGreenhouseMode } from '../utils/storage'
 
@@ -40,25 +40,14 @@ function Onboarding() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [prefillLoading, setPrefillLoading] = useState(isEdit)
-  const [plantList, setPlantList] = useState(() => sortPlants(fallbackPlants))
+  // 식물 목록은 FE static 데이터만 사용 — BE 호출에서 오는 props 변동(flicker) 방지
+  const plantList = useMemo(() => sortPlants(fallbackPlants), [])
   const [data, setData] = useState({
     plantId:    null,
     location:   null,
     city:       '',
     sensorMode: null, // 'virtual' | 'real'
   })
-
-  // BE 식물 목록 시도 (실패 시 더미 유지)
-  useEffect(() => {
-    let cancelled = false
-    getPlantList()
-      .then((list) => {
-        if (cancelled || list.length === 0) return
-        setPlantList(sortPlants(list.map(mergeWithFallback)))
-      })
-      .catch(() => { /* 더미 유지 */ })
-    return () => { cancelled = true }
-  }, [])
 
   // 수정 모드: 기존 온실 정보 prefill
   useEffect(() => {
