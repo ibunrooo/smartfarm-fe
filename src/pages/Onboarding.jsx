@@ -24,9 +24,9 @@ function mergeWithFallback(bePlant) {
 }
 
 const stepDesc = {
-  1: '어떤 식물을 키우고 싶으세요?',
-  2: '어디서 키우시나요?',
-  3: '어느 지역인가요?',
+  1: '어떤 식물을 키우시나요?',
+  2: '재배 환경이 어떠한가요?',
+  3: '어느 지역인가요? 날씨 정보를 기반으로 맞춤형 관리를 도와드려요.',
   4: '센서는 어떻게 구성되어 있나요?',
 }
 
@@ -558,28 +558,38 @@ function CityStep({ plants, value, onChange, summary }) {
     return region?.cities ?? []
   }, [province])
 
+  // 특별/광역시처럼 하위 시가 없는 지역 (cities가 1개) — 시 드롭다운은 '-' 자동 선택
+  const isSingleRegion = !!province && cityOptions.length === 1
+
   const handleProvinceChange = (next) => {
     setProvince(next)
-    onChange('')   // 시/도 바꾸면 시/군/구 초기화
+    const region = koreaRegions.find(r => r.province === next)
+    if (region && region.cities.length === 1) {
+      onChange(region.cities[0].name)  // 서울특별시 → 서울 등 자동 선택
+    } else {
+      onChange('')
+    }
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <SelectField
-          label="시 / 도"
+          label="도 / 시"
           value={province}
           onChange={handleProvinceChange}
           options={koreaRegions.map(r => ({ value: r.province, label: r.province }))}
           placeholder="선택"
         />
         <SelectField
-          label="시 / 군 / 구"
+          label="시"
           value={value}
           onChange={onChange}
-          options={cityOptions.map(c => ({ value: c.name, label: c.name }))}
-          placeholder={province ? '선택' : '시/도 먼저 선택'}
-          disabled={!province}
+          options={isSingleRegion
+            ? [{ value: cityOptions[0].name, label: '-' }]
+            : cityOptions.map(c => ({ value: c.name, label: c.name }))}
+          placeholder={province ? '선택' : '도 먼저 선택'}
+          disabled={!province || isSingleRegion}
         />
       </div>
 
@@ -596,7 +606,9 @@ function CityStep({ plants, value, onChange, summary }) {
         <SummaryRow label="환경" value={summary.location === 'indoor' ? '실내' : '실외'} />
         <SummaryRow
           label="위치"
-          value={value ? `${province} ${value}` : '선택 필요'}
+          value={value
+            ? (isSingleRegion ? province : `${province} ${value}`)
+            : '선택 필요'}
           dim={!value}
         />
       </div>
