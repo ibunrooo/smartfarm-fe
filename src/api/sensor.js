@@ -3,12 +3,15 @@ import { apiFetch, buildQuery } from './client'
 export function mapSensorReading(raw) {
   if (!raw) return null
   return {
-    greenhouseId: raw.greenhouse_id,
-    temp:         raw.temperature,
-    humidity:     raw.humidity,
-    soil:         raw.soil_moisture,
-    lux:          raw.lux,
-    ts:           raw.ts,
+    greenhouseId:      raw.greenhouse_id,
+    temp:              raw.temperature,
+    humidity:          raw.humidity,
+    soil:              raw.soil_moisture,
+    lux:               raw.lux,
+    ts:                raw.ts,
+    // BE 데이터 출처 — `sensor` 또는 `weather_fallback`
+    dataSource:        raw.data_source ?? null,
+    isWeatherFallback: raw.is_weather_fallback === true,
   }
 }
 
