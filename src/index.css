@@ -90,3 +90,59 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* 시뮬레이션 슬라이더 — 채워진 부분은 브랜드 그린, 빈 부분은 연한 회색
+   각 input은 inline style={{ '--filled-pct': '50%' }} 로 채움 비율 전달 */
+.sim-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.sim-slider:focus { outline: none; }
+
+.sim-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--brand) 0%,
+    var(--brand) var(--filled-pct, 0%),
+    var(--bd-strong) var(--filled-pct, 0%),
+    var(--bd-strong) 100%
+  );
+}
+.sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand);
+  margin-top: -5px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+
+.sim-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bd-strong);
+}
+.sim-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--brand);
+}
+.sim-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}

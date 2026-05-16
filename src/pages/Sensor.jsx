@@ -4,6 +4,7 @@ import AlertBanner from '../components/AlertBanner'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import SensorMetricCard from '../components/SensorMetricCard'
 import SensorEventLog from '../components/SensorEventLog'
+import ManualPublishPanel from '../components/ManualPublishPanel'
 import { DeviceIcon } from '../components/Device'
 import { DEVICE_KEYS, deviceLabels } from '../data/devices'
 import { plants, getSimInitial } from '../data/plants'
@@ -12,7 +13,7 @@ import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
-import { startSimulation } from '../api/simulate'
+import { startSimulation, publishOnce } from '../api/simulate'
 import { getMyGreenhouseIds, getGreenhouseMode } from '../utils/storage'
 
 function deriveDeviceState(actuators) {
@@ -46,6 +47,7 @@ function Sensor() {
   const [alerts, setAlerts]     = useState([])
   const [actuators, setActuators] = useState([])
   const [loading, setLoading]   = useState(() => !!activeId)
+  const [publishOpen, setPublishOpen] = useState(false)
   const [error, setError]       = useState(null)
 
   useEffect(() => {
@@ -121,6 +123,13 @@ function Sensor() {
 
   const setActiveId = (id) => setSearchParams({ gh: id })
 
+  // 사용자 수동 발행 — 입력 값을 BE → MQTT로 1회 publish 후 즉시 한 번 새로고침
+  const handleManualPublish = async (payload) => {
+    await publishOnce(activeId, payload)
+    const fresh = await getLatestSensor(activeId).catch(() => null)
+    if (fresh) setLatest(fresh)
+  }
+
   // 데이터 합성
   const switcherList = buildSwitcherList(metas, ids)
   const sensors      = buildSensors(latest)
@@ -128,6 +137,9 @@ function Sensor() {
   const eventLogs    = mergeEventLogs(alerts, actuators)
   const topAlert     = buildTopAlert(alerts)
   const noSensorData = !latest && (!Array.isArray(history) || history.length === 0)
+  const activeMeta   = metas.find(m => m?.greenhouseId === activeId)
+  const locationType = activeMeta?.locationType ?? 'indoor'
+  const plantType    = activeMeta?.plantType
 
   /* 빈 상태: 등록된 온실 없음 */
   if (!activeId) {
@@ -219,11 +231,23 @@ function Sensor() {
           fontSize: 13, color: 'var(--brand-strong)',
           display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
         }}>
-          <span style={{ fontWeight: 700 }}>센서 데이터를 기다리는 중</span>
-          <span style={{ opacity: .5 }}>·</span>
-          <span style={{ color: 'var(--tx-2)' }}>
-            아직 수집된 측정값이 없어요. 잠시 후 자동으로 표시됩니다.
-          </span>
+          {sensorMode === 'real' && locationType === 'indoor' ? (
+            <>
+              <span style={{ fontWeight: 700 }}>실제 센서 연결 시 확인 가능합니다</span>
+              <span style={{ opacity: .5 }}>·</span>
+              <span style={{ color: 'var(--tx-2)' }}>
+                실내 환경은 외부 날씨로 대체할 수 없어요. MQTT에 디바이스를 연결해주세요.
+              </span>
+            </>
+          ) : (
+            <>
+              <span style={{ fontWeight: 700 }}>센서 데이터를 기다리는 중</span>
+              <span style={{ opacity: .5 }}>·</span>
+              <span style={{ color: 'var(--tx-2)' }}>
+                아직 수집된 측정값이 없어요. 잠시 후 자동으로 표시됩니다.
+              </span>
+            </>
+          )}
         </div>
       )}
 
@@ -241,11 +265,29 @@ function Sensor() {
           {sensorMode === 'virtual' ? '가상 모드' : '실제 모드'}
         </span>
         <span style={{ opacity: .5 }}>·</span>
-        <span>
+        <span style={{ flex: 1, minWidth: 0 }}>
           {sensorMode === 'virtual'
             ? '시뮬레이션 데이터로 동작 중이에요.'
             : '실제 센서/디바이스에 연결되어 있어요.'}
         </span>
+        {sensorMode === 'virtual' && (
+          <button
+            onClick={() => setPublishOpen(true)}
+            style={{
+              padding: '4px 10px',
+              background: 'var(--surface)',
+              border: '0.5px solid var(--warn-bd)',
+              borderRadius: 8,
+              fontSize: 12, fontWeight: 700,
+              color: 'var(--warn-tx)',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              flexShrink: 0,
+            }}
+          >
+            직접 시뮬레이션
+          </button>
+        )}
       </div>
 
       {/* 실시간 센서 4종 */}
@@ -281,6 +323,39 @@ function Sensor() {
 
       {/* 이벤트 로그 (전체) */}
       <SensorEventLog logs={eventLogs} />
+
+      {/* 수동 발행 모달 — 가상 모드의 [값 직접 발행] 버튼으로 오픈 */}
+      {publishOpen && (
+        <div
+          onClick={() => setPublishOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,.35)',
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)',
+            zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 420,
+              maxHeight: '90dvh',
+              overflow: 'auto',
+            }}
+          >
+            <ManualPublishPanel
+              initialValues={latest}
+              plantType={plantType}
+              onPublish={handleManualPublish}
+              onClose={() => setPublishOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   )
