@@ -36,7 +36,8 @@ function Onboarding() {
   const isEdit = !!editId
 
   const [mode, setMode] = useState('main')
-  const [step, setStep] = useState(1)
+  const minStep = isEdit ? 2 : 1   // 수정 모드: 식물 선택(step 1) 스킵
+  const [step, setStep] = useState(minStep)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [prefillLoading, setPrefillLoading] = useState(isEdit)
@@ -99,7 +100,7 @@ function Onboarding() {
     else handleSubmit()
   }
   const goPrev = () => {
-    if (step > 1) setStep(step - 1)
+    if (step > minStep) setStep(step - 1)
     else navigate('/home')
   }
   const handleSubmit = async () => {
@@ -179,7 +180,7 @@ function Onboarding() {
           fontFamily: 'var(--ff)',
         }}
       >
-        ← {step === 1 ? '홈으로' : '이전'}
+        ← {step === minStep ? '홈으로' : '이전'}
       </button>
 
       <div style={{ padding: '0 2px' }}>
@@ -191,7 +192,10 @@ function Onboarding() {
         </div>
       </div>
 
-      <Stepper current={step} total={4} labels={['식물', '환경', '위치', '센서']} />
+      {isEdit
+        ? <Stepper current={step - 1} total={3} labels={['환경', '위치', '센서']} />
+        : <Stepper current={step}     total={4} labels={['식물', '환경', '위치', '센서']} />
+      }
 
       <div style={{ minHeight: 200 }}>
         {step === 1 && (
@@ -241,7 +245,7 @@ function Onboarding() {
 
       {/* 액션 버튼 */}
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-        {step > 1 && (
+        {step > minStep && (
           <button
             onClick={goPrev}
             disabled={submitting}
