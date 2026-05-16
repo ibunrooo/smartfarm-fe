@@ -5,7 +5,7 @@ import { plants } from '../data/plants'
 import { getMyGreenhouses, deleteGreenhouse } from '../api/greenhouse'
 import { getWeather } from '../api/weather'
 import { stopSimulation } from '../api/simulate'
-import { setMyGreenhouseIds, removeGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
+import { setMyGreenhouseIds, removeGreenhouseId, setActiveGreenhouseId, getGreenhouseMode, removeGreenhouseMode } from '../utils/storage'
 
 function Home() {
   const navigate = useNavigate()
@@ -56,12 +56,15 @@ function Home() {
 
     setDeletingId(greenhouseId)
     try {
-      // 시뮬레이션 정지 (BE 메모리 정리) — 실패해도 삭제는 진행
-      await stopSimulation(greenhouseId).catch(err => {
-        console.warn('시뮬레이션 중지 실패 (무시):', err)
-      })
+      // 가상 모드만 시뮬레이션 stop 호출 (실제 모드는 BE 세션 없음)
+      if (getGreenhouseMode(greenhouseId) === 'virtual') {
+        await stopSimulation(greenhouseId).catch(err => {
+          console.warn('시뮬레이션 중지 실패 (무시):', err)
+        })
+      }
       await deleteGreenhouse(greenhouseId)
       removeGreenhouseId(greenhouseId)
+      removeGreenhouseMode(greenhouseId)
       setCards(prev => {
         const next = prev.filter(c => c.id !== greenhouseId)
         // 첫 번째 남은 온실을 active로 (없으면 비움)

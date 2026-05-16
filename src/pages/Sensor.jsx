@@ -12,12 +12,7 @@ import { getGreenhouse } from '../api/greenhouse'
 import { getLatestSensor, getSensorHistory } from '../api/sensor'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
-import { getMyGreenhouseIds } from '../utils/storage'
-
-const modeOptions = [
-  { id: 'virtual', label: '가상' },
-  { id: 'real',    label: '실제' },
-]
+import { getMyGreenhouseIds, getGreenhouseMode } from '../utils/storage'
 
 function deriveDeviceState(actuators) {
   const state = { pump: false, led: false, window: false }
@@ -38,11 +33,11 @@ function actionFor(actuator, on) {
 function Sensor() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [sensorMode, setSensorMode] = useState('virtual')
 
   const ids = useMemo(() => getMyGreenhouseIds(), [])
   const requestedId = searchParams.get('gh')
   const activeId = ids.includes(requestedId) ? requestedId : ids[0]
+  const sensorMode = getGreenhouseMode(activeId)
 
   const [metas, setMetas]       = useState([])
   const [latest, setLatest]     = useState(null)
@@ -166,47 +161,13 @@ function Sensor() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
 
-      {/* 헤더: 온실 스위처 + 센서 모드 토글 */}
+      {/* 헤더: 온실 스위처 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <GreenhouseSwitcher
           greenhouses={switcherList}
           activeId={activeId}
           onChange={setActiveId}
         />
-        <div style={{ flex: 1 }} />
-
-        <div style={{
-          display: 'flex',
-          background: 'var(--surface-2)',
-          border: '0.5px solid var(--bd-soft)',
-          borderRadius: 10,
-          padding: 3,
-          gap: 2,
-        }}>
-          {modeOptions.map(opt => {
-            const isActive = sensorMode === opt.id
-            return (
-              <button
-                key={opt.id}
-                onClick={() => setSensorMode(opt.id)}
-                style={{
-                  padding: '6px 14px',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: isActive ? 'var(--surface)' : 'transparent',
-                  color: isActive ? 'var(--tx-1)' : 'var(--tx-3)',
-                  fontSize: 13.5, fontWeight: isActive ? 700 : 500,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--ff)',
-                  boxShadow: isActive ? 'var(--shadow-xs)' : 'none',
-                  transition: 'all .15s',
-                }}
-              >
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
       </div>
 
       {/* 긴급/주의 알림 */}

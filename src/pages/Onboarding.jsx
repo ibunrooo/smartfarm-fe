@@ -4,7 +4,7 @@ import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPl
 import { upsertGreenhouse } from '../api/greenhouse'
 import { getPlantList, recommendPlant, registerPlant } from '../api/plant'
 import { startSimulation } from '../api/simulate'
-import { addGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
+import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode } from '../utils/storage'
 
 const DEFAULT_THEME = { main: '#2ea84e', accent: '#4db866' }
 
@@ -27,6 +27,7 @@ const stepDesc = {
   1: '어떤 식물을 키우고 싶으세요?',
   2: '어디서 키우시나요?',
   3: '어느 지역인가요?',
+  4: '센서는 어떻게 구성되어 있나요?',
 }
 
 function Onboarding() {
@@ -37,9 +38,10 @@ function Onboarding() {
   const [submitError, setSubmitError] = useState(null)
   const [plantList, setPlantList] = useState(fallbackPlants)
   const [data, setData] = useState({
-    plantId:  null,
-    location: null,
-    city:     '',
+    plantId:    null,
+    location:   null,
+    city:       '',
+    sensorMode: null, // 'virtual' | 'real'
   })
 
   // BE 식물 목록 시도 (실패 시 더미 유지)
@@ -70,11 +72,12 @@ function Onboarding() {
   const canNext = (
     (step === 1 && data.plantId) ||
     (step === 2 && data.location) ||
-    (step === 3 && data.city.trim().length > 0)
+    (step === 3 && data.city.trim().length > 0) ||
+    (step === 4 && data.sensorMode)
   )
 
   const goNext = () => {
-    if (step < 3) setStep(step + 1)
+    if (step < 4) setStep(step + 1)
     else handleSubmit()
   }
   const goPrev = () => {
@@ -99,13 +102,16 @@ function Onboarding() {
       await registerPlant(newId, data.plantId).catch((err) => {
         console.warn('plant 등록 호출 실패 (무시):', err)
       })
-      // 가상 센서 시뮬레이션 시작 — 식물별 초기값으로 BE가 주기 발행 (실패해도 온보딩은 진행)
-      await startSimulation(newId, {
-        plantType: data.plantId,
-        ...getSimInitial(data.plantId),
-      }).catch((err) => {
-        console.warn('simulate 시작 실패 (무시):', err)
-      })
+      // 가상 모드일 때만 BE 시뮬레이션 시작 — 실제 모드는 외부 디바이스가 publish하길 기다림
+      if (data.sensorMode === 'virtual') {
+        await startSimulation(newId, {
+          plantType: data.plantId,
+          ...getSimInitial(data.plantId),
+        }).catch((err) => {
+          console.warn('simulate 시작 실패 (무시):', err)
+        })
+      }
+      setGreenhouseMode(newId, data.sensorMode)
       addGreenhouseId(newId)
       setActiveGreenhouseId(newId)
       navigate('/home')
@@ -141,7 +147,7 @@ function Onboarding() {
         </div>
       </div>
 
-      <Stepper current={step} total={3} labels={['식물', '환경', '위치']} />
+      <Stepper current={step} total={4} labels={['식물', '환경', '위치', '센서']} />
 
       <div style={{ minHeight: 200 }}>
         {step === 1 && (
@@ -164,6 +170,12 @@ function Onboarding() {
             value={data.city}
             onChange={(city) => setData(d => ({ ...d, city }))}
             summary={data}
+          />
+        )}
+        {step === 4 && (
+          <SensorModeStep
+            value={data.sensorMode}
+            onChange={(mode) => setData(d => ({ ...d, sensorMode: mode }))}
           />
         )}
       </div>
@@ -221,7 +233,7 @@ function Onboarding() {
             boxShadow: (canNext && !submitting) ? 'var(--shadow-xs)' : 'none',
           }}
         >
-          {step === 3 ? (submitting ? '등록 중…' : '등록하기') : '다음 →'}
+          {step === 4 ? (submitting ? '등록 중…' : '등록하기') : '다음 →'}
         </button>
       </div>
     </div>
@@ -410,6 +422,87 @@ function LocationStep({ value, onChange }) {
         )
       })}
     </div>
+  )
+}
+
+function SensorModeStep({ value, onChange }) {
+  const options = [
+    {
+      id: 'virtual',
+      label: '가상 시뮬레이션',
+      desc: '센서 없이 시뮬레이션 데이터로 동작',
+      icon: <VirtualIcon />,
+    },
+    {
+      id: 'real',
+      label: '실제 센서 연결',
+      desc: 'MQTT 서버에 연결된 디바이스에서 측정값 수신',
+      icon: <RealIcon />,
+    },
+  ]
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      {options.map(opt => {
+        const selected = value === opt.id
+        return (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            style={{
+              padding: '24px 14px',
+              background: selected ? '#f2faf3' : '#fff',
+              border: `1px solid ${selected ? '#2ea84e' : '#e8e8e8'}`,
+              borderRadius: 14,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 8,
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            <div style={{
+              width: 48, height: 48,
+              borderRadius: 12,
+              background: selected ? '#ddf2e2' : '#f5f5f5',
+              color: selected ? '#2ea84e' : '#888',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {opt.icon}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>
+              {opt.label}
+            </div>
+            <div style={{ fontSize: 12, color: '#888', textAlign: 'center', lineHeight: 1.4 }}>
+              {opt.desc}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function VirtualIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="5" width="18" height="12" rx="2"
+        stroke="currentColor" strokeWidth="1.6" fill="none"/>
+      <path d="M8 20h8M12 17v3"
+        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M8 11l-2 1.5L8 14M16 11l2 1.5L16 14M13 9l-2 6"
+        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+  )
+}
+
+function RealIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect x="7" y="7" width="10" height="10" rx="1.5"
+        stroke="currentColor" strokeWidth="1.6" fill="none"/>
+      <path d="M10 7V4M14 7V4M10 20v-3M14 20v-3M7 10H4M7 14H4M20 10h-3M20 14h-3"
+        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    </svg>
   )
 }
 
