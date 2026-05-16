@@ -395,23 +395,36 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
               disabled={!hasReport}
               style={{
                 aspectRatio: '1',
-                background: isToday ? 'var(--brand-soft)' : 'transparent',
-                border: isToday ? '0.5px solid var(--brand-line)' : '0.5px solid transparent',
-                borderRadius: 8,
+                position: 'relative',
+                background: 'transparent',
+                border: 'none',
                 cursor: hasReport ? 'pointer' : 'default',
-                color: hasReport ? 'var(--tx-1)' : 'var(--tx-4)',
-                fontWeight: hasReport ? 600 : 400,
-                fontSize: 12.5,
                 fontFamily: 'var(--ff)',
-                display: 'flex', flexDirection: 'column',
+                display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
-                gap: 2,
                 padding: 0,
               }}
             >
-              <span>{d}</span>
+              <span style={{
+                width: 22, height: 22, borderRadius: '50%',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: isToday ? 'var(--brand-soft)' : 'transparent',
+                border: isToday ? '0.5px solid var(--brand-line)' : '0.5px solid transparent',
+                color: isToday
+                  ? 'var(--brand-strong)'
+                  : (hasReport ? 'var(--tx-1)' : 'var(--tx-4)'),
+                fontWeight: (isToday || hasReport) ? 600 : 400,
+                fontSize: 12.5,
+                lineHeight: 1,
+              }}>
+                {d}
+              </span>
               {dotColor && (
                 <span style={{
+                  position: 'absolute',
+                  bottom: 6,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   width: 5, height: 5, borderRadius: '50%',
                   background: dotColor,
                 }} />
