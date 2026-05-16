@@ -28,3 +28,19 @@ export function upsertGreenhouse(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+// DELETE /api/greenhouse?greenhouseId=xxx
+// 본인 소유 온실만 삭제. 관련 센서/날씨/알림/동작/리포트/식물 등록 데이터 cascade.
+export function deleteGreenhouse(greenhouseId) {
+  return apiFetch(`/api/greenhouse${buildQuery({ greenhouseId })}`, {
+    method: 'DELETE',
+  })
+}
+
+// GET /api/greenhouses
+// 로그인 사용자의 모든 온실 반환 (로그아웃-재로그인 후 복원용)
+export async function getMyGreenhouses() {
+  const data = await apiFetch('/api/greenhouses')
+  if (!Array.isArray(data)) return []
+  return data.map(mapGreenhouse).filter(Boolean)
+}

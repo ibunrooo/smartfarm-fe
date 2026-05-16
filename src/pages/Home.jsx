@@ -2,36 +2,46 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GreenhouseCard from '../components/GreenhouseCard'
 import { plants } from '../data/plants'
-import { getGreenhouse } from '../api/greenhouse'
+import { getMyGreenhouses, deleteGreenhouse } from '../api/greenhouse'
 import { getWeather } from '../api/weather'
-import { getMyGreenhouseIds } from '../utils/storage'
+import { stopSimulation } from '../api/simulate'
+import { setMyGreenhouseIds, removeGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
 
 function Home() {
   const navigate = useNavigate()
   const [cards, setCards] = useState([])
-  const [loading, setLoading] = useState(() => getMyGreenhouseIds().length > 0)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     let cancelled = false
-    const ids = getMyGreenhouseIds()
-    if (ids.length === 0) return
 
-    Promise.all(
-      ids.map(id =>
-        Promise.all([
-          getGreenhouse(id).catch(() => null),
-          getWeather(id).catch(() => null),
-        ]).then(([gh, weather]) => (gh ? buildCard(gh, weather) : null))
-      )
-    )
+    // BE에서 내 온실 목록 → localStorage 동기화 → 각 온실 카드 정보 합성
+    getMyGreenhouses()
+      .then((myList) => {
+        if (cancelled) return Promise.reject(new Error('cancelled'))
+        const ids = myList.map(g => g.greenhouseId)
+        setMyGreenhouseIds(ids)
+        if (myList.length === 0) {
+          setCards([])
+          setLoading(false)
+          return null
+        }
+        return Promise.all(
+          myList.map(gh =>
+            getWeather(gh.greenhouseId).catch(() => null)
+              .then(weather => buildCard(gh, weather))
+          )
+        )
+      })
       .then((results) => {
-        if (cancelled) return
+        if (cancelled || !results) return
         setCards(results.filter(Boolean))
         setLoading(false)
       })
       .catch((err) => {
-        if (cancelled) return
+        if (cancelled || err.message === 'cancelled') return
         console.error('온실 조회 실패:', err)
         setError(err.message || '온실 정보를 불러오지 못했어요.')
         setLoading(false)
@@ -39,6 +49,32 @@ function Home() {
 
     return () => { cancelled = true }
   }, [])
+
+  const handleDelete = async (greenhouseId) => {
+    if (deletingId) return
+    if (!window.confirm('이 식물을 삭제하시겠어요?\n관련 센서/알림/리포트 데이터가 모두 사라져요.')) return
+
+    setDeletingId(greenhouseId)
+    try {
+      // 시뮬레이션 정지 (BE 메모리 정리) — 실패해도 삭제는 진행
+      await stopSimulation(greenhouseId).catch(err => {
+        console.warn('시뮬레이션 중지 실패 (무시):', err)
+      })
+      await deleteGreenhouse(greenhouseId)
+      removeGreenhouseId(greenhouseId)
+      setCards(prev => {
+        const next = prev.filter(c => c.id !== greenhouseId)
+        // 첫 번째 남은 온실을 active로 (없으면 비움)
+        setActiveGreenhouseId(next[0]?.id ?? '')
+        return next
+      })
+    } catch (err) {
+      console.error('식물 삭제 실패:', err)
+      alert(`삭제 실패: ${err.message ?? '알 수 없는 오류'}`)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const goAdd = () => navigate('/onboarding')
 
@@ -79,6 +115,7 @@ function Home() {
             key={card.id}
             greenhouse={card}
             onClick={() => navigate(`/sensor?gh=${card.id}`)}
+            onDelete={() => handleDelete(card.id)}
           />
         ))}
         <AddCard onClick={goAdd} />

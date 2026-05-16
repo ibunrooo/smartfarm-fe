@@ -1,6 +1,11 @@
-function GreenhouseCard({ greenhouse, onClick }) {
+function GreenhouseCard({ greenhouse, onClick, onDelete }) {
   const { plant, weather } = greenhouse
   const theme = plant.theme ?? { main: '#2ea84e', accent: '#4db866' }
+
+  const handleDelete = (e) => {
+    e.stopPropagation()
+    onDelete?.()
+  }
 
   return (
     <div
@@ -17,23 +22,50 @@ function GreenhouseCard({ greenhouse, onClick }) {
         transition: 'border-color .15s, box-shadow .15s',
       }}
     >
-      {/* 날씨 미니 — 데이터 있을 때만 */}
-      {weather && weather.temp !== '-' && weather.summary !== '-' && (
-        <div style={{
-          position: 'absolute', right: 12, top: 10,
-          display: 'flex', alignItems: 'center', gap: 5,
-          background: 'var(--surface-2)',
-          border: '0.5px solid var(--bd-soft)',
-          borderRadius: 18, padding: '3px 8px',
-          fontSize: 12, color: 'var(--tx-2)',
-        }}>
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-            <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
-              stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".7"/>
-          </svg>
-          {weather.temp}° · {weather.summary}
-        </div>
-      )}
+      {/* 우측 상단: 삭제 버튼 + 날씨 미니 */}
+      <div style={{
+        position: 'absolute', right: 10, top: 8,
+        display: 'flex', alignItems: 'center', gap: 6,
+      }}>
+        {weather && weather.temp !== '-' && weather.summary !== '-' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: 'var(--surface-2)',
+            border: '0.5px solid var(--bd-soft)',
+            borderRadius: 18, padding: '3px 8px',
+            fontSize: 12, color: 'var(--tx-2)',
+          }}>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
+                stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".7"/>
+            </svg>
+            {weather.temp}° · {weather.summary}
+          </div>
+        )}
+        {onDelete && (
+          <button
+            onClick={handleDelete}
+            title="식물 삭제"
+            aria-label="식물 삭제"
+            style={{
+              width: 24, height: 24,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'var(--surface-2)',
+              border: '0.5px solid var(--bd-soft)',
+              borderRadius: 8,
+              color: 'var(--tx-3)',
+              cursor: 'pointer',
+              padding: 0,
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <path d="M3 3l6 6M9 3l-6 6"
+                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
+      </div>
 
       {/* 식물 아이콘 — plant theme 컬러는 여기에만 한정 */}
       <div style={{
