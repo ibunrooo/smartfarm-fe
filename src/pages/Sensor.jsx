@@ -463,8 +463,8 @@ function DeviceControlPanel({ greenhouseId, initialDevices, initialAutoControl }
       {/* 자동제어 헤더 */}
       <div style={{
         padding: '12px 14px',
-        background: 'var(--brand-soft)',
-        borderBottom: '0.5px solid var(--brand-line)',
+        background: 'var(--surface)',
+        borderBottom: '0.5px solid var(--bd-soft)',
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
