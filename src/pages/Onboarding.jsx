@@ -117,7 +117,9 @@ function Onboarding() {
         greenhouseId: targetId,
         plantType:    data.plantId,
         locationType: data.location,
-        useSensor:    true,
+        // virtual: BE가 시뮬레이션 메시지 수신·저장하도록 true
+        // real:    BE가 외부 디바이스 대기. 실외면 OpenWeather fallback 자동 동작
+        useSensor:    data.sensorMode === 'virtual',
         lat:          coords.lat,
         lon:          coords.lon,
       })
