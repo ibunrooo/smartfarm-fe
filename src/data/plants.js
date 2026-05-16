@@ -58,6 +58,18 @@ export function getSimInitial(plantId) {
   return plant?.simInitial ?? DEFAULT_SIM_INITIAL
 }
 
+// BE 정렬 규칙 (ORDER BY difficulty, name_ko)과 일치시켜야 초기 렌더 시 깜빡임 없음
+const DIFFICULTY_RANK = { easy: 1, medium: 2, hard: 3 }
+
+export function sortPlants(list) {
+  return [...list].sort((a, b) => {
+    const ra = DIFFICULTY_RANK[a.difficulty] ?? 99
+    const rb = DIFFICULTY_RANK[b.difficulty] ?? 99
+    if (ra !== rb) return ra - rb
+    return (a.name ?? '').localeCompare(b.name ?? '', 'ko')
+  })
+}
+
 export const difficultyLabel = {
   easy:   '쉬움',
   medium: '중간',

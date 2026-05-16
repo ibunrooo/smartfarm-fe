@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial } from '../data/plants'
-import { upsertGreenhouse } from '../api/greenhouse'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { plants as fallbackPlants, difficultyLabel, difficultyColor, recommendPlants as fallbackRecommend, getSimInitial, sortPlants } from '../data/plants'
+import { koreaRegions, findCityCoords, findCityByCoords } from '../data/koreaCities'
+import { upsertGreenhouse, getGreenhouse } from '../api/greenhouse'
 import { getPlantList, recommendPlant, registerPlant } from '../api/plant'
-import { startSimulation } from '../api/simulate'
-import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode } from '../utils/storage'
+import { startSimulation, stopSimulation } from '../api/simulate'
+import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode, getGreenhouseMode } from '../utils/storage'
 
 const DEFAULT_THEME = { main: '#2ea84e', accent: '#4db866' }
+const DEFAULT_COORDS = { lat: 37.5665, lon: 126.9780 } // 서울 fallback
 
 function mergeWithFallback(bePlant) {
   const fb = fallbackPlants.find(p => p.id === bePlant.id)
@@ -20,9 +22,6 @@ function mergeWithFallback(bePlant) {
   }
 }
 
-// 도시 → lat/lon 매핑 (추후 확장 / 동적 geocoding 가능)
-const DEFAULT_LAT_LON = { lat: 37.5665, lon: 126.9780 } // 서울
-
 const stepDesc = {
   1: '어떤 식물을 키우고 싶으세요?',
   2: '어디서 키우시나요?',
@@ -32,11 +31,16 @@ const stepDesc = {
 
 function Onboarding() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editId = searchParams.get('edit') || null
+  const isEdit = !!editId
+
   const [mode, setMode] = useState('main')
   const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
-  const [plantList, setPlantList] = useState(fallbackPlants)
+  const [prefillLoading, setPrefillLoading] = useState(isEdit)
+  const [plantList, setPlantList] = useState(() => sortPlants(fallbackPlants))
   const [data, setData] = useState({
     plantId:    null,
     location:   null,
@@ -50,11 +54,36 @@ function Onboarding() {
     getPlantList()
       .then((list) => {
         if (cancelled || list.length === 0) return
-        setPlantList(list.map(mergeWithFallback))
+        setPlantList(sortPlants(list.map(mergeWithFallback)))
       })
       .catch(() => { /* 더미 유지 */ })
     return () => { cancelled = true }
   }, [])
+
+  // 수정 모드: 기존 온실 정보 prefill
+  useEffect(() => {
+    if (!isEdit) return
+    let cancelled = false
+    getGreenhouse(editId)
+      .then((gh) => {
+        if (cancelled || !gh) return
+        const cityFromCoords = findCityByCoords(gh.lat, gh.lon)
+        setData({
+          plantId:    gh.plantType ?? null,
+          location:   gh.locationType ?? null,
+          city:       cityFromCoords?.name ?? '',
+          sensorMode: getGreenhouseMode(editId),
+        })
+        setPrefillLoading(false)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('수정 모드 prefill 실패:', err)
+        setSubmitError('기존 정보를 불러오지 못했어요.')
+        setPrefillLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [isEdit, editId])
 
   if (mode === 'recommend') {
     return (
@@ -88,38 +117,64 @@ function Onboarding() {
     if (submitting) return
     setSubmitting(true)
     setSubmitError(null)
-    const newId = `gh-${Date.now()}`
+
+    const coords = findCityCoords(data.city) ?? DEFAULT_COORDS
+    const targetId = editId ?? `gh-${Date.now()}`
+
     try {
       await upsertGreenhouse({
-        greenhouseId: newId,
+        greenhouseId: targetId,
         plantType:    data.plantId,
         locationType: data.location,
         useSensor:    true,
-        lat:          DEFAULT_LAT_LON.lat,
-        lon:          DEFAULT_LAT_LON.lon,
+        lat:          coords.lat,
+        lon:          coords.lon,
       })
-      // 명세상 식물 등록 endpoint 추가 호출 (실패는 무시 — plantType은 이미 greenhouse에 들어감)
-      await registerPlant(newId, data.plantId).catch((err) => {
+      // plantType이 바뀐 경우(또는 신규)에 user_plants 갱신
+      await registerPlant(targetId, data.plantId).catch((err) => {
         console.warn('plant 등록 호출 실패 (무시):', err)
       })
-      // 가상 모드일 때만 BE 시뮬레이션 시작 — 실제 모드는 외부 디바이스가 publish하길 기다림
+
+      // 시뮬레이션을 mode에 맞게 정렬 (idempotent)
+      // - virtual: startSimulation은 BE에서 기존 세션을 교체함 (식물 변경도 자연스럽게 반영)
+      // - real:   기존 세션이 있을 수 있으니 정지
       if (data.sensorMode === 'virtual') {
-        await startSimulation(newId, {
+        await startSimulation(targetId, {
           plantType: data.plantId,
           ...getSimInitial(data.plantId),
         }).catch((err) => {
           console.warn('simulate 시작 실패 (무시):', err)
         })
+      } else if (isEdit) {
+        await stopSimulation(targetId).catch((err) => {
+          console.warn('simulate 중지 실패 (무시):', err)
+        })
       }
-      setGreenhouseMode(newId, data.sensorMode)
-      addGreenhouseId(newId)
-      setActiveGreenhouseId(newId)
+      setGreenhouseMode(targetId, data.sensorMode)
+
+      if (!isEdit) {
+        addGreenhouseId(targetId)
+        setActiveGreenhouseId(targetId)
+      }
       navigate('/home')
     } catch (err) {
-      console.error('온실 등록 실패:', err)
-      setSubmitError(err.message || '등록 중 오류가 발생했어요.')
+      console.error(isEdit ? '수정 실패:' : '온실 등록 실패:', err)
+      setSubmitError(err.message || (isEdit ? '수정 중 오류가 발생했어요.' : '등록 중 오류가 발생했어요.'))
       setSubmitting(false)
     }
+  }
+
+  // 수정 모드 데이터 로딩 중
+  if (prefillLoading) {
+    return (
+      <div style={{
+        minHeight: 360,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--tx-3)', fontSize: 13.5,
+      }}>
+        기존 정보를 불러오는 중…
+      </div>
+    )
   }
 
   return (
@@ -140,7 +195,7 @@ function Onboarding() {
 
       <div style={{ padding: '0 2px' }}>
         <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)' }}>
-          식물 추가
+          {isEdit ? '식물 정보 수정' : '식물 추가'}
         </div>
         <div style={{ fontSize: 13.5, color: 'var(--tx-3)', marginTop: 4 }}>
           {stepDesc[step]}
@@ -233,7 +288,9 @@ function Onboarding() {
             boxShadow: (canNext && !submitting) ? 'var(--shadow-xs)' : 'none',
           }}
         >
-          {step === 4 ? (submitting ? '등록 중…' : '등록하기') : '다음 →'}
+          {step === 4
+            ? (submitting ? (isEdit ? '수정 중…' : '등록 중…') : (isEdit ? '수정 완료' : '등록하기'))
+            : '다음 →'}
         </button>
       </div>
     </div>
@@ -508,47 +565,95 @@ function RealIcon() {
 
 function CityStep({ plants, value, onChange, summary }) {
   const plant = plants.find(p => p.id === summary.plantId)
+  const [province, setProvince] = useState(() => findCityCoords(value)?.province ?? '')
+
+  const cityOptions = useMemo(() => {
+    const region = koreaRegions.find(r => r.province === province)
+    return region?.cities ?? []
+  }, [province])
+
+  const handleProvinceChange = (next) => {
+    setProvince(next)
+    onChange('')   // 시/도 바꾸면 시/군/구 초기화
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#666', marginBottom: 6 }}>
-          도시
-        </div>
-        <input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="예: 서울"
-          style={{
-            width: '100%',
-            padding: '12px 14px',
-            background: '#fff',
-            border: '0.5px solid #ddd',
-            borderRadius: 10,
-            fontSize: 14,
-            fontFamily: 'var(--ff)',
-            outline: 'none',
-            color: '#1a1a1a',
-          }}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <SelectField
+          label="시 / 도"
+          value={province}
+          onChange={handleProvinceChange}
+          options={koreaRegions.map(r => ({ value: r.province, label: r.province }))}
+          placeholder="선택"
         />
-        <div style={{ fontSize: 12, color: '#aaa', marginTop: 6 }}>
-          OpenWeather 연동 시 위치 기반 외부 기상이 반영돼요.
-        </div>
+        <SelectField
+          label="시 / 군 / 구"
+          value={value}
+          onChange={onChange}
+          options={cityOptions.map(c => ({ value: c.name, label: c.name }))}
+          placeholder={province ? '선택' : '시/도 먼저 선택'}
+          disabled={!province}
+        />
       </div>
 
       <div style={{
         padding: 14,
-        background: '#f8fdf9',
-        border: '0.5px solid #ddf2e2',
+        background: 'var(--brand-soft)',
+        border: '0.5px solid var(--brand-line)',
         borderRadius: 12,
       }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1e8a3c', marginBottom: 8 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand-strong)', marginBottom: 8 }}>
           이렇게 등록할게요
         </div>
         <SummaryRow label="식물" value={plant?.name ?? '-'} />
         <SummaryRow label="환경" value={summary.location === 'indoor' ? '실내' : '실외'} />
-        <SummaryRow label="위치" value={value.trim() || '입력 필요'} dim={!value.trim()} />
+        <SummaryRow
+          label="위치"
+          value={value ? `${province} ${value}` : '선택 필요'}
+          dim={!value}
+        />
       </div>
     </div>
+  )
+}
+
+function SelectField({ label, value, onChange, options, placeholder, disabled }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx-2)' }}>
+        {label}
+      </span>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          padding: '11px 12px',
+          background: disabled ? 'var(--surface-2)' : 'var(--surface)',
+          border: '0.5px solid var(--bd)',
+          borderRadius: 10,
+          fontSize: 14,
+          fontFamily: 'var(--ff)',
+          outline: 'none',
+          color: value ? 'var(--tx-1)' : 'var(--tx-4)',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          backgroundImage:
+            'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path fill=\'none\' stroke=\'%23999\' stroke-width=\'1.4\' stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M3 4.5l3 3 3-3\'/></svg>")',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 10px center',
+          paddingRight: 30,
+        }}
+      >
+        <option value="" disabled hidden>{placeholder}</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    </label>
   )
 }
 

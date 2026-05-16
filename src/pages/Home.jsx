@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GreenhouseCard from '../components/GreenhouseCard'
 import { plants } from '../data/plants'
+import { findCityByCoords } from '../data/koreaCities'
 import { getMyGreenhouses, deleteGreenhouse } from '../api/greenhouse'
-import { getWeather } from '../api/weather'
+import { getLatestSensor } from '../api/sensor'
 import { stopSimulation } from '../api/simulate'
 import { setMyGreenhouseIds, removeGreenhouseId, setActiveGreenhouseId, getGreenhouseMode, removeGreenhouseMode } from '../utils/storage'
 
@@ -30,8 +31,8 @@ function Home() {
         }
         return Promise.all(
           myList.map(gh =>
-            getWeather(gh.greenhouseId).catch(() => null)
-              .then(weather => buildCard(gh, weather))
+            getLatestSensor(gh.greenhouseId).catch(() => null)
+              .then(latest => buildCard(gh, latest))
           )
         )
       })
@@ -107,17 +108,18 @@ function Home() {
 
       {error && <ErrorBanner message={error} />}
 
-      {/* 카드 그리드 */}
+      {/* 카드 그리드 — 모바일 1열, 데스크탑 2~3열 */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: 12,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: 14,
       }}>
         {cards.map(card => (
           <GreenhouseCard
             key={card.id}
             greenhouse={card}
             onClick={() => navigate(`/sensor?gh=${card.id}`)}
+            onEdit={() => navigate(`/onboarding?edit=${card.id}`)}
             onDelete={() => handleDelete(card.id)}
           />
         ))}
@@ -131,21 +133,22 @@ function Home() {
    BE 데이터 → GreenhouseCard 형식 합성
    ──────────────────────────────────────── */
 
-function buildCard(greenhouse, weather) {
+function buildCard(greenhouse, latest) {
   const plant = plants.find(p => p.id === greenhouse.plantType)
   const days = computeDaysSince(greenhouse.createdAt)
   const locationLabel = greenhouse.locationType === 'outdoor' ? '실외' : '실내'
+  const cityHit = findCityByCoords(greenhouse.lat, greenhouse.lon)
+  const cityLabel = cityHit?.name ?? '-'
+  const mode = getGreenhouseMode(greenhouse.greenhouseId)
   return {
     id: greenhouse.greenhouseId,
-    plant: {
-      name: plant?.name ?? greenhouse.plantType ?? '식물',
-      sub: `${locationLabel} · 등록 ${days}일째`,
-      status: '정상 운영 중',
-      theme: plant?.theme ?? { main: '#2ea84e', accent: '#4db866' },
-    },
-    weather: weather
-      ? { temp: Math.round(weather.temp ?? 0), summary: weather.summary ?? '-' }
-      : { temp: '-', summary: '-' },
+    plantName:    plant?.name ?? greenhouse.plantType ?? '식물',
+    plantTheme:   plant?.theme ?? { main: '#2ea84e', accent: '#4db866' },
+    locationLabel,
+    cityLabel,
+    daysSince:    days,
+    modeLabel:    mode === 'real' ? '실제' : '가상',
+    latest,
   }
 }
 

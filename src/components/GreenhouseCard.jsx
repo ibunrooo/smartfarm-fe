@@ -1,11 +1,63 @@
-function GreenhouseCard({ greenhouse, onClick, onDelete }) {
-  const { plant, weather } = greenhouse
-  const theme = plant.theme ?? { main: '#2ea84e', accent: '#4db866' }
+import { useEffect, useRef, useState } from 'react'
 
-  const handleDelete = (e) => {
-    e.stopPropagation()
-    onDelete?.()
+const METRIC_DEFS = [
+  { key: 'temp',     label: '온도', unit: '°C' },
+  { key: 'humidity', label: '습도', unit: '%'  },
+  { key: 'soil',     label: '토양', unit: '%'  },
+  { key: 'lux',      label: '조도', unit: 'lx' },
+]
+
+// 센서 페이지 statusFor와 동일한 기준 — 색만 결정용
+function statusFor(key, value) {
+  if (value == null) return 'idle'
+  if (key === 'temp') {
+    if (value >= 35 || value <= 5)  return 'bad'
+    if (value >= 30 || value <= 10) return 'warn'
+    return 'ok'
   }
+  if (key === 'humidity') {
+    if (value >= 80 || value <= 25) return 'bad'
+    if (value >= 70 || value <= 35) return 'warn'
+    return 'ok'
+  }
+  if (key === 'soil') {
+    if (value <= 20)                return 'bad'
+    if (value <= 30 || value >= 75) return 'warn'
+    return 'ok'
+  }
+  if (key === 'lux') {
+    if (value <= 100)               return 'bad'
+    if (value <= 500)               return 'warn'
+    return 'ok'
+  }
+  return 'ok'
+}
+
+const STATUS_COLOR = {
+  ok:   { bg: 'var(--brand-soft)',  bd: 'var(--brand-line)', dot: 'var(--brand)',     fg: 'var(--brand-strong)' },
+  warn: { bg: 'var(--warn-bg)',     bd: 'var(--warn-bd)',    dot: 'var(--warn-tx)',   fg: 'var(--warn-tx)' },
+  bad:  { bg: 'var(--danger-bg)',   bd: 'var(--danger-bd)',  dot: 'var(--danger-tx)', fg: 'var(--danger-tx)' },
+  idle: { bg: 'var(--surface-2)',   bd: 'var(--bd-soft)',    dot: 'var(--tx-4)',      fg: 'var(--tx-3)' },
+}
+
+function aggregateStatus(latest) {
+  if (!latest) return { kind: 'idle',  label: '데이터 대기 중' }
+  const statuses = METRIC_DEFS.map(m => statusFor(m.key, latest[m.key]))
+  if (statuses.includes('bad'))  return { kind: 'bad',  label: '위험 상태' }
+  if (statuses.includes('warn')) return { kind: 'warn', label: '주의 필요' }
+  if (statuses.every(s => s === 'idle')) return { kind: 'idle', label: '데이터 대기 중' }
+  return { kind: 'ok', label: '정상 운영 중' }
+}
+
+function GreenhouseCard({ greenhouse, onClick, onEdit, onDelete }) {
+  const {
+    plantName, plantTheme,
+    locationLabel, cityLabel, daysSince, modeLabel,
+    latest,
+  } = greenhouse
+
+  const status = aggregateStatus(latest)
+  const statusStyle = STATUS_COLOR[status.kind]
 
   return (
     <div
@@ -15,101 +67,195 @@ function GreenhouseCard({ greenhouse, onClick, onDelete }) {
         border: '0.5px solid var(--bd)',
         boxShadow: 'var(--shadow-xs)',
         borderRadius: 14,
-        padding: 14, display: 'flex', alignItems: 'center', gap: 12,
-        position: 'relative', overflow: 'hidden',
+        padding: 16,
+        display: 'flex', flexDirection: 'column', gap: 12,
+        position: 'relative',
         cursor: onClick ? 'pointer' : 'default',
-        minHeight: 92,
         transition: 'border-color .15s, box-shadow .15s',
       }}
     >
-      {/* 우측 상단: 삭제 버튼 + 날씨 미니 */}
-      <div style={{
-        position: 'absolute', right: 10, top: 8,
-        display: 'flex', alignItems: 'center', gap: 6,
-      }}>
-        {weather && weather.temp !== '-' && weather.summary !== '-' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'var(--surface-2)',
-            border: '0.5px solid var(--bd-soft)',
-            borderRadius: 18, padding: '3px 8px',
-            fontSize: 12, color: 'var(--tx-2)',
-          }}>
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-              <path d="M3 6.5a2 2 0 011.7-2 2.5 2.5 0 014.7.6A1.8 1.8 0 019 8.5H4a1.5 1.5 0 01-1-2zM4.5 10l-.5 1M6 10l-.5 1M7.5 10l-.5 1"
-                stroke="currentColor" strokeWidth="1" strokeLinecap="round" fill="none" opacity=".7"/>
-            </svg>
-            {weather.temp}° · {weather.summary}
-          </div>
-        )}
-        {onDelete && (
-          <button
-            onClick={handleDelete}
-            title="식물 삭제"
-            aria-label="식물 삭제"
-            style={{
-              width: 24, height: 24,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--surface-2)',
-              border: '0.5px solid var(--bd-soft)',
-              borderRadius: 8,
-              color: 'var(--tx-3)',
-              cursor: 'pointer',
-              padding: 0,
-              fontFamily: 'var(--ff)',
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-              <path d="M3 3l6 6M9 3l-6 6"
-                stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* 식물 아이콘 — plant theme 컬러는 여기에만 한정 */}
-      <div style={{
-        width: 44, height: 44,
-        background: 'var(--brand-soft)',
-        border: '0.5px solid var(--brand-line)',
-        borderRadius: 12,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-        color: theme.main,
-      }}>
-        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
-          <path d="M13 6C10 6 7.5 8.5 7.5 11.5c0 2 .9 3.7 2.3 4.8L9 21h8l-.8-4.7c1.4-1.1 2.3-2.8 2.3-4.8C18.5 8.5 16 6 13 6z"
-            stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
-          <line x1="13" y1="9" x2="13" y2="19"
-            stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
-          <path d="M10 12c0 0 1.3-1.5 3-1.5s3 1.5 3 1.5"
-            stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".7"/>
-        </svg>
-      </div>
-
-      {/* 식물 정보 */}
-      <div style={{ minWidth: 0, flex: 1 }}>
+      {/* 헤더: 식물명 + 메뉴 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{
+          width: 9, height: 9, borderRadius: '50%',
+          background: plantTheme?.main ?? 'var(--brand)',
+          flexShrink: 0,
+        }} />
         <div style={{
-          fontSize: 15, fontWeight: 700, color: 'var(--tx-1)',
+          flex: 1, minWidth: 0,
+          fontSize: 16, fontWeight: 700, color: 'var(--tx-1)',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          {plant.name}
+          {plantName}
         </div>
-        <div style={{ fontSize: 12.5, color: 'var(--tx-3)', marginTop: 2 }}>
-          {plant.sub}
-        </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 7,
-          background: 'var(--brand-soft)',
-          border: '0.5px solid var(--brand-line)',
-          borderRadius: 20, padding: '3px 9px',
-          fontSize: 11.5, color: 'var(--brand-strong)', fontWeight: 600,
-        }}>
-          <div style={{ width: 5, height: 5, background: 'var(--brand)', borderRadius: '50%' }} />
-          {plant.status}
-        </div>
+        {(onEdit || onDelete) && (
+          <KebabMenu onEdit={onEdit} onDelete={onDelete} />
+        )}
+      </div>
+
+      {/* 메타 정보 */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6,
+        fontSize: 12.5, color: 'var(--tx-3)',
+      }}>
+        <span>{locationLabel}</span>
+        <Dot />
+        <span>{cityLabel}</span>
+        <Dot />
+        <span>등록 {daysSince}일차</span>
+        <Dot />
+        <span>{modeLabel}</span>
+      </div>
+
+      {/* 메트릭 4개 */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 6,
+      }}>
+        {METRIC_DEFS.map(m => {
+          const value = latest?.[m.key]
+          const s = statusFor(m.key, value)
+          const c = STATUS_COLOR[s]
+          return (
+            <div key={m.key} style={{
+              padding: '8px 6px',
+              background: c.bg,
+              border: `0.5px solid ${c.bd}`,
+              borderRadius: 9,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', gap: 2,
+            }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: c.fg, opacity: .8 }}>
+                {m.label}
+              </div>
+              <div style={{
+                fontSize: 13.5, fontWeight: 700,
+                color: value == null ? c.fg : 'var(--tx-1)',
+              }}>
+                {value == null ? '-' : `${formatValue(m.key, value)}${m.unit}`}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 상태 칩 */}
+      <div style={{
+        display: 'inline-flex', alignSelf: 'flex-start',
+        alignItems: 'center', gap: 6,
+        padding: '4px 10px', borderRadius: 20,
+        background: statusStyle.bg,
+        border: `0.5px solid ${statusStyle.bd}`,
+        fontSize: 12, fontWeight: 700,
+        color: statusStyle.fg,
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: statusStyle.dot,
+        }} />
+        {status.label}
       </div>
     </div>
+  )
+}
+
+function formatValue(key, v) {
+  if (key === 'lux') return Math.round(v)
+  return Math.round(v * 10) / 10
+}
+
+function Dot() {
+  return <span style={{ opacity: .4 }}>·</span>
+}
+
+function KebabMenu({ onEdit, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => {
+      if (!ref.current?.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const stop = (e) => e.stopPropagation()
+
+  return (
+    <div ref={ref} onClick={stop} style={{ position: 'relative' }}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        title="메뉴"
+        aria-label="메뉴 열기"
+        style={{
+          width: 28, height: 28,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: open ? 'var(--surface-2)' : 'transparent',
+          border: 'none',
+          borderRadius: 8,
+          color: 'var(--tx-3)',
+          cursor: 'pointer',
+          padding: 0,
+          fontFamily: 'var(--ff)',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="3" cy="7" r="1.3" fill="currentColor"/>
+          <circle cx="7" cy="7" r="1.3" fill="currentColor"/>
+          <circle cx="11" cy="7" r="1.3" fill="currentColor"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 32, right: 0,
+          minWidth: 130,
+          background: 'var(--surface)',
+          border: '0.5px solid var(--bd)',
+          borderRadius: 10,
+          boxShadow: 'var(--shadow-md)',
+          padding: 4,
+          display: 'flex', flexDirection: 'column',
+          zIndex: 10,
+        }}>
+          {onEdit && (
+            <MenuItem onClick={() => { setOpen(false); onEdit() }}>
+              정보 수정
+            </MenuItem>
+          )}
+          {onDelete && (
+            <MenuItem onClick={() => { setOpen(false); onDelete() }} danger>
+              삭제
+            </MenuItem>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MenuItem({ onClick, danger, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '9px 10px',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: 7,
+        fontSize: 13.5, fontWeight: 500,
+        color: danger ? 'var(--danger-tx)' : 'var(--tx-1)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontFamily: 'var(--ff)',
+      }}
+    >
+      {children}
+    </button>
   )
 }
 
