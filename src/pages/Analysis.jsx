@@ -63,24 +63,12 @@ function Analysis() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, width: '100%', maxWidth: 640, margin: '0 auto' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 2px' }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 11,
-          background: 'var(--brand-soft)',
-          border: '0.5px solid var(--brand-line)',
-          color: 'var(--brand)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <LeafScanIcon />
+      <div style={{ padding: '0 2px' }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)', letterSpacing: '-.01em' }}>
+          이미지 분석
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx-1)', letterSpacing: '-.01em' }}>
-            이미지 분석
-          </div>
-          <div style={{ fontSize: 12.5, color: 'var(--tx-3)', marginTop: 2 }}>
-            잎 사진을 업로드하면 AI가 식물 질병을 진단해 드려요.
-          </div>
+        <div style={{ fontSize: 12.5, color: 'var(--tx-3)', marginTop: 2 }}>
+          식물 사진을 업로드하면 학습된 AI가 식물 질병을 진단해요.
         </div>
       </div>
 
@@ -164,15 +152,10 @@ function UploadCard({ onClick }) {
         }}>+</div>
       </div>
 
-      {/* 타이틀 + 부제 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx-1)', letterSpacing: '-.01em' }}>
-          사진을 올려주세요
-        </div>
-        <div style={{ fontSize: 12.5, color: 'var(--tx-3)', textAlign: 'center', lineHeight: 1.6, maxWidth: 280 }}>
-          잎이 또렷이 보이는 사진일수록 더 정확해요.<br />
-          탭하여 갤러리 또는 카메라에서 선택하세요.
-        </div>
+      {/* 부제 */}
+      <div style={{ fontSize: 12.5, color: 'var(--tx-3)', textAlign: 'center', lineHeight: 1.6, maxWidth: 280 }}>
+        잎이 또렷이 보이는 사진일수록 더 정확해요.<br />
+        탭하여 갤러리 또는 카메라에서 선택하세요.
       </div>
 
       {/* 메타 칩 */}
@@ -552,17 +535,6 @@ function CameraIcon() {
       <path d="M4 9.5A2 2 0 016 7.5h1.2L9 5h8l1.8 2.5H20a2 2 0 012 2v9A2 2 0 0120 20.5H6a2 2 0 01-2-2v-9z"
         stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
       <circle cx="13" cy="14" r="3.6" stroke="currentColor" strokeWidth="1.4"/>
-    </svg>
-  )
-}
-
-function LeafScanIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
-      <path d="M11 4C7.7 4 5 6.7 5 10c0 2 1 3.8 2.5 4.9L7 19h8l-.5-4.1C16 13.8 17 12 17 10c0-3.3-2.7-6-6-6z"
-        stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
-      <line x1="11" y1="8" x2="11" y2="17" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity=".7"/>
-      <circle cx="11" cy="11" r="1.4" stroke="currentColor" strokeWidth="1.1" fill="none"/>
     </svg>
   )
 }
