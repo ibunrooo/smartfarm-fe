@@ -13,7 +13,7 @@ const chartColor = {
   bad:  '#e84040',
 }
 
-function SensorMetricCard({ id, label, value, unit, status, statusText, history }) {
+function SensorMetricCard({ id, label, value, unit, status, statusText, history, emptyText = '아직 시계열 데이터가 없어요' }) {
   const color = chartColor[status]
   const gradId = `sensor-grad-${id}`
 
@@ -73,7 +73,7 @@ function SensorMetricCard({ id, label, value, unit, status, statusText, history 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 11, color: 'var(--tx-4)',
           }}>
-            아직 시계열 데이터가 없어요
+            {emptyText}
           </div>
         )}
       </div>

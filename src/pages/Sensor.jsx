@@ -308,6 +308,9 @@ function Sensor() {
               status={m.status}
               statusText={m.statusText}
               history={histories[key]}
+              emptyText={sensorMode === 'real'
+                ? '실제 센서/디바이스를 연결해주세요'
+                : '아직 시계열 데이터가 없어요'}
             />
           )
         })}
