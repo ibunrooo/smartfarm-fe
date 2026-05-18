@@ -19,7 +19,7 @@ import {
   getDevices, getDeviceStatus, registerDevice, provisionDevice, revokeDevice,
   DEVICE_TYPE_LABEL,
 } from '../api/devices'
-import { getMyGreenhouseIds, getGreenhouseMode } from '../utils/storage'
+import { getMyGreenhouseIds, getGreenhouseMode, modeFromUseSensor, syncGreenhouseModesFromBE } from '../utils/storage'
 
 function deriveDeviceState(actuators) {
   const state = { pump: false, led: false, window: false }
@@ -60,7 +60,8 @@ function Sensor() {
   const ids = useMemo(() => getMyGreenhouseIds(), [])
   const requestedId = searchParams.get('gh')
   const activeId = ids.includes(requestedId) ? requestedId : ids[0]
-  const sensorMode = getGreenhouseMode(activeId)
+  // sensorMode는 BE meta가 도착하면 useSensor로부터 정확히 derive (아래 activeMeta 옆에서).
+  // 그때까지는 localStorage 캐시 사용.
 
   const [metas, setMetas]       = useState([])
   const [latest, setLatest]     = useState(null)
@@ -92,7 +93,10 @@ function Sensor() {
     ])
       .then(([metaList, latestData, historyData, alertList, actuatorList, weatherData, deviceList]) => {
         if (cancelled) return
-        setMetas(metaList.filter(Boolean))
+        const metaListClean = metaList.filter(Boolean)
+        // BE의 useSensor 기준으로 localStorage modes 동기화 (새 디바이스/캐시 청소 후 로그인 보정)
+        syncGreenhouseModesFromBE(metaListClean)
+        setMetas(metaListClean)
         setLatest(latestData)
         setHistory(historyData)
         setAlerts(alertList)
@@ -208,6 +212,11 @@ function Sensor() {
   const activeMeta   = metas.find(m => m?.greenhouseId === activeId)
   const locationType = activeMeta?.locationType ?? 'indoor'
   const plantType    = activeMeta?.plantType
+  // BE의 useSensor를 우선 사용 (다른 디바이스/캐시 청소 후 로그인해도 정확).
+  // meta 로딩 전에는 localStorage 캐시로 폴백.
+  const sensorMode = (activeMeta && typeof activeMeta.useSensor === 'boolean')
+    ? modeFromUseSensor(activeMeta.useSensor)
+    : getGreenhouseMode(activeId)
   const isWeatherFallback = latest?.dataSource === 'weather_fallback' || latest?.isWeatherFallback === true
 
   /* 빈 상태: 등록된 온실 없음 */

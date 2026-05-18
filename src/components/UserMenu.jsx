@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { clearBackendToken } from '../lib/authToken'
 import { getAuthMe } from '../api/auth'
+import { clearGreenhouseModes } from '../utils/storage'
 
 function UserMenu() {
   const navigate = useNavigate()
@@ -45,6 +46,8 @@ function UserMenu() {
       localStorage.removeItem('farm-me:greenhouseIds')
       localStorage.removeItem('farm-me:activeGreenhouseId')
     } catch { /* private mode 등 무시 */ }
+    // 다른 계정으로 갈아탈 때 이전 사용자의 가상/실제 모드 캐시가 새어 들어가지 않도록 정리
+    clearGreenhouseModes()
     navigate('/login', { replace: true })
   }
 

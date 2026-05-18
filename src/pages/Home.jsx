@@ -6,7 +6,10 @@ import { findCityByCoords } from '../data/koreaCities'
 import { getMyGreenhouses, deleteGreenhouse } from '../api/greenhouse'
 import { getLatestSensor } from '../api/sensor'
 import { stopSimulation } from '../api/simulate'
-import { setMyGreenhouseIds, removeGreenhouseId, getActiveGreenhouseId, setActiveGreenhouseId, getGreenhouseMode, removeGreenhouseMode } from '../utils/storage'
+import {
+  setMyGreenhouseIds, removeGreenhouseId, getActiveGreenhouseId, setActiveGreenhouseId,
+  getGreenhouseMode, removeGreenhouseMode, syncGreenhouseModesFromBE,
+} from '../utils/storage'
 
 function Home() {
   const navigate = useNavigate()
@@ -24,6 +27,9 @@ function Home() {
         if (cancelled) return Promise.reject(new Error('cancelled'))
         const ids = myList.map(g => g.greenhouseId)
         setMyGreenhouseIds(ids)
+        // BE의 useSensor를 single source of truth로 보고 localStorage modes 동기화 —
+        // 다른 디바이스/브라우저에서 로그인했을 때 가상으로 잘못 표시되는 문제 해결
+        syncGreenhouseModesFromBE(myList)
         if (myList.length === 0) {
           setCards([])
           setLoading(false)
