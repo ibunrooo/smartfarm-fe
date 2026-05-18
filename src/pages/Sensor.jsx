@@ -338,7 +338,7 @@ function Sensor() {
           {sensorMode === 'virtual'
             ? '시뮬레이션 데이터로 동작 중이에요.'
             : (isWeatherFallback
-                ? '센서값이 없어 외부 날씨 데이터로 대체된 값이에요.'
+                ? '외부 날씨 데이터를 연동했어요. 기기를 등록해주세요.'
                 : '실제 센서/디바이스에 연결되어 있어요.')}
         </span>
         {sensorMode === 'virtual' && (
@@ -529,9 +529,19 @@ function DeviceRegistryRow({ device, onRevoke }) {
   const isOnline = device.status === 'online'
   const isRevoked = device.deviceStatus === 'revoked'
   const dotColor = isRevoked ? 'var(--tx-4)' : (isOnline ? 'var(--brand)' : 'var(--warn-tx)')
-  const statusText = isRevoked
-    ? '해지됨'
-    : (isOnline ? '온라인' : (device.status === 'offline' ? '오프라인' : '대기 중'))
+  // 디바이스가 한 번도 MQTT 접속 못한 초기 상태(deviceType 없고 status도 unknown)는
+  // 디바이스 종류·상태 두 칸을 합쳐 "등록 대기 중" 한 줄로 노출
+  const typeLabel = DEVICE_TYPE_LABEL[device.deviceType] ?? device.deviceType ?? null
+  const knownStatus = isRevoked || isOnline || device.status === 'offline'
+  const metaText = (!typeLabel && !knownStatus)
+    ? '등록 대기 중'
+    : [
+        typeLabel,
+        isRevoked
+          ? '해지됨'
+          : (isOnline ? '온라인' : (device.status === 'offline' ? '오프라인' : '등록 대기 중')),
+        device.lastSeenAt ? formatLastSeen(device.lastSeenAt) : null,
+      ].filter(Boolean).join(' · ')
   return (
     <div style={{
       padding: '10px 12px',
@@ -553,9 +563,7 @@ function DeviceRegistryRow({ device, onRevoke }) {
           {device.deviceId}
         </div>
         <div style={{ fontSize: 11, color: 'var(--tx-3)', marginTop: 1 }}>
-          {DEVICE_TYPE_LABEL[device.deviceType] ?? device.deviceType ?? '-'}
-          {' · '}{statusText}
-          {device.lastSeenAt && ` · ${formatLastSeen(device.lastSeenAt)}`}
+          {metaText}
         </div>
       </div>
       {!isRevoked && (
