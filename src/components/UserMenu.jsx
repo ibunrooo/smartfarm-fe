@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { clearBackendToken } from '../lib/authToken'
+import { getAuthMe } from '../api/auth'
 
 function UserMenu() {
   const navigate = useNavigate()
@@ -10,18 +12,18 @@ function UserMenu() {
 
   useEffect(() => {
     let mounted = true
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return
-      setEmail(data.user?.email ?? null)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, sess) => {
-      if (!mounted) return
-      setEmail(sess?.user?.email ?? null)
-    })
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
+    // Supabase 세션 사용자와 카카오 BE JWT 사용자를 통합해서 다루기 위해
+    // BE의 /api/auth/me로 단일화 — apiFetch가 토큰을 알아서 부착함
+    getAuthMe()
+      .then((data) => {
+        if (!mounted) return
+        setEmail(data?.user?.email ?? data?.user?.name ?? null)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setEmail(null)
+      })
+    return () => { mounted = false }
   }, [])
 
   useEffect(() => {
@@ -36,6 +38,8 @@ function UserMenu() {
   const handleLogout = async () => {
     setOpen(false)
     if (!window.confirm('로그아웃 하시겠어요?')) return
+    // BE JWT(카카오) + Supabase 세션(이메일/구글) 모두 정리
+    clearBackendToken()
     await supabase.auth.signOut().catch(() => {})
     try {
       localStorage.removeItem('farm-me:greenhouseIds')

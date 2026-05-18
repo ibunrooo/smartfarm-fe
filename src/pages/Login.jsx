@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { startKakaoLogin } from '../api/auth'
 import logo from '../assets/logo.png'
 
 function Login() {
@@ -13,7 +14,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
 
-  const handleOAuth = (provider, label) => async () => {
+  const handleGoogle = async () => {
     if (loading) return
     setError(null)
     setInfo(null)
@@ -21,23 +22,39 @@ function Login() {
     setLoading(true)
     try {
       const { error: oauthErr } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/home`,
-          ...(provider === 'kakao' && { scopes: 'profile_nickname,profile_image' }),
-        },
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/home` },
       })
       if (oauthErr) throw oauthErr
       // 성공 시 브라우저가 자동으로 provider 페이지로 리다이렉트됩니다.
     } catch (err) {
-      console.error(`${label} 로그인 실패:`, err)
-      setError(err.message || `${label} 로그인을 시작하지 못했어요.`)
+      console.error('Google 로그인 실패:', err)
+      setError(err.message || 'Google 로그인을 시작하지 못했어요.')
       setLoading(false)
     }
   }
 
-  const handleGoogle = handleOAuth('google', 'Google')
-  const handleKakao  = handleOAuth('kakao',  'Kakao')
+  // 카카오는 백엔드 자체 OAuth: /api/auth/kakao/start → authorizeUrl 이동
+  // 콜백 후 BE가 /home?token=...&provider=kakao 로 리다이렉트하면
+  // main.jsx 부트스트랩이 토큰을 localStorage에 저장한다.
+  const handleKakao = async () => {
+    if (loading) return
+    setError(null)
+    setInfo(null)
+    setShowResend(false)
+    setLoading(true)
+    try {
+      const redirectTo = `${window.location.origin}/home`
+      const res = await startKakaoLogin(redirectTo)
+      const authorizeUrl = res?.authorizeUrl
+      if (!authorizeUrl) throw new Error('카카오 인가 URL을 받지 못했어요.')
+      window.location.href = authorizeUrl
+    } catch (err) {
+      console.error('Kakao 로그인 실패:', err)
+      setError(err.message || 'Kakao 로그인을 시작하지 못했어요.')
+      setLoading(false)
+    }
+  }
 
   const resendConfirmation = async () => {
     if (loading) return
