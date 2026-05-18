@@ -361,8 +361,9 @@ function Sensor() {
         )}
       </div>
 
-      {/* 외부 날씨 — 실외 모드에서만 노출 */}
-      {locationType === 'outdoor' && weather && (
+      {/* 외부 날씨 — 실제 모드 + 실외 온실에서만 노출
+          (가상 모드는 시뮬레이션 값을 쓰므로 외기 정보는 무의미) */}
+      {sensorMode === 'real' && locationType === 'outdoor' && weather && (
         <WeatherCard weather={weather} />
       )}
 
