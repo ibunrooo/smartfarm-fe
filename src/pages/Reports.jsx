@@ -4,7 +4,7 @@ import DailyReportDetail from '../components/DailyReportDetail'
 import GreenhouseSwitcher from '../components/GreenhouseSwitcher'
 import { riskLabel, riskColor } from '../data/dailyReports'
 import { plants } from '../data/plants'
-import { getReportList, generateTodayReport } from '../api/report'
+import { getReportList, generateTodayReport, generateDailyReport } from '../api/report'
 import { getMyGreenhouses } from '../api/greenhouse'
 import { getActiveGreenhouseId, setActiveGreenhouseId } from '../utils/storage'
 import { substituteGreenhouseId } from '../utils/reportText'
@@ -21,10 +21,14 @@ function Reports() {
   const [active, setActive]     = useState(null)  // 상세 모달
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState(null)
+  // 캘린더 셀 클릭으로 과거 날짜를 수동 생성하는 중인지 — 'YYYY-MM-DD' 또는 null
+  const [creatingDate, setCreatingDate] = useState(null)
 
   const today = new Date()
   const [viewYear, setViewYear]   = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1)
+  // 사용자 로컬(KST 가정) 기준 오늘 ISO — 미래 날짜 클릭 차단용
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
   // greenhouseId → 식물명 매핑 (요약 텍스트의 'gh-XXX' 치환용)
   const plantNameMap = useMemo(() => {
@@ -71,9 +75,28 @@ function Reports() {
     setActiveGreenhouseId(id)
   }
 
-  const handleDayClick = (iso) => {
+  const handleDayClick = async (iso) => {
     const r = reportByDate[iso]
-    if (r) setActive(r)
+    if (r) {
+      setActive(r)
+      return
+    }
+    // 점이 없는 날짜 — 과거(또는 오늘)면 BE에 수동 생성 요청
+    if (!activeId) return
+    if (iso > todayIso) return            // 미래 날짜는 무시
+    if (creatingDate) return              // 다른 날짜 생성 중이면 무시
+    if (!window.confirm(`${iso} 리포트를 만들까요?\n해당 날짜의 측정 데이터로 리포트를 생성해요.`)) return
+    setCreatingDate(iso)
+    setGenerateError(null)
+    try {
+      await generateDailyReport(activeId, iso)
+      await fetchReports(activeId)
+    } catch (err) {
+      console.error('일자 리포트 생성 실패:', err)
+      setGenerateError(err.message ?? '리포트 생성에 실패했어요.')
+    } finally {
+      setCreatingDate(null)
+    }
   }
 
   const movePrev = () => {
@@ -262,6 +285,8 @@ function Reports() {
               year={viewYear}
               month={viewMonth}
               reportByDate={reportByDate}
+              todayIso={todayIso}
+              creatingDate={creatingDate}
               onPrev={movePrev}
               onNext={moveNext}
               onDayClick={handleDayClick}
@@ -317,7 +342,7 @@ function Reports() {
   )
 }
 
-function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }) {
+function MonthCalendar({ year, month, reportByDate, todayIso, creatingDate, onPrev, onNext, onDayClick }) {
   const firstDay = new Date(year, month - 1, 1)
   const lastDay  = new Date(year, month, 0)
   const startWeekday = firstDay.getDay()  // 0=일 ~ 6=토
@@ -386,22 +411,28 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
           const report = reportByDate[iso]
           const hasReport = !!report
           const isToday = d === todayDate
+          const isFuture = todayIso ? iso > todayIso : false
+          const isCreating = creatingDate === iso
+          // 점 없는 과거/오늘 날짜도 수동 생성을 위해 클릭 가능
+          const canClick = (hasReport || (!isFuture && !creatingDate))
           const dotColor = hasReport ? (riskColor[report.riskLevel] ?? 'var(--brand)') : null
           return (
             <button
               key={i}
               onClick={() => onDayClick(iso)}
-              disabled={!hasReport}
+              disabled={!canClick}
+              title={!hasReport && !isFuture ? '리포트 생성' : undefined}
               style={{
                 aspectRatio: '1',
                 position: 'relative',
                 background: 'transparent',
                 border: 'none',
-                cursor: hasReport ? 'pointer' : 'default',
+                cursor: canClick ? 'pointer' : 'default',
                 fontFamily: 'var(--ff)',
                 display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 padding: 0,
+                opacity: isCreating ? 0.5 : 1,
               }}
             >
               <span style={{
@@ -427,6 +458,18 @@ function MonthCalendar({ year, month, reportByDate, onPrev, onNext, onDayClick }
                   width: 5, height: 5, borderRadius: '50%',
                   background: dotColor,
                 }} />
+              )}
+              {isCreating && (
+                <span style={{
+                  position: 'absolute',
+                  bottom: 5,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: 9, fontWeight: 700, color: 'var(--brand-strong)',
+                  lineHeight: 1,
+                }}>
+                  …
+                </span>
               )}
             </button>
           )

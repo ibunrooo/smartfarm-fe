@@ -31,6 +31,16 @@ export async function getLatestReport(greenhouseId) {
   return mapReport(data)
 }
 
+// POST /api/report/daily (UPSERT) — 과거 특정 날짜 리포트를 수동 생성/재생성
+// body: { greenhouseId, date: 'YYYY-MM-DD' }
+export async function generateDailyReport(greenhouseId, date) {
+  const data = await apiFetch('/api/report/daily', {
+    method: 'POST',
+    body: JSON.stringify({ greenhouseId, date }),
+  })
+  return mapReport(data)
+}
+
 // GET /api/reports?greenhouseId=xxx&limit=7
 export async function getReportList(greenhouseId, limit = 7) {
   const data = await apiFetch(`/api/reports${buildQuery({ greenhouseId, limit })}`)
