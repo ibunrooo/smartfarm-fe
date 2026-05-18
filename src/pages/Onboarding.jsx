@@ -7,6 +7,7 @@ import { upsertGreenhouse, getGreenhouse } from '../api/greenhouse'
 import { recommendPlant, registerPlant, unregisterPlant } from '../api/plant'
 import { startSimulation, stopSimulation } from '../api/simulate'
 import { addGreenhouseId, setActiveGreenhouseId, setGreenhouseMode, getGreenhouseMode } from '../utils/storage'
+import { enablePushForAllGreenhouses } from '../utils/push'
 
 const DEFAULT_THEME = { main: '#2ea84e', accent: '#4db866' }
 const DEFAULT_COORDS = { lat: 37.5665, lon: 126.9780 } // 서울 fallback
@@ -157,6 +158,13 @@ function Onboarding() {
       if (!isEdit) {
         addGreenhouseId(targetId)
         setActiveGreenhouseId(targetId)
+      }
+      // 사용자가 이미 푸시 권한을 줬다면 새/수정 온실에 즉시 endpoint 등록 시도 —
+      // 식물 0건일 때 NotificationBanner가 구독을 보류한 케이스 복구
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        enablePushForAllGreenhouses().catch((err) => {
+          console.warn('식물 추가 후 푸시 재구독 실패 (무시):', err)
+        })
       }
       navigate('/home')
     } catch (err) {

@@ -4,11 +4,16 @@ import { supabase } from '../lib/supabase'
 import { clearBackendToken } from '../lib/authToken'
 import { getAuthMe } from '../api/auth'
 import { clearGreenhouseModes } from '../utils/storage'
+import { isPushSupported, disablePushForAllGreenhouses } from '../utils/push'
 
 function UserMenu() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState(null)
+  // 푸시 권한 상태 — '알림 끄기' 메뉴 노출 조건
+  const [pushPermission, setPushPermission] = useState(
+    isPushSupported() ? Notification.permission : 'unsupported'
+  )
   const ref = useRef(null)
 
   useEffect(() => {
@@ -39,16 +44,38 @@ function UserMenu() {
   const handleLogout = async () => {
     setOpen(false)
     if (!window.confirm('로그아웃 하시겠어요?')) return
+    // 다른 사용자가 같은 디바이스로 로그인했을 때 이전 사용자에게 알림이 가지 않도록 먼저 구독 해지
+    await disablePushForAllGreenhouses().catch((err) => {
+      console.warn('로그아웃 시 푸시 해지 실패:', err)
+    })
     // BE JWT(카카오) + Supabase 세션(이메일/구글) 모두 정리
     clearBackendToken()
     await supabase.auth.signOut().catch(() => {})
     try {
       localStorage.removeItem('farm-me:greenhouseIds')
       localStorage.removeItem('farm-me:activeGreenhouseId')
+      localStorage.removeItem('farm-me:pushTestAck')
     } catch { /* private mode 등 무시 */ }
     // 다른 계정으로 갈아탈 때 이전 사용자의 가상/실제 모드 캐시가 새어 들어가지 않도록 정리
     clearGreenhouseModes()
     navigate('/login', { replace: true })
+  }
+
+  // 알림 끄기 — 모든 온실에서 현재 디바이스 endpoint 해지 + 브라우저 구독 해지
+  // 권한 자체는 그대로 두므로 사용자가 '알림 켜기'를 다시 눌러도 재요청 없이 새 구독 생성됨
+  const handleDisableNotifications = async () => {
+    setOpen(false)
+    if (!window.confirm('이 기기의 알림을 끌까요?\n다시 켜려면 AI 채팅 화면에서 알림 켜기를 눌러주세요.')) return
+    try {
+      await disablePushForAllGreenhouses()
+      try { localStorage.removeItem('farm-me:pushTestAck') } catch { /* 무시 */ }
+      // 권한 상태 갱신 — Notification.permission은 'granted' 그대로지만
+      // 알림 끄기 메뉴는 실제 구독 유무를 기반으로 보여줘야 하므로 별도 체크는 다음 마운트 때
+      setPushPermission(isPushSupported() ? Notification.permission : 'unsupported')
+    } catch (err) {
+      console.error('알림 끄기 실패:', err)
+      window.alert('알림을 끄는 중 오류가 발생했어요.')
+    }
   }
 
   return (
@@ -102,6 +129,25 @@ function UserMenu() {
             {email ?? '...'}
           </div>
           <div style={{ height: 0.5, background: 'var(--bd-soft)', margin: '4px 6px' }} />
+          {pushPermission === 'granted' && (
+            <button
+              onClick={handleDisableNotifications}
+              style={{
+                width: '100%',
+                padding: '9px 10px',
+                background: 'none',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 13, fontWeight: 500,
+                color: 'var(--tx-1)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontFamily: 'var(--ff)',
+              }}
+            >
+              알림 끄기
+            </button>
+          )}
           <button
             onClick={handleLogout}
             style={{
