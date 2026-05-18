@@ -15,6 +15,10 @@ import { getWeather } from '../api/weather'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
 import { startSimulation, publishOnce } from '../api/simulate'
+import {
+  getDevices, getDeviceStatus, registerDevice, provisionDevice, revokeDevice,
+  DEVICE_TYPE_LABEL,
+} from '../api/devices'
 import { getMyGreenhouseIds, getGreenhouseMode } from '../utils/storage'
 
 function deriveDeviceState(actuators) {
@@ -33,6 +37,22 @@ function actionFor(actuator, on) {
   return on ? 'ON' : 'OFF'
 }
 
+// 기기 목록과 상태를 함께 가져와 합쳐서 반환 — BE 응답에 status가 포함되지 않을 수 있어
+// 디바이스별 /status를 병렬 호출. 각 status 실패는 무시(unknown 표시).
+async function loadDevicesWithStatus(greenhouseId) {
+  const list = await getDevices(greenhouseId)
+  if (!Array.isArray(list) || list.length === 0) return []
+  const statuses = await Promise.all(
+    list.map(d => getDeviceStatus(d.deviceId).catch(() => null))
+  )
+  return list.map((d, i) => ({
+    ...d,
+    status:        statuses[i]?.status        ?? 'unknown',
+    deviceStatus:  statuses[i]?.deviceStatus  ?? d.deviceStatus ?? null,
+    lastSeenAt:    statuses[i]?.lastSeenAt    ?? d.lastSeenAt   ?? null,
+  }))
+}
+
 function Sensor() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -48,6 +68,10 @@ function Sensor() {
   const [alerts, setAlerts]     = useState([])
   const [actuators, setActuators] = useState([])
   const [weather, setWeather]   = useState(null)
+  // IoT 기기 — 실제 모드 온실에서만 의미가 있음
+  const [devices, setDevices]   = useState([])
+  const [registerOpen, setRegisterOpen]   = useState(false)
+  const [provisionResult, setProvisionResult] = useState(null)
   const [loading, setLoading]   = useState(() => !!activeId)
   const [publishOpen, setPublishOpen] = useState(false)
   const [error, setError]       = useState(null)
@@ -64,8 +88,9 @@ function Sensor() {
       getAlerts(activeId, 20).catch(() => []),
       getActuatorLogs(activeId).catch(() => []),
       getWeather(activeId).catch(() => null),
+      loadDevicesWithStatus(activeId).catch(() => []),
     ])
-      .then(([metaList, latestData, historyData, alertList, actuatorList, weatherData]) => {
+      .then(([metaList, latestData, historyData, alertList, actuatorList, weatherData, deviceList]) => {
         if (cancelled) return
         setMetas(metaList.filter(Boolean))
         setLatest(latestData)
@@ -73,6 +98,7 @@ function Sensor() {
         setAlerts(alertList)
         setActuators(actuatorList)
         setWeather(weatherData)
+        setDevices(deviceList)
         setLoading(false)
 
         // 자동 복구: 가상 모드인데 시계열이 비어있으면 simulate 세션이 죽은 상태
@@ -98,22 +124,24 @@ function Sensor() {
         setLoading(false)
       })
 
-    // 폴링 — 센서/알림/액추에이터만 조용히 재조회
+    // 폴링 — 센서/알림/액추에이터/기기 상태 조용히 재조회
     const POLL_INTERVAL_MS = 15_000
     const intervalId = setInterval(async () => {
       if (cancelled) return
       try {
-        const [latestData, historyData, alertList, actuatorList] = await Promise.all([
+        const [latestData, historyData, alertList, actuatorList, deviceList] = await Promise.all([
           getLatestSensor(activeId).catch(() => null),
           getSensorHistory(activeId, 60).catch(() => []),
           getAlerts(activeId, 20).catch(() => []),
           getActuatorLogs(activeId).catch(() => []),
+          loadDevicesWithStatus(activeId).catch(() => null),
         ])
         if (cancelled) return
         setLatest(latestData)
         setHistory(historyData)
         setAlerts(alertList)
         setActuators(actuatorList)
+        if (deviceList) setDevices(deviceList)
       } catch (err) {
         console.warn('센서 폴링 실패 (무시):', err)
       }
@@ -141,6 +169,33 @@ function Sensor() {
     await publishOnce(activeId, payload)
     const fresh = await getLatestSensor(activeId).catch(() => null)
     if (fresh) setLatest(fresh)
+  }
+
+  // 기기 등록 → 즉시 provision → 결과 모달로 자격증명 1회 노출
+  const handleRegisterDevice = async ({ deviceId, deviceType }) => {
+    await registerDevice({ greenhouseId: activeId, deviceId, deviceType })
+    const result = await provisionDevice(deviceId, activeId)
+    const refreshed = await loadDevicesWithStatus(activeId).catch(() => null)
+    if (refreshed) setDevices(refreshed)
+    setRegisterOpen(false)
+    setProvisionResult({
+      deviceId,
+      deviceType,
+      provisioning: result?.provisioning ?? result,
+    })
+  }
+
+  // 기기 해지 — 인증서 revoke, BE가 기기 상태를 'revoked'로 변경
+  const handleRevokeDevice = async (deviceId) => {
+    if (!window.confirm('이 기기 인증서를 해지하시겠어요?\n기기는 더 이상 MQTT에 연결할 수 없게 돼요.')) return
+    try {
+      await revokeDevice(deviceId)
+      const refreshed = await loadDevicesWithStatus(activeId).catch(() => null)
+      if (refreshed) setDevices(refreshed)
+    } catch (err) {
+      console.error('기기 해지 실패:', err)
+      alert(`해지 실패: ${err.message ?? '알 수 없는 오류'}`)
+    }
   }
 
   // 데이터 합성
@@ -337,6 +392,15 @@ function Sensor() {
         })}
       </div>
 
+      {/* IoT 기기 — 실제 모드 온실에서만 노출 */}
+      {sensorMode === 'real' && (
+        <DeviceRegistrySection
+          devices={devices}
+          onAdd={() => setRegisterOpen(true)}
+          onRevoke={handleRevokeDevice}
+        />
+      )}
+
       {/* 디바이스 제어 — BE control API 연동 */}
       <DeviceControlPanel
         key={activeId}
@@ -381,8 +445,437 @@ function Sensor() {
         </div>
       )}
 
+      {/* 기기 등록 모달 */}
+      {registerOpen && (
+        <DeviceRegisterModal
+          onClose={() => setRegisterOpen(false)}
+          onSubmit={handleRegisterDevice}
+        />
+      )}
+
+      {/* 프로비저닝 결과 모달 — 자격증명 1회 노출 */}
+      {provisionResult && (
+        <ProvisioningResultModal
+          result={provisionResult}
+          onClose={() => setProvisionResult(null)}
+        />
+      )}
+
     </div>
   )
+}
+
+/* ────────────────────────────────────────
+   IoT 기기 등록/목록 — 실제 모드 온실 전용
+   ──────────────────────────────────────── */
+
+const DEVICE_TYPE_OPTIONS = ['sensor', 'light', 'pump', 'window']
+const DEVICE_ID_PATTERN = /^[A-Za-z0-9._-]{1,128}$/
+
+function DeviceRegistrySection({ devices, onAdd, onRevoke }) {
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '0.5px solid var(--bd)',
+      borderRadius: 12,
+      padding: 14,
+      display: 'flex', flexDirection: 'column', gap: 10,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: 'var(--tx-1)' }}>
+          등록된 기기 <span style={{ color: 'var(--brand)', fontSize: 13.5 }}>{devices.length}</span>
+        </div>
+        <button
+          onClick={onAdd}
+          style={{
+            padding: '6px 12px',
+            background: 'var(--brand)',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: 12.5, fontWeight: 700,
+            color: '#fff',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          + 기기 추가
+        </button>
+      </div>
+
+      {devices.length === 0 ? (
+        <div style={{
+          padding: '14px 12px',
+          background: 'var(--surface-2)',
+          border: '0.5px dashed var(--bd-soft)',
+          borderRadius: 10,
+          fontSize: 12.5, color: 'var(--tx-3)', lineHeight: 1.5,
+          textAlign: 'center',
+        }}>
+          아직 등록된 IoT 기기가 없어요. 센서나 액추에이터를 등록해주세요.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {devices.map(d => (
+            <DeviceRegistryRow key={d.deviceId} device={d} onRevoke={() => onRevoke(d.deviceId)} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DeviceRegistryRow({ device, onRevoke }) {
+  const isOnline = device.status === 'online'
+  const isRevoked = device.deviceStatus === 'revoked'
+  const dotColor = isRevoked ? 'var(--tx-4)' : (isOnline ? 'var(--brand)' : 'var(--warn-tx)')
+  const statusText = isRevoked
+    ? '해지됨'
+    : (isOnline ? '온라인' : (device.status === 'offline' ? '오프라인' : '대기 중'))
+  return (
+    <div style={{
+      padding: '10px 12px',
+      background: 'var(--surface-2)',
+      border: '0.5px solid var(--bd-soft)',
+      borderRadius: 10,
+      display: 'flex', alignItems: 'center', gap: 10,
+    }}>
+      <span style={{
+        width: 7, height: 7, borderRadius: '50%',
+        background: dotColor,
+        flexShrink: 0,
+      }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 13, fontWeight: 700, color: 'var(--tx-1)',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {device.deviceId}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--tx-3)', marginTop: 1 }}>
+          {DEVICE_TYPE_LABEL[device.deviceType] ?? device.deviceType ?? '-'}
+          {' · '}{statusText}
+          {device.lastSeenAt && ` · ${formatLastSeen(device.lastSeenAt)}`}
+        </div>
+      </div>
+      {!isRevoked && (
+        <button
+          onClick={onRevoke}
+          style={{
+            padding: '4px 10px',
+            background: 'var(--surface)',
+            border: '0.5px solid var(--danger-bd)',
+            borderRadius: 8,
+            fontSize: 11.5, fontWeight: 600,
+            color: 'var(--danger-tx)',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+            flexShrink: 0,
+          }}
+        >
+          해지
+        </button>
+      )}
+    </div>
+  )
+}
+
+function formatLastSeen(iso) {
+  try {
+    const d = new Date(iso)
+    const diffSec = Math.floor((Date.now() - d.getTime()) / 1000)
+    if (diffSec < 60)      return '방금 전'
+    if (diffSec < 3600)    return `${Math.floor(diffSec / 60)}분 전`
+    if (diffSec < 86400)   return `${Math.floor(diffSec / 3600)}시간 전`
+    return `${Math.floor(diffSec / 86400)}일 전`
+  } catch { return '' }
+}
+
+function DeviceRegisterModal({ onClose, onSubmit }) {
+  const [deviceId, setDeviceId] = useState('')
+  const [deviceType, setDeviceType] = useState('sensor')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  const isValid = DEVICE_ID_PATTERN.test(deviceId)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!isValid || submitting) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await onSubmit({ deviceId: deviceId.trim(), deviceType })
+    } catch (err) {
+      console.error('기기 등록 실패:', err)
+      setError(err.message ?? '기기 등록에 실패했어요.')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <ModalShell onClose={submitting ? undefined : onClose}>
+      <form onSubmit={handleSubmit} style={{
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
+        borderRadius: 14,
+        padding: 18,
+        display: 'flex', flexDirection: 'column', gap: 12,
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx-1)' }}>
+          IoT 기기 등록
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--tx-3)', lineHeight: 1.5 }}>
+          등록 후 MQTT 자격증명이 한 번만 표시돼요. 기기에 바로 입력할 수 있도록 준비해주세요.
+        </div>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--tx-2)' }}>기기 ID</span>
+          <input
+            type="text"
+            value={deviceId}
+            onChange={(e) => setDeviceId(e.target.value)}
+            placeholder="예: DVC001"
+            maxLength={128}
+            autoFocus
+            style={modalFieldStyle}
+          />
+          <span style={{ fontSize: 11, color: 'var(--tx-4)' }}>
+            영문/숫자/._- 만 사용, 최대 128자
+          </span>
+        </label>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--tx-2)' }}>기기 종류</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+            {DEVICE_TYPE_OPTIONS.map(t => {
+              const selected = deviceType === t
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setDeviceType(t)}
+                  style={{
+                    padding: '8px 4px',
+                    background: selected ? 'var(--brand-soft)' : 'var(--surface)',
+                    border: `0.5px solid ${selected ? 'var(--brand-line)' : 'var(--bd)'}`,
+                    borderRadius: 8,
+                    fontSize: 12, fontWeight: 600,
+                    color: selected ? 'var(--brand-strong)' : 'var(--tx-2)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--ff)',
+                  }}
+                >
+                  {DEVICE_TYPE_LABEL[t]}
+                </button>
+              )
+            })}
+          </div>
+        </label>
+
+        {error && (
+          <div style={{
+            padding: '8px 10px',
+            background: 'var(--danger-bg)',
+            border: '0.5px solid var(--danger-bd)',
+            borderRadius: 8,
+            fontSize: 12, color: 'var(--danger-tx)', lineHeight: 1.5,
+          }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            style={{
+              flex: 1,
+              padding: '10px',
+              background: 'var(--surface)',
+              border: '0.5px solid var(--bd)',
+              borderRadius: 10,
+              fontSize: 13, fontWeight: 600,
+              color: 'var(--tx-2)',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            취소
+          </button>
+          <button
+            type="submit"
+            disabled={!isValid || submitting}
+            style={{
+              flex: 2,
+              padding: '10px',
+              background: (isValid && !submitting) ? 'var(--brand)' : 'var(--brand-tint)',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: 13, fontWeight: 700,
+              color: '#fff',
+              cursor: (isValid && !submitting) ? 'pointer' : 'not-allowed',
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            {submitting ? '등록 중…' : '등록 + 자격증명 발급'}
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  )
+}
+
+function ProvisioningResultModal({ result, onClose }) {
+  const p = result?.provisioning ?? {}
+  const topicsPub = Array.isArray(p?.topics?.pub) ? p.topics.pub.join('\n') : ''
+  const topicsSub = Array.isArray(p?.topics?.sub) ? p.topics.sub.join('\n') : ''
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div style={{
+        background: 'var(--surface)',
+        border: '0.5px solid var(--bd)',
+        borderRadius: 14,
+        padding: 18,
+        display: 'flex', flexDirection: 'column', gap: 12,
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx-1)' }}>
+          기기 자격증명 발급 완료
+        </div>
+        <div style={{
+          padding: '10px 12px',
+          background: 'var(--warn-bg)',
+          border: '0.5px solid var(--warn-bd)',
+          borderRadius: 10,
+          fontSize: 12, color: 'var(--warn-tx)', lineHeight: 1.5,
+        }}>
+          <span style={{ fontWeight: 700 }}>비밀번호는 이 화면에서만 한 번 표시</span>
+          돼요. 창을 닫기 전에 기기에 입력하거나 안전한 곳에 복사해두세요.
+        </div>
+
+        <CredField label="기기 ID"        value={result.deviceId} />
+        <CredField label="MQTT URL"      value={p.mqttUrl} />
+        <CredField label="사용자명"       value={p.username} />
+        <CredField label="비밀번호"       value={p.password} highlight mono />
+        {p.expiresAt && (
+          <CredField label="만료 시각"     value={new Date(p.expiresAt).toLocaleString('ko-KR')} />
+        )}
+        {topicsPub && <CredField label="발행 토픽 (pub)" value={topicsPub} multiline />}
+        {topicsSub && <CredField label="구독 토픽 (sub)" value={topicsSub} multiline />}
+
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            marginTop: 4,
+            padding: '11px',
+            background: 'var(--brand)',
+            border: 'none',
+            borderRadius: 10,
+            fontSize: 13.5, fontWeight: 700,
+            color: '#fff',
+            cursor: 'pointer',
+            fontFamily: 'var(--ff)',
+            boxShadow: 'var(--shadow-xs)',
+          }}
+        >
+          기기에 입력했어요
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+function CredField({ label, value, highlight, mono, multiline }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = async () => {
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(String(value))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch { /* 클립보드 권한 없음 — 무시 */ }
+  }
+  return (
+    <div style={{
+      padding: '8px 10px',
+      background: highlight ? 'var(--brand-soft)' : 'var(--surface-2)',
+      border: `0.5px solid ${highlight ? 'var(--brand-line)' : 'var(--bd-soft)'}`,
+      borderRadius: 8,
+      display: 'flex', flexDirection: 'column', gap: 4,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: 'var(--tx-3)' }}>{label}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          disabled={!value}
+          style={{
+            padding: '2px 8px',
+            background: 'var(--surface)',
+            border: '0.5px solid var(--bd)',
+            borderRadius: 6,
+            fontSize: 11, fontWeight: 600,
+            color: 'var(--tx-2)',
+            cursor: value ? 'pointer' : 'not-allowed',
+            fontFamily: 'var(--ff)',
+          }}
+        >
+          {copied ? '복사됨' : '복사'}
+        </button>
+      </div>
+      <div style={{
+        fontSize: mono ? 13 : 12.5,
+        fontFamily: mono ? 'ui-monospace, SFMono-Regular, monospace' : 'var(--ff)',
+        color: 'var(--tx-1)',
+        wordBreak: 'break-all',
+        whiteSpace: multiline ? 'pre-wrap' : 'normal',
+        fontWeight: highlight ? 700 : 500,
+      }}>
+        {value || '-'}
+      </div>
+    </div>
+  )
+}
+
+function ModalShell({ children, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,.35)',
+        backdropFilter: 'blur(2px)',
+        WebkitBackdropFilter: 'blur(2px)',
+        zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 440, maxHeight: '90dvh', overflow: 'auto' }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const modalFieldStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  background: 'var(--surface)',
+  border: '0.5px solid var(--bd)',
+  borderRadius: 8,
+  fontSize: 13.5,
+  fontFamily: 'var(--ff)',
+  outline: 'none',
+  color: 'var(--tx-1)',
+  boxSizing: 'border-box',
 }
 
 /* ────────────────────────────────────────
