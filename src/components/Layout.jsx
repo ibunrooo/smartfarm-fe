@@ -2,10 +2,17 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import BottomNav from './BottomNav'
 
+// 경로를 nav item id로 매핑 — 서브 페이지가 같은 탭으로 묶이도록.
+// 예) /reports는 '리포트' 탭(ai)의 일부로 취급.
+const PATH_GROUP = {
+  reports: 'ai',
+}
+
 function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const currentPath = location.pathname.replace('/', '') || 'home'
+  const rawPath = location.pathname.replace('/', '') || 'home'
+  const currentPath = PATH_GROUP[rawPath] ?? rawPath
 
   const navItems = [
     {
