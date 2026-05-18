@@ -48,7 +48,8 @@ function Home() {
       .catch((err) => {
         if (cancelled || err.message === 'cancelled') return
         console.error('온실 조회 실패:', err)
-        setError(err.message || '온실 정보를 불러오지 못했어요.')
+        // BE 원본 에러(DB raw 메시지 등) 노출 대신 일반 안내로 통일
+        setError('온실 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
         setLoading(false)
       })
 
