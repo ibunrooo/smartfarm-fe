@@ -7,32 +7,36 @@ const METRICS = [
   { key: 'lux',          label: '조도',     unit: 'lux', min: 0,    max: 20000,  step: 100,  decimals: 0 },
 ]
 
-function ManualPublishPanel({ initialValues, plantType, onPublish, onClose }) {
+function ManualPublishPanel({ initialValues, plantType, onPublish, onStart, onStop, onClose }) {
   const [values, setValues] = useState(() => ({
     temperature:  Number(initialValues?.temperature  ?? 22),
     humidity:     Number(initialValues?.humidity     ?? 60),
     soilMoisture: Number(initialValues?.soilMoisture ?? 40),
     lux:          Number(initialValues?.lux          ?? 1000),
   }))
-  const [publishing, setPublishing] = useState(false)
+  const [busy, setBusy] = useState(null) // 'publish' | 'start' | 'stop' | null
   const [error, setError] = useState(null)
-  const [lastAt, setLastAt] = useState(null)
+  const [status, setStatus] = useState(null) // { action, at }
 
   const setValue = (key, v) => setValues(prev => ({ ...prev, [key]: Number(v) }))
 
-  const handlePublish = async () => {
-    if (publishing) return
-    setPublishing(true)
+  const run = (action, fn, successLabel) => async () => {
+    if (busy) return
+    setBusy(action)
     setError(null)
     try {
-      await onPublish({ ...values, plantType })
-      setLastAt(new Date())
+      await fn()
+      setStatus({ action: successLabel, at: new Date() })
     } catch (e) {
-      setError(e?.message ?? '발행에 실패했어요.')
+      setError(e?.message ?? '요청에 실패했어요.')
     } finally {
-      setPublishing(false)
+      setBusy(null)
     }
   }
+
+  const handlePublish = run('publish', () => onPublish({ ...values, plantType }), '1회 발행')
+  const handleStart   = run('start',   () => onStart({ ...values, plantType }),   '시뮬레이션 시작')
+  const handleStop    = run('stop',    () => onStop(),                            '중지')
 
   return (
     <div style={{
@@ -97,28 +101,33 @@ function ManualPublishPanel({ initialValues, plantType, onPublish, onClose }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
-          onClick={handlePublish}
-          disabled={publishing}
-          style={{
-            flex: 1,
-            padding: '11px',
-            background: publishing ? 'var(--brand-tint)' : 'var(--brand)',
-            border: 'none',
-            borderRadius: 10,
-            fontSize: 13.5, fontWeight: 700,
-            color: '#fff',
-            cursor: publishing ? 'not-allowed' : 'pointer',
-            fontFamily: 'var(--ff)',
-            boxShadow: publishing ? 'none' : 'var(--shadow-xs)',
-          }}
+          onClick={handleStart}
+          disabled={!!busy}
+          style={primaryButtonStyle(busy === 'start', !!busy)}
         >
-          {publishing ? '값 입력 중…' : '시뮬레이션 시작'}
+          {busy === 'start' ? '시작 중…' : '시뮬레이션 시작'}
         </button>
-        {lastAt && (
-          <span style={{ fontSize: 11.5, color: 'var(--tx-3)' }}>
-            마지막 발행 {formatTime(lastAt)}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={handlePublish}
+            disabled={!!busy}
+            style={secondaryButtonStyle(busy === 'publish', !!busy)}
+          >
+            {busy === 'publish' ? '발행 중…' : '1회만'}
+          </button>
+          <button
+            onClick={handleStop}
+            disabled={!!busy}
+            style={dangerButtonStyle(busy === 'stop', !!busy)}
+          >
+            {busy === 'stop' ? '중지 중…' : '중지'}
+          </button>
+        </div>
+        {status && (
+          <span style={{ fontSize: 11.5, color: 'var(--tx-3)', textAlign: 'right' }}>
+            마지막 {status.action} {formatTime(status.at)}
           </span>
         )}
       </div>
@@ -158,6 +167,25 @@ function SliderRow({ metric, value, onChange }) {
     </div>
   )
 }
+
+function buttonStyle({ bg, color, border = 'none', active, disabled }) {
+  return {
+    flex: 1,
+    padding: '11px',
+    background: active ? 'var(--brand-tint)' : bg,
+    border,
+    borderRadius: 10,
+    fontSize: 13.5, fontWeight: 700,
+    color,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontFamily: 'var(--ff)',
+    boxShadow: (disabled || active) ? 'none' : 'var(--shadow-xs)',
+    opacity: disabled && !active ? 0.5 : 1,
+  }
+}
+const primaryButtonStyle   = (active, disabled) => buttonStyle({ bg: 'var(--brand)',   color: '#fff',             active, disabled })
+const secondaryButtonStyle = (active, disabled) => buttonStyle({ bg: 'var(--surface)', color: 'var(--tx-1)',      border: '0.5px solid var(--bd)',       active, disabled })
+const dangerButtonStyle    = (active, disabled) => buttonStyle({ bg: 'var(--surface)', color: 'var(--danger-tx)', border: '0.5px solid var(--danger-bd)', active, disabled })
 
 function formatTime(d) {
   const hh = String(d.getHours()).padStart(2, '0')

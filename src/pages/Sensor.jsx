@@ -14,12 +14,15 @@ import { getLatestSensor, getSensorHistory } from '../api/sensor'
 import { getWeather } from '../api/weather'
 import { getAlerts } from '../api/alerts'
 import { getActuatorLogs, controlActuator } from '../api/actuator'
-import { startSimulation, publishOnce } from '../api/simulate'
+import { startSimulation, stopSimulation, publishOnce } from '../api/simulate'
 import {
   getDevices, getDeviceStatus, registerDevice, provisionDevice, revokeDevice,
   DEVICE_TYPE_LABEL,
 } from '../api/devices'
-import { getMyGreenhouseIds, getGreenhouseMode, modeFromUseSensor, syncGreenhouseModesFromBE } from '../utils/storage'
+import {
+  getMyGreenhouseIds, getGreenhouseMode, modeFromUseSensor, syncGreenhouseModesFromBE,
+  isSimStoppedByUser, markSimStoppedByUser,
+} from '../utils/storage'
 
 function deriveDeviceState(actuators) {
   const state = { pump: false, led: false, window: false }
@@ -107,7 +110,9 @@ function Sensor() {
 
         // 자동 복구: 가상 모드인데 시계열이 비어있으면 simulate 세션이 죽은 상태
         // (BE 재배포 시 sessions Map이 wipe됨). 신규 그린하우스(생성 30초 이내) 제외.
+        // 사용자가 명시적으로 중지한 경우는 복구하지 않음 (의도 존중).
         if (getGreenhouseMode(activeId) === 'virtual'
+            && !isSimStoppedByUser(activeId)
             && Array.isArray(historyData) && historyData.length === 0) {
           const meta = metaList.find(m => m?.greenhouseId === activeId)
           const ageMs = meta?.createdAt
@@ -173,6 +178,18 @@ function Sensor() {
     await publishOnce(activeId, payload)
     const fresh = await getLatestSensor(activeId).catch(() => null)
     if (fresh) setLatest(fresh)
+  }
+
+  // 자동 시뮬레이션 시작 — 입력 값을 기준점으로 주기 발행 세션 시작 (기존 세션은 BE에서 교체됨)
+  const handleStartSim = async (payload) => {
+    await startSimulation(activeId, payload)
+    markSimStoppedByUser(activeId, false)
+  }
+
+  // 자동 시뮬레이션 중지 — 자동 복구 가드 플래그 ON
+  const handleStopSim = async () => {
+    await stopSimulation(activeId)
+    markSimStoppedByUser(activeId, true)
   }
 
   // 기기 등록 → 즉시 provision → 결과 모달로 자격증명 1회 노출
@@ -354,18 +371,19 @@ function Sensor() {
           <button
             onClick={() => setPublishOpen(true)}
             style={{
-              padding: '4px 10px',
+              padding: '8px 16px',
               background: 'var(--surface)',
               border: '0.5px solid var(--warn-bd)',
-              borderRadius: 8,
-              fontSize: 12, fontWeight: 700,
+              borderRadius: 10,
+              fontSize: 13.5, fontWeight: 700,
               color: 'var(--warn-tx)',
               cursor: 'pointer',
               fontFamily: 'var(--ff)',
               flexShrink: 0,
+              boxShadow: 'var(--shadow-xs)',
             }}
           >
-            직접 시뮬레이션
+            시뮬레이션 설정
           </button>
         )}
       </div>
@@ -449,6 +467,8 @@ function Sensor() {
               initialValues={latest}
               plantType={plantType}
               onPublish={handleManualPublish}
+              onStart={handleStartSim}
+              onStop={handleStopSim}
               onClose={() => setPublishOpen(false)}
             />
           </div>

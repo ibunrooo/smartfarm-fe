@@ -7,6 +7,7 @@
 const GREENHOUSE_IDS_KEY   = 'farm-me:greenhouseIds'
 const ACTIVE_ID_KEY        = 'farm-me:activeGreenhouseId'
 const GREENHOUSE_MODES_KEY = 'farm-me:greenhouseModes'  // { [id]: 'virtual' | 'real' }
+const SIM_STOPPED_KEY      = 'farm-me:simStoppedByUser' // { [id]: true } — 사용자가 명시적으로 중지한 온실
 
 function safeGet(key) {
   try {
@@ -95,6 +96,31 @@ export function removeGreenhouseMode(id) {
 
 export function clearGreenhouseModes() {
   try { localStorage.removeItem(GREENHOUSE_MODES_KEY) } catch { /* 무시 */ }
+}
+
+// 사용자가 명시적으로 시뮬레이션을 중지했는지 여부 — Sensor 페이지 자동 복구 가드용
+function getSimStoppedMap() {
+  const raw = safeGet(SIM_STOPPED_KEY)
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return (parsed && typeof parsed === 'object') ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function isSimStoppedByUser(id) {
+  if (!id) return false
+  return getSimStoppedMap()[id] === true
+}
+
+export function markSimStoppedByUser(id, stopped) {
+  if (!id) return
+  const map = getSimStoppedMap()
+  if (stopped) map[id] = true
+  else delete map[id]
+  safeSet(SIM_STOPPED_KEY, JSON.stringify(map))
 }
 
 // BE의 useSensor 필드 → FE 모드 라벨
