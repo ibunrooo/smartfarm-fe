@@ -27,6 +27,7 @@ function ManualPublishPanel({ initialValues, plantType, onPublish, onStart, onSt
     try {
       await fn()
       setStatus({ action: successLabel, at: new Date() })
+      onClose?.()
     } catch (e) {
       setError(e?.message ?? '요청에 실패했어요.')
     } finally {

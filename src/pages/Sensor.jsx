@@ -173,17 +173,30 @@ function Sensor() {
 
   const setActiveId = (id) => setSearchParams({ gh: id })
 
-  // 사용자 수동 발행 — 입력 값을 BE → MQTT로 1회 publish 후 즉시 한 번 새로고침
+  // 최신 센서 데이터/시계열을 다시 조회해 카드와 그래프를 즉시 갱신
+  const refreshSensorData = async () => {
+    const [fresh, histList] = await Promise.all([
+      getLatestSensor(activeId).catch(() => null),
+      getSensorHistory(activeId, 60).catch(() => []),
+    ])
+    if (fresh) setLatest(fresh)
+    if (Array.isArray(histList)) setHistory(histList)
+  }
+
+  // 사용자 수동 발행 — 입력 값을 BE → MQTT로 1회 publish 후 즉시 새로고침
+  // 짧은 지연은 BE의 MQTT→DB 처리 race를 회피하기 위함
   const handleManualPublish = async (payload) => {
     await publishOnce(activeId, payload)
-    const fresh = await getLatestSensor(activeId).catch(() => null)
-    if (fresh) setLatest(fresh)
+    await new Promise(r => setTimeout(r, 400))
+    await refreshSensorData()
   }
 
   // 자동 시뮬레이션 시작 — 입력 값을 기준점으로 주기 발행 세션 시작 (기존 세션은 BE에서 교체됨)
+  // BE 첫 발행까지 약 intervalMs(기본 2s) 정도 걸리므로 약간 대기 후 새로고침
   const handleStartSim = async (payload) => {
     await startSimulation(activeId, payload)
     markSimStoppedByUser(activeId, false)
+    setTimeout(() => { refreshSensorData() }, 2500)
   }
 
   // 자동 시뮬레이션 중지 — 자동 복구 가드 플래그 ON
