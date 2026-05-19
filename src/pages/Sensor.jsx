@@ -464,7 +464,12 @@ function Sensor() {
             }}
           >
             <ManualPublishPanel
-              initialValues={latest}
+              initialValues={latest ? {
+                temperature:  latest.temp,
+                humidity:     latest.humidity,
+                soilMoisture: latest.soil,
+                lux:          latest.lux,
+              } : null}
               plantType={plantType}
               onPublish={handleManualPublish}
               onStart={handleStartSim}
