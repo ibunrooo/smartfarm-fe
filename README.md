@@ -1,239 +1,230 @@
-# 🌿 팜-므파탈 (Farm-me Fatale)
+<!-- 헤더 -->
+<div align="center">
 
-> 재배 환경 분석부터 병해충 진단까지, 식물이 죽지 않도록 함께하는 AI 홈 가드닝 플랫폼입니다.
+# 팜-므파탈 (Farm-me Fatale)
 
-<br>
+**식물이 죽지 않도록 함께하는 AI 홈 가드닝 플랫폼**
 
-## 📌 프로젝트 소개
+재배 환경 분석 · 자동 관수 · AI 일일 리포트 · 병해충 진단
 
-Farm-me Fatale은 공공 기상 데이터와 MQTT 기반 가상 센서를 활용한 **스마트팜 시뮬레이션 관리 플랫폼**입니다.
-고가의 하드웨어 없이도 실내·실외 식물 환경을 실시간으로 모니터링하고,
-AI 기반 일일 리포트·실시간 채팅·병해충 진단을 통해 초보 홈 가드너의 식물 관리 실패를 방지합니다.
+[![배포](https://img.shields.io/badge/배포-Vercel-000000?style=flat-square&logo=vercel)](https://smartfarm-fe.vercel.app)
+[![백엔드](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render)](https://render.com)
+[![라이선스](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE) 
 
-| 구분 | 내용 |
+아주대학교 2026-1 미디어프로젝트 | TEAM Root Node
+
+</div>
+
+---
+
+## 왜 만들었나요?
+
+홈가드닝 인구는 늘고 있지만 초보자 대부분이 식물 관리를 포기합니다. 벌레가 생겨도 어떻게 해야 할지 모르고, 언제 물을 줘야 할지, 환기를 해야 할지 직접 판단하기 어렵기 때문입니다.
+
+기존 스마트팜 솔루션은 고가의 IoT 장비가 필수라 일반 가정에서 도입하기 어렵고, 타깃도 전문 농업인에 맞춰져 있습니다.
+
+**팜-므파탈은 장비 없이도 소프트웨어만으로 스마트팜 환경을 시뮬레이션하고, AI가 식물 관리를 대신 도와줍니다.**
+
+---
+
+## 데모
+
+🌐 **[smartfarm-fe.vercel.app](https://smartfarm-fe.vercel.app)**
+
+---
+
+## 기능 소개
+
+<table>
+<tr>
+<td width="50%">
+
+**🌱 맞춤형 식물 추천**
+
+햇빛·벌레 민감도·베란다 방향을 입력하면 Gemini AI가 조건에 맞는 식물을 추천하고 이유를 자연어로 설명합니다. 추천 결과에서 바로 온실 등록으로 연결됩니다.
+
+</td>
+<td width="50%">
+
+**💧 자동 관수 룰엔진**
+
+온도·습도·토양수분·조도 센서 데이터를 실시간 수집하고, IF-THEN 룰엔진이 펌프·환기팬·LED를 자동 제어합니다. 비 예보 시 관수를 자동으로 건너뛰고 SunCalc로 일출·일몰을 계산해 LED도 알아서 켜집니다.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**📋 Gemini AI 일일 리포트**
+
+매일 오후 8시, 하루 센서 데이터를 집계해 Gemini AI가 건강 요약과 행동 추천을 생성합니다. 온도·습도 조건 기반 병해충 위험도도 함께 제공되며 채팅 스타일 UI로 친근하게 전달됩니다.
+
+</td>
+<td width="50%">
+
+**🔬 병해충 진단 AI 모델**
+
+잎 사진 한 장을 업로드하면 팀이 직접 학습한 ResNet18 모델이 질병 여부와 신뢰도를 즉시 반환합니다. 외부 API 없이 자체 FastAPI 서버로 독립 배포해 운영합니다.
+
+</td>
+</tr>
+</table>
+
+### 자동 제어 시나리오
+
+| 상황 | 조건 | 동작 |
+|------|------|------|
+| 토양 건조 | 토양수분 < 임계값 | 펌프 ON |
+| 습도 과다 | 습도 > 임계값 | 창문 OPEN |
+| 빛 부족 | 태양 고도 < 기준 | LED ON |
+| 병해충 위험 | 온도·습도 동시 초과 | 경보 알림 |
+| 비 예보 | 강수 확률 ≥ 50% (실외) | 관수 스킵 |
+| 저온 감지 | 온도 < 최솟값 | 창문 CLOSE + 알림 |
+
+---
+
+## 기술 구성
+
+```
+사용자 (React + Vercel)
+    │
+    ├── Supabase Auth  →  이메일 / Google / Kakao 로그인
+    │
+    └── Node.js Backend (Render)
+            │
+            ├── MQTT Subscribe  ←  Mosquitto Broker  ←  가상 센서 / 실제 센서
+            │
+            ├── 룰엔진  →  자동 관수 · 환기 · LED · 병해충 경보
+            │
+            ├── OpenWeather API  →  10분 주기 기상 수집
+            │
+            ├── 농사로 공공데이터 API  →  식물 DB 동기화
+            │
+            ├── Gemini AI  →  일일 리포트 · 식물 추천 이유 · 채팅 답변
+            │
+            └── Python AI 서버 (FastAPI + ResNet18)
+                    →  병해충 이미지 분류
+```
+
+**사용 기술**
+
+| 영역 | 스택 |
 |------|------|
-| 팀명 | 루트노드 (Root Node) |
-| 서비스명 | 팜-므파탈 (Farm-me Fatale) |
-| 개발 기간 | 2026.03 - 2026.06 |
-| 소속 | 아주대학교 2026-1 미디어프로젝트 |
-| 배포 | https://smartfarm-fe.vercel.app |
+| Frontend | React, Vercel |
+| Backend | Node.js, Express, Supabase PostgreSQL, Render |
+| IoT | MQTT, Mosquitto Broker |
+| AI/ML | ResNet18 (PyTorch), FastAPI, Google Colab |
+| External | Gemini API, Ajou LLM API, OpenWeather API, 농사로 API, AI Hub |
+| Auth | Supabase Auth, Google OAuth, Kakao OAuth |
 
-<br>
+---
 
-## 🎯 문제 정의
+## AI 서버
 
-```
-식물을 키우다 포기하는 이유
-  🐛 병해충       벌레·진드기 발생 시 대처 방법을 알 수 없음
-  🌬️ 통풍·습도   환기 타이밍을 직접 판단하기 어려움
-  ☀️ 채광 부족   베란다 방향·계절에 따라 적정 일조량 확보가 어려움
-  😓 관리 부담   바쁜 일상 속 지속적인 식물 케어가 어려움
-```
+병해충 진단 모델은 별도 레포지토리에서 관리합니다.
 
-> 식물을 키우는 것보다 **죽지 않게 유지하는 것**이 더 어렵다
+> 🔗 [python-smartfarm-ai-server](https://github.com/juunghaa/python-smartfarm-ai-server)
 
-<br>
+AI Hub 식물 병충해 이미지 데이터셋([147번](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&aihubDataSe=data&dataSetSn=147))을 기반으로 ResNet18 전이학습 Binary Classification 모델을 Google Colab에서 직접 학습했습니다. 학습된 모델은 FastAPI 서버로 배포되어 백엔드와 REST API로 통신합니다.
 
-## ✨ 핵심 가치 및 차별점
+---
 
-### 핵심 가치
-- 전문 농업 지식 없이도 식물 관리 가능
-- 룰엔진 기반 자동 제어로 식물 관리 자동화
-- 리포트·채팅·병해충 진단 등 AI 기반 관리 지원
+## 로컬 실행
 
-### 기존 서비스와의 차별점
+```bash
+# 패키지 설치
+npm install
 
-| 항목 | 기존 서비스 | 팜-므파탈 |
-|------|-----------|---------|
-| 도입 비용 | 고가 IoT 장비 필요 | 저비용 센서 연결 or 센서 없이도 사용 가능 |
-| 타깃 사용자 | 농업 종사자·기업 | 홈 가드닝 초보자 |
-| 식물 관리 | 단일 작물 중심 | 식물별 별도 관리 가능 |
-| AI 활용 | 제한적 | Gemini 일일 리포트 / 질병 분류 AI 모델 |
-| 센서 확장성 | 전용 장비 필요 | 가상 ↔ 실제 센서 교체 가능 |
-| 개인화 | 제한적 | 환경 맞춤 식물 추천 |
+# 환경변수 설정
+cp .env.example .env
 
-<br>
+# Mosquitto 브로커 실행
+mosquitto
 
-## 🛠️ 기술 스택
+# 서버 실행
+node server.js
 
-### External API
-![OpenWeather](https://img.shields.io/badge/OpenWeather_API-EB6E4B?style=flat-square)
-![Gemini](https://img.shields.io/badge/Gemini_AI-4285F4?style=flat-square&logo=google&logoColor=white)
-![Ajou LLM](https://img.shields.io/badge/Ajou_LLM_API-0057A8?style=flat-square)
-![농사로](https://img.shields.io/badge/농촌진흥청_API-2E7D32?style=flat-square)
-
-### IoT
-![MQTT](https://img.shields.io/badge/MQTT-660066?style=flat-square&logo=mqtt&logoColor=white)
-![Mosquitto](https://img.shields.io/badge/Mosquitto_Broker-660066?style=flat-square)
-
-### Backend
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)
-![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Render](https://img.shields.io/badge/Render-46E3B7?style=flat-square&logo=render&logoColor=white)
-
-### AI / ML
-![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![ResNet](https://img.shields.io/badge/ResNet18-Classification-orange?style=flat-square)
-![AI Hub](https://img.shields.io/badge/AI_Hub-식물질병_데이터셋-blue?style=flat-square)
-
-### Auth
-![Supabase](https://img.shields.io/badge/Supabase_Auth-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![Google](https://img.shields.io/badge/Google_OAuth-4285F4?style=flat-square&logo=google&logoColor=white)
-![Kakao](https://img.shields.io/badge/Kakao_OAuth-FFCD00?style=flat-square&logo=kakao&logoColor=black)
-
-### Frontend
-![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
-
-<br>
-
-## 🏗️ 서비스 파이프라인
-
-```
-[01 사용자 온보딩]
-  환경 입력 → 식물 추천 및 등록
-        ↓
-[02 MQTT 센서 데이터 수신]
-  온도 · 습도 · 토양수분 · 조도
-        ↓
-[03 룰엔진 판단]
-  식물 5종 임계값 비교 → 자동 제어 여부 결정
-  (관수 / 환기 / LED / 병해충 경보 / 비 예보 스킵)
-        ↓
-[04 AI 처리]
-  Gemini 일일 리포트 생성
-  ResNet18 질병 분류 AI 수행
-        ↓
-[05 React 대시보드 출력]
-  실시간 시각화 · 알림 표시
+# 가상 센서 실행 (별도 터미널)
+node publisher.js
 ```
 
-**외부 연동 시스템**
-- OpenWeather API · 농사로 공공데이터 API
-- Gemini AI API · Ajou LLM API
-- Python FastAPI AI 서버 (자체 개발)
-- Supabase PostgreSQL
+### 환경변수
 
-<br>
+```env
+PORT=3000
 
-## ✨ 주요 기능
+DATABASE_URL=postgresql://...
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_ANON_KEY=your_key
+SUPABASE_SERVICE_ROLE_KEY=your_key
 
-### 1. 🌱 사용자 맞춤형 식물 추천
-- 햇빛·벌레 민감도·베란다 방향 등 환경 설문 입력
-- 입력 조건 기반으로 적합한 식물 자동 매칭
-- Gemini API로 추천 이유 자연어 생성
-- 추천 결과에서 온실 등록 바로 연결
+MQTT_URL=mqtt://localhost:1883
+SENSOR_TOPIC=farm/+/sensor
+ENABLE_MQTT=true
 
-**지원 식물 5종**
+OPENWEATHER_API_KEY=your_key
+GEMINI_API_KEY=your_key
+NONGSARO_API_KEY=your_key
 
-| 식물 | 환경 | 난이도 |
-|------|------|--------|
-| 산세베리아 | 실내 | 쉬움 |
-| 몬스테라 | 실내 | 보통 |
-| 방울토마토 | 실외 | 보통 |
-| 상추 | 실외 | 쉬움 |
-| 파 | 실외 | 쉬움 |
+AI_SERVER_URL=https://python-smartfarm-ai-server.onrender.com
+```
 
-### 2. 💧 자동 관수 및 환경 제어 룰베이스
-- 온도·습도·토양수분·조도 센서 데이터 실시간 수집
-- IF-THEN 룰엔진 → 관수·환기·LED 자동 제어
-- OpenWeather API → 외부 기상 데이터 반영
-- SunCalc 기반 일출·일몰 계산 → LED 필요 여부 자동 판단
-- 가상 센서 모드 지원 → 장비 없이 시뮬레이션 체험 가능
+---
 
-**자동 제어 시나리오 6가지**
+## DB 구조
 
-| 룰 | 조건 | 동작 |
-|----|------|------|
-| 자동 관수 | 토양수분 < 임계값 | 펌프 ON (히스테리시스) |
-| 환기 알림 | 습도 > 임계값 | 창문 OPEN |
-| LED 제어 | 태양 고도 < 기준 (SunCalc) | LED ON |
-| 병해충 경보 | 온도·습도 조건 동시 초과 | 알림 저장 |
-| 비 예보 스킵 | 강수 확률 ≥ 50% (실외) | 관수 건너뜀 |
-| 저온 경보 | 온도 < 최솟값 | 창문 CLOSE + 알림 |
+```
+greenhouses      온실 설정 (식물 종류, 위치, 좌표, user_id)
+sensor_readings  센서 데이터 (온도, 습도, 토양수분, 조도)
+actuator_logs    제어 이벤트 로그 (관수, 환기, LED)
+weather_logs     외부 기상 데이터 (10분 주기)
+alert_logs       룰엔진 알림 로그
+daily_reports    Gemini AI 일일 리포트
+plants           식물 정보 DB (농사로 API 연동)
+user_plants      사용자 등록 식물
+disease_logs     질병 분석 이력 (ResNet18 결과)
+```
 
-### 3. 📋 Gemini AI 일일 리포트
-- 매일 오후 8시 자동 생성
-- 하루 센서 데이터 집계 → Gemini AI 분석 → 건강 요약 + 행동 추천
-- 온도·습도 조건 기반 병해충 위험도 계산 포함
-- 채팅 스타일 UI로 친근하게 리포트 수신
-- 누적 리포트 이력 조회 가능
+---
 
-### 4. 💬 Gemini 실시간 채팅
-- 채팅으로 식물 질문 → 학습된 AI 즉시 답변
-- 현재 센서 데이터 기반 맞춤 응답 제공
-- 병해충·질병 정보 실시간 조회 가능
-- 초보 사용자도 부담 없이 정보 확인 가능
+## API 엔드포인트
 
-### 5. 🔬 병해충 진단 AI 모델
-- 식물 잎 사진 업로드 → 질병 여부 및 신뢰도 즉시 반환
-- AI Hub 데이터셋 기반으로 학습된 ResNet18 모델 (팀 직접 학습·개발)
-- 자체 FastAPI 서버 독립 배포 → 백엔드 REST API 연동
-- 진단 결과 및 조치 방법 안내
-- 분석 이력 저장 및 조회 가능
+모든 요청에 `Authorization: Bearer {token}` 헤더가 필요합니다.
 
-<br>
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| POST | `/api/auth/signup` | 이메일 회원가입 |
+| POST | `/api/auth/login` | 이메일 로그인 |
+| GET | `/api/auth/me` | 내 정보 조회 |
+| GET | `/api/greenhouse` | 온실 설정 조회 |
+| POST | `/api/greenhouse` | 온실 등록·수정 |
+| GET | `/api/latest` | 최신 센서 데이터 |
+| GET | `/api/history` | 시계열 센서 이력 |
+| GET | `/api/alerts` | 알림 로그 |
+| POST | `/api/control` | 수동 디바이스 제어 |
+| POST | `/api/plant/recommend` | 식물 추천 |
+| POST | `/api/plant/register` | 식물 등록 |
+| GET | `/api/reports/today` | 오늘 리포트 |
+| GET | `/api/reports` | 리포트 이력 |
+| POST | `/api/disease/analyze` | 병해충 이미지 분석 |
+| GET | `/api/disease/history` | 분석 이력 |
 
-## 📊 프로젝트 결과
+---
 
-### 정량적 성과
-- REST API **20+** 개 구현
-- 식물 맞춤 룰엔진 **5종**
-- 자동 제어 시나리오 **6가지**
-- 소셜 로그인 **3종** 지원 (이메일·Google·Kakao)
-
-### 구현 완료 기능
-- Supabase Auth 멀티 소셜 로그인
-- MQTT 센서 → DB 저장 파이프라인
-- 룰베이스 자동 제어 엔진
-- OpenWeather 기상 연동
-- 농촌진흥청 공공데이터 식물 DB 연동
-- Gemini AI 일일 리포트 자동 생성
-- ResNet18 질병 분류 모델 자체 학습·배포
-- React 실시간 센서 대시보드
-- 전체 서비스 배포 완료
-
-<br>
-
-## 🚀 기대 효과
-
-**사용자 측면**
-- 전문 지식 없이도 체계적인 식물 관리 가능
-- AI 기반 질병 조기 감지로 식물 폐사 방지
-- 홈가드닝 성공 경험 증가 → 지속적인 참여 유도
-
-**기술적 측면**
-- MQTT 기반 IoT 시스템 설계 경험 확보
-- AI 모델 학습·배포 경험 확보 (ResNet18 → FastAPI)
-- 디지털 트윈 플랫폼으로 확장 가능한 구조
-
-<br>
-
-## 🔭 향후 계획
-
-- 실제 아두이노 센서 연동
-- Supabase RLS 보안 정책 적용
-- AI 모델 정확도 개선 (데이터셋 확대)
-- YOLO 기반 객체 탐지 도입 → 병해충 발생 부위 시각화
-- 병해충 다중 분류 지원
-- 미세먼지·풍속 연동 환기 판단 고도화
-
-<br>
-
-## 👥 팀원
+## 팀
 
 | 이름 | 학과 | 역할 |
 |------|------|------|
 | 김효정 | 디지털미디어학과 | Frontend |
 | 김정하 | 소프트웨어학과 | Backend · AI |
 
-**지도교수**: 고욱 교수님 (디지털미디어학과)
-**멘토**: 제민욱 멘토님
+지도교수: 고욱 교수님 (디지털미디어학과)
+자문: 제민욱 멘토님 (PROJECT PLUTO)
 
-<br>
+---
 
-## 📄 라이선스
+<div align="center">
 
-This project is licensed under the MIT License.
+MIT License © 2026 Team Root Node
+
+</div>
