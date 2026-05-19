@@ -405,7 +405,7 @@ function Sensor() {
       {/* IoT 기기 — 실제 모드 온실에서만 노출 */}
       {sensorMode === 'real' && (
         <DeviceRegistrySection
-          devices={devices}
+          devices={devices.filter(d => d.deviceStatus !== 'revoked')}
           onAdd={() => setRegisterOpen(true)}
           onRevoke={handleRevokeDevice}
         />

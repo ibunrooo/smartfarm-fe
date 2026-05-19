@@ -1,5 +1,19 @@
 import { apiFetch, buildQuery } from './client'
 
+// BE는 snake_case로 응답 — camelCase로 정규화. camelCase로 이미 와도 안전하게 폴백.
+function mapDevice(raw) {
+  if (!raw) return null
+  return {
+    deviceId:     raw.deviceId     ?? raw.device_id,
+    deviceType:   raw.deviceType   ?? raw.device_type,
+    greenhouseId: raw.greenhouseId ?? raw.greenhouse_id,
+    deviceStatus: raw.deviceStatus ?? raw.device_status ?? null,
+    status:       raw.status ?? null,
+    lastSeenAt:   raw.lastSeenAt   ?? raw.last_seen_at ?? null,
+    createdAt:    raw.createdAt    ?? raw.created_at ?? null,
+  }
+}
+
 // POST /api/devices/register
 // body: { greenhouseId, deviceId, deviceType: 'sensor'|'light'|'pump'|'window' }
 export function registerDevice({ greenhouseId, deviceId, deviceType }) {
@@ -24,15 +38,19 @@ export function provisionDevice(deviceId, greenhouseId) {
 export async function getDevices(greenhouseId) {
   const data = await apiFetch(`/api/devices${buildQuery({ greenhouseId })}`)
   // 응답 형식이 [...] 또는 { devices: [...] } 둘 다 가능 — 안전하게 두 케이스 처리
-  if (Array.isArray(data)) return data
-  if (Array.isArray(data?.devices)) return data.devices
-  return []
+  const list = Array.isArray(data) ? data : Array.isArray(data?.devices) ? data.devices : []
+  return list.map(mapDevice).filter(d => d && d.deviceId)
 }
 
 // GET /api/devices/:deviceId/status
 // 응답: { ok, status: 'online'|'offline', deviceStatus: 'active'|'revoked', lastSeenAt }
-export function getDeviceStatus(deviceId) {
-  return apiFetch(`/api/devices/${encodeURIComponent(deviceId)}/status`)
+export async function getDeviceStatus(deviceId) {
+  const raw = await apiFetch(`/api/devices/${encodeURIComponent(deviceId)}/status`)
+  return {
+    status:       raw?.status ?? null,
+    deviceStatus: raw?.deviceStatus ?? raw?.device_status ?? null,
+    lastSeenAt:   raw?.lastSeenAt ?? raw?.last_seen_at ?? null,
+  }
 }
 
 // POST /api/devices/:deviceId/revoke
