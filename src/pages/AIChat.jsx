@@ -17,10 +17,21 @@ const CHAT_CACHE_KEY = 'farm-me:aiChatMessages'
 const TRANSIENT_IDS = new Set(['w-loading', 'w-no-plant', 'w-no-report', 'w-err', 'w-intro', 'ai-typing'])
 
 function nowParts() {
-  const d = new Date()
+  return partsFromDate(new Date())
+}
+
+function partsFromDate(d) {
   const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   const date = d.toISOString().slice(0, 10)
   return { time, date }
+}
+
+// BE의 ISO 타임스탬프 → 메시지 표시용 time/date. 파싱 실패 시 현재 시각으로 폴백.
+function partsFromISO(iso) {
+  if (!iso) return nowParts()
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return nowParts()
+  return partsFromDate(d)
 }
 
 function todayISO() {
@@ -133,12 +144,20 @@ function AIChat() {
         }
 
         const intro = '오늘의 일일 리포트를 보내드릴게요.'
+        // 인트로는 가장 이른 리포트 생성 시각에 맞춤 — "BE가 8시에 보낸 메시지" 느낌
+        const introParts = (() => {
+          const isoList = available.map(r => r.report.createdAt).filter(Boolean)
+          if (!isoList.length) return { time, date }
+          const earliest = isoList.reduce((a, b) => (a < b ? a : b))
+          return partsFromISO(earliest)
+        })()
 
         setMessages(prev => {
           const without = stripTransient(prev)
           const reportMessages = available.map(({ greenhouse, report }) => {
             const plant = plants.find(p => p.id === greenhouse.plantType)
             const plantName = plant?.name ?? greenhouse.plantType ?? '식물'
+            const { time: rTime, date: rDate } = partsFromISO(report.createdAt)
             return {
               id: `r-${greenhouse.greenhouseId}-${report.date ?? Date.now()}`,
               sender: 'ai',
@@ -148,12 +167,12 @@ function AIChat() {
                 plantName,
                 summary: substituteGreenhouseId(report.summary, greenhouse.greenhouseId, plantName),
               },
-              time, date,
+              time: rTime, date: rDate,
             }
           })
           return [
             ...without,
-            { id: 'w-intro', sender: 'ai', type: 'text', text: intro, time, date },
+            { id: 'w-intro', sender: 'ai', type: 'text', text: intro, time: introParts.time, date: introParts.date },
             ...reportMessages,
           ]
         })
