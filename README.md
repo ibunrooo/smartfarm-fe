@@ -5,6 +5,15 @@
 
 <br>
 
+## 🔗 Repositories
+
+| 구분 | URL |
+|------|-----|
+| 🖥 Backend | https://github.com/juunghaa/node-smartfarm-backend.git |
+| 🤖 AI Server | https://github.com/juunghaa/python-smartfarm-ai-server.git |
+
+<br>
+
 ## 📌 프로젝트 소개
 
 팜-므파탈(Farm-me Fatale)은  
