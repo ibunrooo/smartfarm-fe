@@ -52,7 +52,7 @@ function Analysis() {
       setPhase('result')
     } catch (err) {
       console.error('이미지 분석 실패:', err)
-      setErrorMsg(err.message || '분석 중 오류가 발생했어요.')
+      setErrorMsg('AI 서버가 잠들어 있어요. 잠시 후 다시 시도하거나, 문제가 계속되면 운영자에게 문의해 주세요.')
       setPhase('preview')
     }
   }
